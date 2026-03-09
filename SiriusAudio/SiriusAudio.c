@@ -238,6 +238,9 @@ extern "C" {
 			plptr = NULL;
 		}
 
+		// Stop any music playing.
+		ma_sound_stop(&g_sound);
+
 		// Signal the the playlist is loading.
 
 		QueueEvent(SEP_PlaylistLoading, NULL);
@@ -276,8 +279,10 @@ extern "C" {
 
 		// If autostart is set, play automatically.
 
-		if (autostart)
+		if (autostart) {
+			playstate = SEP_Ready; // This will cause play routine to fetch first song from playlist.
 			PlayPause();
+		}
 
 	}
 

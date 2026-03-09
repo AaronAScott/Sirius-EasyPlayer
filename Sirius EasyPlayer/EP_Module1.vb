@@ -1246,6 +1246,40 @@ Module EP_Module1
 
 	End Sub
 	'**************************************************
+
+	' Function to un-escape a special character in
+	' an XML file.
+
+	'**************************************************
+	Public Function EscapeXml(value As String) As String
+		If value Is Nothing Then Return ""
+
+		Dim s As String = value
+		s = s.Replace("&", "&amp;")
+		s = s.Replace("<", "&lt;")
+		s = s.Replace(">", "&gt;")
+		s = s.Replace("""", "&quot;")
+		s = s.Replace("'", "&apos;")
+
+		Return s
+	End Function
+	'**************************************************
+
+	' Function to un-escape a line in an XML file.
+
+	'**************************************************
+	Public Function UnescapeXml(value As String) As String
+		If value Is Nothing Then Return ""
+
+		Dim s As String = value
+		s = s.Replace("&apos;", "'")
+		s = s.Replace("&quot;", """")
+		s = s.Replace("&gt;", ">")
+		s = s.Replace("&lt;", "<")
+		s = s.Replace("&amp;", "&")
+
+		Return s
+	End Function   '**************************************************
 	'
 	' Property to get or set the message box theme
 	'

@@ -1330,7 +1330,7 @@ Public Class frmMain
 		'sb.AppendLine("      <meta name = ""Generator"" content=""Microsoft Windows Media Player -- 12.0.26100.3624""/>")
 		sb.AppendLine("      <meta name = ""Generator"" content=""Sirius Sirius EasyPlayer -- 1.0.0.0""/>")
 		sb.AppendLine("      <meta name = ""ItemCount"" content=""" & ListBox1.Items.Count & """/>")
-		sb.AppendLine("    <title>" & playlistTitle & "</title>")
+		sb.AppendLine("    <title>" & EscapeXml(playlistTitle) & "</title>")
 		sb.AppendLine("  </head>")
 		sb.AppendLine("  <body>")
 		sb.AppendLine("    <seq>")

@@ -8,9 +8,9 @@ Public Class frmMusicPlayer
 	'***********************************************************************
 	' Sirius Playlist Music Player form
 	' PE_MAIN.VB
-	' Written: May 2025
+	' Written: March 2026
 	' Programmer: Aaron Scott
-	' Copyright 2025 Sirius Software All Rights Reserved
+	' Copyright 2026 Sirius Software All Rights Reserved
 	'***********************************************************************
 
 	' Declare function that will let this form block screensaver and shutdown.
@@ -312,6 +312,7 @@ Public Class frmMusicPlayer
 
 		Me.Cursor = Cursors.WaitCursor
 		ListBox1.Enabled = False
+		ListBox1.Items.Clear()
 
 	End Sub
 	'***********************************************************************
@@ -321,6 +322,16 @@ Public Class frmMusicPlayer
 	'***********************************************************************
 
 	Private Sub EndLoad()
+
+		' Declare variables
+
+		Dim i As Integer
+
+		' Refill the list box with the new playlist.
+
+		For i = 0 To MP.Player.PlayListItems.Count - 1
+			ListBox1.Items.Add(MP.Player.PlayListItems(i))
+		Next i
 
 		Me.Cursor = Cursors.Default
 		ListBox1.Enabled = True

@@ -91,7 +91,6 @@ Public Class SiriusAudio
 	Public Event PlaylistLoaded()
 	Public Event SongChanged(idx As Integer, Filename As String)
 	Public Event PlayStateChanged(ps As Integer)
-	Public Event PositionChanged(s As Double)
 	Public Event MediaError(Msg As String)
 
 	' Declare private variables.
@@ -121,12 +120,10 @@ Public Class SiriusAudio
 	'****************************************************************
 	Public Sub New()
 		InitializeAudio()
-		AddHandler mPlayer.PlayStateChange, AddressOf wmpPlayStateChanged
 	End Sub
 	Public Sub Dispose() Implements IDisposable.Dispose
 		ShutdownAudio()
 		GC.SuppressFinalize(Me)
-		RemoveHandler mPlayer.PlayStateChange, AddressOf wmpPlayStateChanged
 	End Sub
 
 	Protected Overrides Sub Finalize()
@@ -231,8 +228,6 @@ Public Class SiriusAudio
 
 		' Send the event to the form containing this control.
 
-		RaiseEvent PlayStateChanged(newState)
-
 		Select Case newState
 
 			Case WMPPlayState.wmppsStopped
@@ -243,6 +238,9 @@ Public Class SiriusAudio
 				PlayNext()
 		End Select
 
+		' Pass the event on to the next layer.
+
+		RaiseEvent PlayStateChanged(newState)
 
 	End Sub
 
@@ -287,7 +285,7 @@ Public Class SiriusAudio
 				Dim mediaNodes As XmlNodeList = xmlDoc.SelectNodes("//smil/body/seq/media")
 				For Each Node As XmlNode In mediaNodes
 					songpath = Node.Attributes("src")?.Value.Replace("..\", MusicPath)
-					plist.Append(songpath & vbCrLf)
+					plist.Append(UnescapeXml(songpath) & vbCrLf)
 				Next Node
 
 				' Pass the playlist to the .dll.

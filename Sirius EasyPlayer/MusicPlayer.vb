@@ -19,9 +19,9 @@ Imports WMPLib
 
 ' Media Player Control
 ' MEDIAPLAYER.VB
-' Written: May 2025
+' Written: March 2026
 ' Programmer: Aaron Scott
-' Copyright 2025 Sirius Software All Rights Reserved
+' Copyright 2026 Sirius Software All Rights Reserved
 
 '*******************************************************
 Public Class MediaPlayer
@@ -109,6 +109,8 @@ Public Class MediaPlayer
 		AddHandler Me.MouseUp, AddressOf picControl_MouseUp
 		AddHandler Me.ButtonPressed, AddressOf MP_ButtonPressed
 		AddHandler mPlayer.SongChanged, AddressOf saSongChanged
+		AddHandler mPlayer.PlaylistLoading, AddressOf PlaylistLoading
+		AddHandler mPlayer.PlaylistLoaded, AddressOf PlaylistLoaded
 
 		MusicFolder = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
 
@@ -125,6 +127,8 @@ Public Class MediaPlayer
 		RemoveHandler Me.MouseUp, AddressOf picControl_MouseUp
 		RemoveHandler Me.ButtonPressed, AddressOf MP_ButtonPressed
 		RemoveHandler mPlayer.SongChanged, AddressOf saSongChanged
+		RemoveHandler mPlayer.PlaylistLoading, AddressOf PlaylistLoading
+		RemoveHandler mPlayer.PlaylistLoaded, AddressOf PlaylistLoaded
 		If lstPlayList IsNot Nothing Then
 			RemoveHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
 			RemoveHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
@@ -595,6 +599,20 @@ Public Class MediaPlayer
 
 	'**********************************************************
 
+	' Handler for the Playlist Loading event.
+
+	'**********************************************************
+	Private Sub PlaylistLoading()
+		RaiseEvent PlayListStartLoad()
+	End Sub
+	'**********************************************************
+	' Handler for the playlist endload event.
+	'**********************************************************
+	Private Sub PlaylistLoaded()
+		RaiseEvent PlayListEndLoad()
+	End Sub
+	'**********************************************************
+
 	' The current song has changed.
 
 	'**********************************************************
@@ -609,8 +627,11 @@ Public Class MediaPlayer
 		' an error.
 
 		If Not My.Computer.FileSystem.FileExists(filename) Then
-			wx = "*" & lstPlayList.Items(lstPlayList.SelectedIndex)
-			lstPlayList.Items(lstPlayList.SelectedIndex) = wx
+			If CType(lstPlayList, ListBox).SelectedIndex >= 0 Then
+				wx = "*" & lstPlayList.Items(lstPlayList.SelectedIndex)
+				lstPlayList.Items(lstPlayList.SelectedIndex) = wx
+			End If
+			Exit Sub
 		End If
 
 		' Get the song information from the metadata.  Do not use the Item
@@ -763,18 +784,10 @@ Public Class MediaPlayer
 
 			mPlaylist = value
 
-			' Fill the playlist list box with the playlist contents.
+			' Set the playlist property to the name of the playlist file.
 
 			mPlayer.Playlist = mPlaylist
 
-			' Populate the listbox with the parsed songs.
-
-			lstPlayList.BeginUpdate()
-
-			For i = 0 To mPlayer.PlayListItems.Count - 1
-				lstPlayList.Items.Add(mPlayer.PlayListItems(i))
-			Next i
-			lstPlayList.EndUpdate()
 		End Set
 
 
