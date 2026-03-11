@@ -53,11 +53,23 @@ Public Class SiriusAudio
 	Private Shared Sub SetAutostart(i As Integer)
 	End Sub
 	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
+	Private Shared Function GetRepeat() As Integer
+	End Function
+	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
+	Private Shared Sub SetRepeat(i As Integer)
+	End Sub
+	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
 	Private Shared Function GetPlaystate() As Integer
 	End Function
 	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
 	Private Shared Function HasPendingEvents() As Integer
 	End Function
+	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
+	Private Shared Function GetVolume() As Single
+	End Function
+	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
+	Private Shared Sub SetVolume(v As Single)
+	End Sub
 	Private Declare Function DequeueEvent Lib "SiriusAudio.dll" (ByRef code As Integer, ByRef payload As IntPtr) As Integer  ' Enum for the types of events we will be raising upon notice from the .dll
 
 	Public Enum SiriusEvent
@@ -72,17 +84,16 @@ Public Class SiriusAudio
 	End Enum
 
 	' Enum for the various playstates exposed by the .dll.
-
-	Public Enum maPlayStates
-		Undefined
-		Stopped
-		Paused
-		Playing
-		ScanForward
-		ScanReverse
-		MediaEnded
-		PlayingExternal
-		Ready
+	Public Enum SEP_Playstate
+		SEP_Undefined
+		SEP_Stopped
+		SEP_Paused
+		SEP_Playing
+		SEP_ScanForward
+		SEP_ScanReverse
+		SEP_MediaEnded
+		SEP_PlayingExternal
+		SEP_Ready
 	End Enum
 
 	' Declare the events to be raised by this class.
@@ -111,7 +122,7 @@ Public Class SiriusAudio
 
 	Private WithEvents _relayTimer As New Timer() With {.Interval = 100, .Enabled = True}
 
-	Private mPlayer As New WMPLib.WindowsMediaPlayer
+	Private wmPlayer As New WMPLib.WindowsMediaPlayer
 
 	'****************************************************************
 
@@ -132,17 +143,19 @@ Public Class SiriusAudio
 	'****************************************************************
 	' The Play method.
 	'****************************************************************
-	Public Sub Play()
+	Friend Sub Play()
 
 		' Determine how to handle play/pause based on the audio engine
 		' currently active.
 
-		' WMP - used for files miniaudio can't play.
+		' wmPlayer is used for files miniaudio can't play.
 
-		If mPlayer.playState = maPlayStates.Playing Then
-			mPlayer.controls.pause()
-		Else
-			mPlayer.controls.play()
+		If wmPlayer.playState = SiriusAudio.SEP_Playstate.SEP_Playing Then
+			wmPlayer.controls.pause()
+			Exit Sub
+		ElseIf wmPlayer.playState = SiriusAudio.SEP_Playstate.SEP_Paused Then
+			wmPlayer.controls.play()
+			Exit Sub
 		End If
 
 		' All other file types, played by SiriusAudio
@@ -158,7 +171,7 @@ Public Class SiriusAudio
 
 		' Stop both engines before moving to the previous song.
 
-		mPlayer.controls.stop()
+		wmPlayer.controls.stop()
 		PlayStop()
 		PlayPrevious()
 	End Sub
@@ -169,7 +182,7 @@ Public Class SiriusAudio
 
 		' Stop both engines before moving to the next song.
 
-		mPlayer.controls.stop()
+		wmPlayer.controls.stop()
 		PlayStop()
 		PlayNext()
 	End Sub
@@ -180,7 +193,7 @@ Public Class SiriusAudio
 
 		' Stop both engines before playing the selected song.
 
-		mPlayer.controls.stop()
+		wmPlayer.controls.stop()
 		PlayStop()
 		PlaySongAtIndex(idx)
 	End Sub
@@ -190,7 +203,7 @@ Public Class SiriusAudio
 
 	'****************************************************************
 	Public Sub StopAll()
-		mPlayer.controls.stop()
+		wmPlayer.controls.stop()
 		PlayStop()
 	End Sub
 	'****************************************************************
@@ -201,12 +214,17 @@ Public Class SiriusAudio
 	Private Sub PlayByWMP(idx As Integer, filename As String)
 
 		Dim media As WMPLib.IWMPMedia
-		mPlayer.controls.stop()
+		wmPlayer.controls.stop()
 		PlayStop()
-		media = mPlayer.newMedia(filename)
-		mPlayer.currentMedia = media
-		mPlayer.controls.play()
-
+		media = wmPlayer.newMedia(filename)
+		wmPlayer.currentMedia = media
+		wmPlayer.controls.play()
+	End Sub
+	'****************************************************************
+	' Sub to process error messages received.
+	'****************************************************************
+	Private Sub ProcessErrorMsg(Msg As String)
+		RaiseEvent MediaError(Msg)
 	End Sub
 	'****************************************************************
 	' Event handler for the WMPLIB engine's PlayStateChanged event.
@@ -226,13 +244,9 @@ Public Class SiriusAudio
 		'wmppsMediaEnded = 8,
 		'**********************************************************
 
-		' Send the event to the form containing this control.
+		' Process the message.  We only handle media ended.
 
 		Select Case newState
-
-			Case WMPPlayState.wmppsStopped
-
-			Case WMPPlayState.wmppsPlaying
 
 			Case WMPPlayState.wmppsMediaEnded
 				PlayNext()
@@ -240,17 +254,42 @@ Public Class SiriusAudio
 
 		' Pass the event on to the next layer.
 
+		' Send the event to the form containing this control.
+
 		RaiseEvent PlayStateChanged(newState)
 
 	End Sub
+
+	'****************************************************************
+	' The Songlist property.  This property accepts a prepared list
+	' of song names separated by CrLfs.
+	'****************************************************************
+	Friend Property Songlist() As String
+		Get
+			Return Playlist ' This is the prepared list in any event.
+		End Get
+		Set(value As String)
+
+			' Make sure the song list ends with a CrLf.
+
+			If Not value.EndsWith(vbCrLf) Then
+				RaiseEvent MediaError("Invalid Songlist Format")
+				Exit Property
+			End If
+
+			' Pass it on to the engine.
+
+			LoadPlaylist(value)
+
+		End Set
+	End Property
 
 	'****************************************************************
 	' The Playlist property.  This property accepts the name of
 	' a Windows Playlist (.wpl) file, and returns a single string
 	' of file names separated by CrLf
 	'****************************************************************
-
-	Public Property Playlist As String
+	Friend Property Playlist As String
 		Get
 
 			Dim zx As String = GetPlaylist()
@@ -296,7 +335,6 @@ Public Class SiriusAudio
 				RaiseEvent MediaError($"Error parsing playlist: {ex.Message}")
 			End Try
 
-
 		End Set
 
 	End Property
@@ -329,7 +367,7 @@ Public Class SiriusAudio
 	' determines if the audio engine begins playing automatically
 	' after a playlist is loaded.
 	'****************************************************************
-	Public Property Autostart(state As Integer) As Integer
+	Public Property Autostart() As Integer
 		Get
 			Return GetAutostart()
 		End Get
@@ -348,6 +386,14 @@ Public Class SiriusAudio
 		Get
 			Return GetPlaystate()
 		End Get
+	End Property
+	Public Property Volume As Single
+		Get
+			Return GetVolume()
+		End Get
+		Set(value As Single)
+			SetVolume(value)
+		End Set
 	End Property
 	'****************************************************************
 	' The event dispatcher.  Upon a tick event, which happens 10ms after the
@@ -383,15 +429,16 @@ Public Class SiriusAudio
 				Case SiriusEvent.PlayStateChanged
 					Dim ev As Integer = payload.ToInt32
 					RaiseEvent PlayStateChanged(ev)
-					If ev = maPlayStates.MediaEnded Then PlayNext()
+					If ev = SiriusAudio.SEP_Playstate.SEP_MediaEnded AndAlso GetRepeat() Then PlayNext()
 
 				Case SiriusEvent.UnreadableByMA
 					Dim info As SongInfo = Marshal.PtrToStructure(Of SongInfo)(payload)
 					RaiseEvent SongChanged(info.index, info.filename)
 					PlayByWMP(info.index, info.filename)
 
+
 				Case SiriusEvent._Error
-					RaiseEvent MediaError(Marshal.PtrToStringUni(payload))
+					ProcessErrorMsg(Marshal.PtrToStringUni(payload))
 
 			End Select
 		Loop

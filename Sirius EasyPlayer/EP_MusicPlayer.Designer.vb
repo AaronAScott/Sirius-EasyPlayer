@@ -34,8 +34,8 @@ Partial Class frmMusicPlayer
 		Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
 		Me.lblElapsedTime = New System.Windows.Forms.Label()
 		Me.ProgressBar1 = New System.Windows.Forms.ProgressBar()
-		Me.ListBox1 = New System.Windows.Forms.ListBox()
 		Me.Timer2 = New System.Windows.Forms.Timer(Me.components)
+		Me.lstPlaylist = New Sirius_EasyPlayer.DoubleBufferedListBox()
 		Me.MenuStrip1.SuspendLayout()
 		CType(Me.picAlbumArt, System.ComponentModel.ISupportInitialize).BeginInit()
 		Me.SuspendLayout()
@@ -45,7 +45,7 @@ Partial Class frmMusicPlayer
 		Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuPlaylists, Me.FeaturesToolStripMenuItem})
 		Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
 		Me.MenuStrip1.Name = "MenuStrip1"
-		Me.MenuStrip1.Size = New System.Drawing.Size(633, 24)
+		Me.MenuStrip1.Size = New System.Drawing.Size(669, 24)
 		Me.MenuStrip1.TabIndex = 1
 		Me.MenuStrip1.Text = "MenuStrip1"
 		'
@@ -115,28 +115,31 @@ Partial Class frmMusicPlayer
 		Me.ProgressBar1.Size = New System.Drawing.Size(190, 10)
 		Me.ProgressBar1.TabIndex = 5
 		'
-		'ListBox1
-		'
-		Me.ListBox1.Dock = System.Windows.Forms.DockStyle.Right
-		Me.ListBox1.Font = New System.Drawing.Font("Arial", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.ListBox1.FormattingEnabled = True
-		Me.ListBox1.ItemHeight = 16
-		Me.ListBox1.Location = New System.Drawing.Point(428, 24)
-		Me.ListBox1.Name = "ListBox1"
-		Me.ListBox1.Size = New System.Drawing.Size(205, 487)
-		Me.ListBox1.TabIndex = 6
-		'
 		'Timer2
 		'
 		Me.Timer2.Enabled = True
 		Me.Timer2.Interval = 300000
 		'
+		'lstPlaylist
+		'
+		Me.lstPlaylist.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+		Me.lstPlaylist.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed
+		Me.lstPlaylist.Font = New System.Drawing.Font("Arial Narrow", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+		Me.lstPlaylist.FormattingEnabled = True
+		Me.lstPlaylist.IntegralHeight = False
+		Me.lstPlaylist.ItemHeight = 18
+		Me.lstPlaylist.Location = New System.Drawing.Point(428, 27)
+		Me.lstPlaylist.Name = "lstPlaylist"
+		Me.lstPlaylist.ScrollAlwaysVisible = True
+		Me.lstPlaylist.Size = New System.Drawing.Size(241, 484)
+		Me.lstPlaylist.TabIndex = 7
+		'
 		'frmMusicPlayer
 		'
 		Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
 		Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-		Me.ClientSize = New System.Drawing.Size(633, 511)
-		Me.Controls.Add(Me.ListBox1)
+		Me.ClientSize = New System.Drawing.Size(669, 511)
+		Me.Controls.Add(Me.lstPlaylist)
 		Me.Controls.Add(Me.ProgressBar1)
 		Me.Controls.Add(Me.lblElapsedTime)
 		Me.Controls.Add(Me.lblDuration)
@@ -162,6 +165,6 @@ Partial Class frmMusicPlayer
 	Friend WithEvents Timer1 As Timer
 	Friend WithEvents lblElapsedTime As Label
 	Friend WithEvents ProgressBar1 As ProgressBar
-	Friend WithEvents ListBox1 As ListBox
 	Friend WithEvents Timer2 As Timer
+	Friend WithEvents lstPlaylist As DoubleBufferedListBox
 End Class

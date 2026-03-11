@@ -31,7 +31,7 @@ Partial Class frmMain
 		Me.mnuRepair = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuSavePL = New System.Windows.Forms.ToolStripMenuItem()
 		Me.ToolStripSeparator1 = New System.Windows.Forms.ToolStripSeparator()
-		Me.mnuPlay = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuOpenPlayer = New System.Windows.Forms.ToolStripMenuItem()
 		Me.ToolStripSeparator2 = New System.Windows.Forms.ToolStripSeparator()
 		Me.mnuCheckForNew = New System.Windows.Forms.ToolStripMenuItem()
 		Me.EditToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -51,7 +51,7 @@ Partial Class frmMain
 		Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
 		Me.Panel1 = New System.Windows.Forms.Panel()
 		Me.VScrollBar1 = New System.Windows.Forms.VScrollBar()
-		Me.PictureBox1 = New System.Windows.Forms.PictureBox()
+		Me.picLibraryDisplay = New System.Windows.Forms.PictureBox()
 		Me.pnlMusicPlayer = New System.Windows.Forms.Panel()
 		Me.lblHeader_1 = New System.Windows.Forms.Label()
 		Me.lblHeader_0 = New System.Windows.Forms.Label()
@@ -68,9 +68,13 @@ Partial Class frmMain
 		Me.SaveFileDialog1 = New System.Windows.Forms.SaveFileDialog()
 		Me.ContextMenuStrip2 = New System.Windows.Forms.ContextMenuStrip(Me.components)
 		Me.mnuCMFindArt = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuCMPasteAlbumArt = New System.Windows.Forms.ToolStripMenuItem()
 		Me.ToolStripSeparator4 = New System.Windows.Forms.ToolStripSeparator()
 		Me.mnuCMCancel = New System.Windows.Forms.ToolStripMenuItem()
 		Me.timClearMessage = New System.Windows.Forms.Timer(Me.components)
+		Me.ContextMenuStrip3 = New System.Windows.Forms.ContextMenuStrip(Me.components)
+		Me.mnuCMAddToPlaylist = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuCMPlayItem = New System.Windows.Forms.ToolStripMenuItem()
 		Me.MenuStrip1.SuspendLayout()
 		Me.StatusStrip1.SuspendLayout()
 		CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -78,9 +82,10 @@ Partial Class frmMain
 		Me.SplitContainer1.Panel2.SuspendLayout()
 		Me.SplitContainer1.SuspendLayout()
 		Me.Panel1.SuspendLayout()
-		CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
+		CType(Me.picLibraryDisplay, System.ComponentModel.ISupportInitialize).BeginInit()
 		Me.ContextMenuStrip1.SuspendLayout()
 		Me.ContextMenuStrip2.SuspendLayout()
+		Me.ContextMenuStrip3.SuspendLayout()
 		Me.SuspendLayout()
 		'
 		'MenuStrip1
@@ -94,7 +99,7 @@ Partial Class frmMain
 		'
 		'FileToolStripMenuItem
 		'
-		Me.FileToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuNew, Me.mnuOpenPL, Me.mnuRepair, Me.mnuSavePL, Me.ToolStripSeparator1, Me.mnuPlay, Me.ToolStripSeparator2, Me.mnuCheckForNew})
+		Me.FileToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuNew, Me.mnuOpenPL, Me.mnuRepair, Me.mnuSavePL, Me.ToolStripSeparator1, Me.mnuOpenPlayer, Me.ToolStripSeparator2, Me.mnuCheckForNew})
 		Me.FileToolStripMenuItem.Name = "FileToolStripMenuItem"
 		Me.FileToolStripMenuItem.Size = New System.Drawing.Size(37, 20)
 		Me.FileToolStripMenuItem.Text = "&File"
@@ -128,11 +133,11 @@ Partial Class frmMain
 		Me.ToolStripSeparator1.Name = "ToolStripSeparator1"
 		Me.ToolStripSeparator1.Size = New System.Drawing.Size(184, 6)
 		'
-		'mnuPlay
+		'mnuOpenPlayer
 		'
-		Me.mnuPlay.Name = "mnuPlay"
-		Me.mnuPlay.Size = New System.Drawing.Size(187, 22)
-		Me.mnuPlay.Text = "Play &Music"
+		Me.mnuOpenPlayer.Name = "mnuOpenPlayer"
+		Me.mnuOpenPlayer.Size = New System.Drawing.Size(187, 22)
+		Me.mnuOpenPlayer.Text = "Open &Music Player"
 		'
 		'ToolStripSeparator2
 		'
@@ -253,7 +258,7 @@ Partial Class frmMain
 		'SplitContainer1.Panel1
 		'
 		Me.SplitContainer1.Panel1.Controls.Add(Me.Panel1)
-		Me.SplitContainer1.Panel1.Controls.Add(Me.PictureBox1)
+		Me.SplitContainer1.Panel1.Controls.Add(Me.picLibraryDisplay)
 		Me.SplitContainer1.Panel1MinSize = 400
 		'
 		'SplitContainer1.Panel2
@@ -283,14 +288,14 @@ Partial Class frmMain
 		Me.VScrollBar1.Size = New System.Drawing.Size(20, 402)
 		Me.VScrollBar1.TabIndex = 0
 		'
-		'PictureBox1
+		'picLibraryDisplay
 		'
-		Me.PictureBox1.Dock = System.Windows.Forms.DockStyle.Fill
-		Me.PictureBox1.Location = New System.Drawing.Point(0, 0)
-		Me.PictureBox1.Name = "PictureBox1"
-		Me.PictureBox1.Size = New System.Drawing.Size(398, 402)
-		Me.PictureBox1.TabIndex = 3
-		Me.PictureBox1.TabStop = False
+		Me.picLibraryDisplay.Dock = System.Windows.Forms.DockStyle.Fill
+		Me.picLibraryDisplay.Location = New System.Drawing.Point(0, 0)
+		Me.picLibraryDisplay.Name = "picLibraryDisplay"
+		Me.picLibraryDisplay.Size = New System.Drawing.Size(398, 402)
+		Me.picLibraryDisplay.TabIndex = 3
+		Me.picLibraryDisplay.TabStop = False
 		'
 		'pnlMusicPlayer
 		'
@@ -391,30 +396,54 @@ Partial Class frmMain
 		'
 		'ContextMenuStrip2
 		'
-		Me.ContextMenuStrip2.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMFindArt, Me.ToolStripSeparator4, Me.mnuCMCancel})
+		Me.ContextMenuStrip2.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMFindArt, Me.mnuCMPasteAlbumArt, Me.ToolStripSeparator4, Me.mnuCMCancel})
 		Me.ContextMenuStrip2.Name = "ContextMenuStrip2"
-		Me.ContextMenuStrip2.Size = New System.Drawing.Size(156, 54)
+		Me.ContextMenuStrip2.Size = New System.Drawing.Size(161, 76)
 		'
 		'mnuCMFindArt
 		'
 		Me.mnuCMFindArt.Name = "mnuCMFindArt"
-		Me.mnuCMFindArt.Size = New System.Drawing.Size(155, 22)
-		Me.mnuCMFindArt.Text = "Find &Album Art"
+		Me.mnuCMFindArt.Size = New System.Drawing.Size(160, 22)
+		Me.mnuCMFindArt.Text = "&Find Album Art"
+		'
+		'mnuCMPasteAlbumArt
+		'
+		Me.mnuCMPasteAlbumArt.Name = "mnuCMPasteAlbumArt"
+		Me.mnuCMPasteAlbumArt.Size = New System.Drawing.Size(160, 22)
+		Me.mnuCMPasteAlbumArt.Text = "&Paste Album Art"
 		'
 		'ToolStripSeparator4
 		'
 		Me.ToolStripSeparator4.Name = "ToolStripSeparator4"
-		Me.ToolStripSeparator4.Size = New System.Drawing.Size(152, 6)
+		Me.ToolStripSeparator4.Size = New System.Drawing.Size(157, 6)
 		'
 		'mnuCMCancel
 		'
 		Me.mnuCMCancel.Name = "mnuCMCancel"
-		Me.mnuCMCancel.Size = New System.Drawing.Size(155, 22)
+		Me.mnuCMCancel.Size = New System.Drawing.Size(160, 22)
 		Me.mnuCMCancel.Text = "&Cancel"
 		'
 		'timClearMessage
 		'
 		Me.timClearMessage.Interval = 10000
+		'
+		'ContextMenuStrip3
+		'
+		Me.ContextMenuStrip3.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMAddToPlaylist, Me.mnuCMPlayItem})
+		Me.ContextMenuStrip3.Name = "ContextMenuStrip3"
+		Me.ContextMenuStrip3.Size = New System.Drawing.Size(151, 48)
+		'
+		'mnuCMAddToPlaylist
+		'
+		Me.mnuCMAddToPlaylist.Name = "mnuCMAddToPlaylist"
+		Me.mnuCMAddToPlaylist.Size = New System.Drawing.Size(150, 22)
+		Me.mnuCMAddToPlaylist.Text = "&Add to Playlist"
+		'
+		'mnuCMPlayItem
+		'
+		Me.mnuCMPlayItem.Name = "mnuCMPlayItem"
+		Me.mnuCMPlayItem.Size = New System.Drawing.Size(150, 22)
+		Me.mnuCMPlayItem.Text = "&Play"
 		'
 		'frmMain
 		'
@@ -437,9 +466,10 @@ Partial Class frmMain
 		CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).EndInit()
 		Me.SplitContainer1.ResumeLayout(False)
 		Me.Panel1.ResumeLayout(False)
-		CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
+		CType(Me.picLibraryDisplay, System.ComponentModel.ISupportInitialize).EndInit()
 		Me.ContextMenuStrip1.ResumeLayout(False)
 		Me.ContextMenuStrip2.ResumeLayout(False)
+		Me.ContextMenuStrip3.ResumeLayout(False)
 		Me.ResumeLayout(False)
 		Me.PerformLayout()
 
@@ -449,7 +479,7 @@ Partial Class frmMain
 	Friend WithEvents StatusStrip1 As StatusStrip
 	Friend WithEvents SplitContainer1 As SplitContainer
 	Friend WithEvents FileToolStripMenuItem As ToolStripMenuItem
-	Friend WithEvents PictureBox1 As PictureBox
+	Friend WithEvents picLibraryDisplay As PictureBox
 	Friend WithEvents lblStatus As ToolStripStatusLabel
 	Friend WithEvents Panel1 As Panel
 	Friend WithEvents VScrollBar1 As VScrollBar
@@ -463,7 +493,7 @@ Partial Class frmMain
 	Friend WithEvents SaveFileDialog1 As SaveFileDialog
 	Friend WithEvents mnuRepair As ToolStripMenuItem
 	Friend WithEvents mnuNew As ToolStripMenuItem
-	Friend WithEvents mnuPlay As ToolStripMenuItem
+	Friend WithEvents mnuOpenPlayer As ToolStripMenuItem
 	Friend WithEvents ToolStripSeparator2 As ToolStripSeparator
 	Friend WithEvents EditToolStripMenuItem As ToolStripMenuItem
 	Friend WithEvents mnuCut As ToolStripMenuItem
@@ -492,4 +522,8 @@ Partial Class frmMain
 	Friend WithEvents mnuCheckForNew As ToolStripMenuItem
 	Friend WithEvents timClearMessage As Timer
 	Friend WithEvents mnuRepairMetadata As ToolStripMenuItem
+	Friend WithEvents mnuCMPasteAlbumArt As ToolStripMenuItem
+	Friend WithEvents ContextMenuStrip3 As ContextMenuStrip
+	Friend WithEvents mnuCMAddToPlaylist As ToolStripMenuItem
+	Friend WithEvents mnuCMPlayItem As ToolStripMenuItem
 End Class

@@ -13,7 +13,7 @@ Imports System.Drawing
 Imports System.Net.Http
 Imports System.Runtime.InteropServices
 
-Module EP_Module1
+Public Module EP_Module1
 
 	'***********************************************************************
 	' Sirius Sirius EasyPlayer Module 1
@@ -50,6 +50,19 @@ Module EP_Module1
 		Small
 		Large
 	End Enum
+	Public Enum SEP_Playstate
+		SEP_Undefined
+		SEP_Stopped
+		SEP_Paused
+		SEP_Playing
+		SEP_ScanForward
+		SEP_ScanReverse
+		SEP_MediaEnded
+		SEP_PlayingExternal
+		SEP_Ready
+	End Enum
+
+
 	'***********************************************************************
 
 	' Function to import a list of music into the music library, and return
@@ -1223,7 +1236,7 @@ Module EP_Module1
 
 						' Check for deformed title metadata: leading numbers, or paths in the title.
 
-					ElseIf Val(f.Tag.title) > 0 Or f.Tag.title.Contains("\") Then
+					ElseIf Val(f.Tag.Title) > 0 Or f.Tag.Title.Contains("\") Then
 						f.Tag.Title = zx
 						f.Save()
 

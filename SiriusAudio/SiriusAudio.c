@@ -57,7 +57,8 @@ extern "C" {
 	static size_t pllen;
 	static struct SongInfo info;
 	static wchar_t* currentfilename = NULL;
-	static int autostart = 1; // 0 = false; 1= true
+	static int autostart = 1; // 0 = false; 1 = true
+	static int repeat = 1; // 0 = false; 1 = true
 	static int playstate = SEP_Undefined;
 
 	// ************************************************************
@@ -83,6 +84,8 @@ extern "C" {
 	DLL_EXPORT void PlayPause(void);
 	DLL_EXPORT int GetAutostart(void);
 	DLL_EXPORT void SetAutostart(int i);
+	DLL_EXPORT int GetRepeat(void);
+	DLL_EXPORT void SetRepeat(int i);
 	DLL_EXPORT int GetPlaystate(void);
 	DLL_EXPORT int DequeueEvent(int* code, void** payload);
 
@@ -95,6 +98,8 @@ extern "C" {
 	void TerminateEventSystem(void);
 	void QueueEvent(int code, void* payload);
 	ma_result LoadAndPlaySong(const wchar_t* songpath);
+	wchar_t* GetPreviousSongName(void);
+	wchar_t* GetNextSongName(void);
 	int IsWMA(const char* path);
 
 	// Declarations for the event queue.
@@ -149,43 +154,6 @@ extern "C" {
 		return;
 	}
 	// ************************************************************
-	// Function to initialize the event queue.
-	// ************************************************************
-	void InitEventSystem(void)
-	{
-		InitializeCriticalSection(&g_eventLock);
-		g_eventHead = g_eventTail = 0;
-	}
-
-	// ************************************************************
-	// Function to terminate the event queue.
-	// ************************************************************
-	void TerminateEventSystem(void)
-	{
-		DeleteCriticalSection(&g_eventLock);
-	}
-	// ************************************************************
-	// Function add event information (event code, optional data)
-	// to the event queue.
-	// ************************************************************
-
-	void QueueEvent(int code, void* payload)
-	{
-		EnterCriticalSection(&g_eventLock);
-
-		int nextTail = (g_eventTail + 1) % MAX_EVENTS;
-
-		// Drop event if queue is full.
-		if (nextTail != g_eventHead) {
-			g_eventQueue[g_eventTail].code = code;
-			g_eventQueue[g_eventTail].payload = payload;
-			g_eventTail = nextTail;
-		}
-
-		LeaveCriticalSection(&g_eventLock);
-
-	}
-	// ************************************************************
 	// Function remove one event's information from the queue. This
 	// is done in the wrapper program's timer_tick event handler.
 	// ************************************************************
@@ -220,7 +188,42 @@ extern "C" {
 
 		return result;
 	}
+	// ************************************************************
+	// GetAutostart function.
+	// ************************************************************
+	DLL_EXPORT int GetAutostart(void)
+	{
+		return autostart;
+	}
+	// ************************************************************
+	// SetAutostart function
+	// ************************************************************
+	DLL_EXPORT void SetAutostart(int i)
+	{
+		autostart = i;
+	}
+	// ************************************************************
+	// GetRepeat function.
+	// ************************************************************
+	DLL_EXPORT int GetRepeat(void)
+	{
+		return repeat;
+	}
+	// ************************************************************
+	// SetRepeat function
+	// ************************************************************
+	DLL_EXPORT void SetRepeat(int i)
+	{
+		repeat = i;
+	}
+	// ************************************************************
+	// Playstate function
+	// ************************************************************
+	DLL_EXPORT int GetPlaystate(void)
+	{
+		return playstate;
 
+	}
 	// ************************************************************
 	//  LoadPlaylist
 	//  Receives a CRLF-separated UTF-16 playlist buffer from VB,
@@ -292,7 +295,6 @@ extern "C" {
 	// into it and returns it as BSTR, which Visual Basic can
 	// capture.
 	// ************************************************************
-
 	DLL_EXPORT BSTR GetPlaylist(void)
 	{
 		if (!plptr || pllen == 0)
@@ -344,7 +346,320 @@ extern "C" {
 		return count;
 
 	}
+	// ************************************************************
+	// Function to set the engine volume
+	// ************************************************************
+	DLL_EXPORT void SetVolume(float vol)
+	{
+		ma_engine_set_volume(&g_engine, vol);
 
+	}
+	// ************************************************************
+	// Function to retrieve the engine volume.
+	// ************************************************************
+	DLL_EXPORT float GetVolume(void)
+	{
+		return  ma_engine_get_volume(&g_engine);
+	}
+	// ************************************************************
+	// Function to return the index and filename of the current song.
+	// ************************************************************
+	DLL_EXPORT struct SongInfo* GetCurrentSong(void)
+	{
+
+		if (info.index == -1) {
+			if (info.filename)
+				SysFreeString(info.filename);
+
+			info.filename = SysAllocStringLen(L"", 0);  // empty string
+		}
+
+		return &info;
+
+	}
+	// ************************************************************
+	// Function to play the song at a current index into the
+	// playlist.
+	// ************************************************************
+	DLL_EXPORT void PlaySongAtIndex(int idx)
+	{
+
+		int count = PlaylistItemCount();
+		if (idx < 0 || idx >= count) {
+			QueueEvent(SEP_Error, L"Invalid Index");
+			return;
+		}
+
+		// Start at beginning of playlist text
+		wchar_t* p = plptr;
+		int current = 0;
+
+		// Walk to the idx-th line
+		while (current < idx) {
+			while (*p && *p != L'\n')
+				p++;
+			if (*p == L'\n')
+				p++;
+			current++;
+		}
+
+		// p now points to start of desired line
+		wchar_t* start = p;
+
+		// Find end of line
+		while (*p && *p != L'\n')
+			p++;
+
+		// Set size of filename.
+		size_t len = p - start;
+
+		// Trim trailing '\r' because playlist always uses CRLF
+		if (len > 0 && start[len - 1] == L'\r')
+			len--;
+
+		// Allocate separate buffer for currentfilename
+		wchar_t* cf = malloc((len + 1) * sizeof(wchar_t));
+		if (!cf) {
+			QueueEvent(SEP_Error, L"Out of memory allocating filename");
+			return;
+		}
+		// Copy the filename from the playlist and add a termination "\0".
+		wmemcpy(cf, start, len);
+		cf[len] = L'\0';
+
+		// Free any current filename.
+
+		if (currentfilename)
+			free(currentfilename);
+
+		// Save the selected filename.
+
+		currentfilename = cf;
+
+		// Update info for VB: BSTR + index
+		if (info.filename)
+			SysFreeString(info.filename);
+
+		info.filename = SysAllocStringLen(start, (UINT)len);
+		plidx = idx;
+		info.index = plidx;
+
+		// Start the song playing.
+		LoadAndPlaySong(currentfilename);
+
+	}
+	// ************************************************************
+	//  Play function, which toggles the play state.
+	// ************************************************************
+	DLL_EXPORT void PlayPause(void)
+	{
+
+		// What we do when PlayPause is called depends on the current playstate.
+
+		switch (playstate) {
+
+			// If the playstate is "ready", meaning the engine has been
+			// initialized, but nothing playing yet, fetch the first song.
+		case SEP_Ready:
+			currentfilename = GetNextSongName();
+
+			// GetNextSongName will return NULL if the playlist has reached the end and
+			// Repeat is not turned on.  In this case, stop the sound, queue the event and
+			// just exit.
+
+			if (!currentfilename) {
+				ma_sound_stop(&g_sound);
+				QueueEvent(SEP_MediaEnded, NULL);
+				break;
+			}
+
+			LoadAndPlaySong(currentfilename);
+			break;
+
+			// If the playstate is playing, pause the music.
+		case SEP_Playing:
+			ma_sound_stop(&g_sound);
+			playstate = SEP_Paused;
+			break;
+
+			// If the music has been stopped or paused, resume playing.
+		case SEP_Paused:
+		case SEP_Stopped:
+			ma_sound_start(&g_sound);
+			playstate = SEP_Playing;
+			break;
+
+		default:
+			break;
+		}
+
+		// Queue the event.
+
+		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
+
+	}
+	// ************************************************************
+	//  PlayNext function.
+	// ************************************************************
+	DLL_EXPORT void PlayNext(void)
+	{
+
+		// Raise the event.
+
+		playstate = SEP_ScanForward;
+		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
+
+		// Get the next song.
+		if (currentfilename) {
+			free(currentfilename);
+			currentfilename = NULL;
+		}
+		currentfilename = GetNextSongName();
+
+		// Stop any song currently playing
+		ma_sound_stop(&g_sound);
+
+		// Pass the name to the LoadAndPlaySong function
+		LoadAndPlaySong(currentfilename);
+
+	}
+	// ************************************************************
+	//  PlayPrevious function.
+	// ************************************************************
+	DLL_EXPORT void PlayPrevious(void)
+	{
+
+		// Raise the event. 
+		playstate = SEP_ScanReverse;
+		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
+
+		// Get the name of the previous song.
+		if (currentfilename) {
+			free(currentfilename);
+			currentfilename = NULL;
+		}
+		currentfilename = GetPreviousSongName();
+
+		// Stop any song currently playing
+		ma_sound_stop(&g_sound);
+
+		// Pass the song name to the LoadAndPlay function.
+
+		LoadAndPlaySong(currentfilename);
+
+	}
+	// ************************************************************
+	//  PlayStop function.
+	// ************************************************************
+	DLL_EXPORT void PlayStop(void)
+	{
+		ma_sound_stop(&g_sound);
+		ma_sound_seek_to_pcm_frame(&g_sound, 0);
+
+		playstate = SEP_Stopped;
+		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
+
+	}
+	// ************************************************************
+	// Function to take a song name, feed it to the engine and
+	// set the callback function for it.
+	// ************************************************************
+
+	ma_result LoadAndPlaySong(const wchar_t* songpath)
+	{
+		ma_result result;
+
+		// Convert UTF-16 filename to UTF-8 for miniaudio.
+		char utf8path[1024];
+		size_t converted = 0;
+		wcstombs_s(&converted, utf8path, sizeof(utf8path), songpath, _TRUNCATE);
+
+		// NOTE: LoadAndPlaySong takes ownership of currentfilename and frees it.
+		if (currentfilename) {
+			free(currentfilename);
+			currentfilename = NULL;
+		}
+
+		// Check if the file is a .wma file, which cannot be played here.
+		if (IsWMA(utf8path)) {
+			QueueEvent(SEP_UnreadableByMA, &info);
+			playstate = SEP_PlayingExternal;
+
+			return 0;
+		}
+
+		// If a sound has been initialized, unitialize it first.
+		if (g_soundInitialized) {
+			ma_sound_uninit(&g_sound);
+		}
+		g_soundInitialized = 1;
+
+		// Initialize a sound from the music file, using the utf8 path.
+		result = ma_sound_init_from_file(&g_engine, utf8path, 0, NULL, NULL, &g_sound);
+
+		// If we can't play the file, raise an event.  The wrapper will
+		// switch to the WMPLIB engine and try to play it.
+		if (result != MA_SUCCESS) {
+			QueueEvent(SEP_UnreadableByMA, &info);
+			playstate = SEP_PlayingExternal;
+			QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
+			return result;
+		}
+
+		// Set the callback function address, which will receive
+		// the signal when a song has ended.
+
+		ma_sound_set_end_callback(&g_sound, MediaEndCallback, NULL);
+
+		// Start the sound playing.
+		ma_sound_start(&g_sound);
+
+		// Send SongChanged event.
+		QueueEvent(SEP_SongChanged, &info);
+
+		// Set the playstate
+
+		playstate = SEP_Playing;
+		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
+		return MA_SUCCESS;
+	}
+	// ************************************************************
+	// Function to initialize the event queue.
+	// ************************************************************
+	void InitEventSystem(void)
+	{
+		InitializeCriticalSection(&g_eventLock);
+		g_eventHead = g_eventTail = 0;
+	}
+
+	// ************************************************************
+	// Function to terminate the event queue.
+	// ************************************************************
+	void TerminateEventSystem(void)
+	{
+		DeleteCriticalSection(&g_eventLock);
+	}
+	// ************************************************************
+	// Function add event information (event code, optional data)
+	// to the event queue.
+	// ************************************************************
+
+	void QueueEvent(int code, void* payload)
+	{
+		EnterCriticalSection(&g_eventLock);
+
+		int nextTail = (g_eventTail + 1) % MAX_EVENTS;
+
+		// Drop event if queue is full.
+		if (nextTail != g_eventHead) {
+			g_eventQueue[g_eventTail].code = code;
+			g_eventQueue[g_eventTail].payload = payload;
+			g_eventTail = nextTail;
+		}
+
+		LeaveCriticalSection(&g_eventLock);
+
+	}
 	// ************************************************************
 	// Function to return the next song in the playlist, and to 
 	// update the info structure, so it's always current.
@@ -358,6 +673,15 @@ extern "C" {
 		int count = PlaylistItemCount();
 		if (count == 0)
 			return SysAllocStringLen(L"", 0);
+
+		// If repeat is turned on, and we've just played the last song,
+		// then restart, by resetting the index.
+		
+		if (plidx == count - 1)
+			plidx = -1;
+
+		else if (plidx == -1 && repeat == 0)
+			return NULL;
 
 		// Initialize plidx if needed
 		// -1 means "no current song yet" → first Next should go to 0
@@ -515,275 +839,6 @@ extern "C" {
 		return currentfilename;
 	}
 	// ************************************************************
-	// Function to return the index and filename of the current song.
-	// ************************************************************
-	DLL_EXPORT struct SongInfo* GetCurrentSong(void)
-	{
-	
-		if (info.index == -1) {
-			if (info.filename)
-				SysFreeString(info.filename);
-
-			info.filename = SysAllocStringLen(L"", 0);  // empty string
-		}
-
-		return &info;
-
-	}
-	// ************************************************************
-	// Function to play the song at a current index into the
-	// playlist.
-	// ************************************************************
-	DLL_EXPORT void PlaySongAtIndex(int idx)
-	{
-	
-		int count = PlaylistItemCount();
-		if (idx < 0 || idx >= count) {
-			QueueEvent(SEP_Error, L"Invalid Index");
-			return;
-		}
-
-		// Start at beginning of playlist text
-		wchar_t* p = plptr;
-		int current = 0;
-
-		// Walk to the idx-th line
-		while (current < idx) {
-			while (*p && *p != L'\n')
-				p++;
-			if (*p == L'\n')
-				p++;
-			current++;
-		}
-
-		// p now points to start of desired line
-		wchar_t* start = p;
-
-		// Find end of line
-		while (*p && *p != L'\n')
-			p++;
-
-		// Set size of filename.
-		size_t len = p - start;
-
-		// Trim trailing '\r' because playlist always uses CRLF
-		if (len > 0 && start[len - 1] == L'\r')
-			len--;
-
-		// Allocate separate buffer for currentfilename
-		wchar_t* cf = malloc((len + 1) * sizeof(wchar_t));
-		if (!cf) {
-			QueueEvent(SEP_Error, L"Out of memory allocating filename");
-			return;
-		}
-		// Copy the filename from the playlist and add a termination "\0".
-			wmemcpy(cf, start, len);
-			cf[len] = L'\0';
-
-		// Free any current filename.
-
-			if (currentfilename)
-				free(currentfilename);
-
-		// Save the selected filename.
-
-			currentfilename = cf;
-
-		// Update info for VB: BSTR + index
-		if (info.filename)
-			SysFreeString(info.filename);
-
-		info.filename = SysAllocStringLen(start, (UINT)len);
-		plidx = idx;
-		info.index = plidx;
-
-		// Start the song playing.
-		LoadAndPlaySong(currentfilename);
-
-		// Raise the events.
-		playstate = SEP_Playing;
-		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
-		QueueEvent(SEP_SongChanged, &info);
-		
-	}
-	// ************************************************************
-	//  Play function, which toggles the play state.
-	// ************************************************************
-	DLL_EXPORT void PlayPause(void)
-	{
-
-	// What we do when PlayPause is called depends on the current playstate.
-	
-		switch (playstate) {
-
-	// If the playstate is "ready", meaning the engine has been
-	// initialized, but nothing playing yet, fetch the first song.
-		case SEP_Ready:
-			currentfilename = GetNextSongName();
-			LoadAndPlaySong(currentfilename);
-			break;
-
-		// If the playstate is playing, pause the music.
-		case SEP_Playing:
-			ma_sound_stop(&g_sound);
-			playstate = SEP_Paused;
-			break;
-
-		// If the music has been stopped or paused, resume playing.
-		case SEP_Paused:
-		case SEP_Stopped:
-			ma_sound_start(&g_sound);
-			playstate = SEP_Playing;
-			break;
-
-		default:
-			break;
-		}
-
-		// Queue the event.
-
-		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
-
-	}
-	// ************************************************************
-	//  PlayNext function.
-	// ************************************************************
-	DLL_EXPORT void PlayNext(void)
-	{
-	
-		// Raise the event.
-
-		playstate = SEP_ScanForward;
-		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
-
-		// Get the next song.
-		if (currentfilename) {
-			free(currentfilename);
-			currentfilename = NULL;
-		}
-		currentfilename = GetNextSongName();
-
-		// Stop any song currently playing
-		ma_sound_stop(&g_sound);
-
-		// Pass the name to the LoadAndPlaySong function
-		LoadAndPlaySong(currentfilename);
-
-		// Raise events
-
-		playstate = SEP_Playing;
-		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
-		QueueEvent(SEP_SongChanged, &info);
-
-	}
-	// ************************************************************
-	//  PlayPrevious function.
-	// ************************************************************
-	DLL_EXPORT void PlayPrevious(void)
-	{
-	
-		// Raise the event. 
-		playstate = SEP_ScanReverse;
-		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
-
-		// Get the name of the previous song.
-		if (currentfilename) {
-			free(currentfilename);
-			currentfilename = NULL;
-		}
-		currentfilename = GetPreviousSongName();
-
-		// Stop any song currently playing
-		ma_sound_stop(&g_sound);
-
-		// Pass the song name to the LoadAndPlay function.
-
-		LoadAndPlaySong(currentfilename);
-
-		// Raise events
-
-		playstate = SEP_Playing;
-		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
-		QueueEvent(SEP_SongChanged, &info);
-
-	}
-	// ************************************************************
-	//  PlayStop function.
-	// ************************************************************
-	DLL_EXPORT void PlayStop(void)
-	{
-		ma_sound_stop(&g_sound); 
-		ma_sound_seek_to_pcm_frame(&g_sound, 0);
-
-		playstate = SEP_Stopped;
-		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
-
-	}
-	// ************************************************************
-	// Function to take a song name, feed it to the engine and
-	// set the callback function for it.
-	// ************************************************************
-
-	ma_result LoadAndPlaySong(const wchar_t* songpath)
-	{
-		ma_result result;
-
-		// Convert UTF-16 filename to UTF-8 for miniaudio.
-		char utf8path[1024];
-		size_t converted = 0;
-		wcstombs_s(&converted, utf8path, sizeof(utf8path), songpath, _TRUNCATE);
-
-		// NOTE: LoadAndPlaySong takes ownership of currentfilename and frees it.
-		if (currentfilename) {
-			free(currentfilename);
-			currentfilename = NULL;
-		}
-
-		// Check if the file is a .wma file, which cannot be played here.
-		if (IsWMA(utf8path)) {
-			QueueEvent(SEP_UnreadableByMA, &info);
-			playstate = SEP_PlayingExternal;
-
-			return 0;
-		}
-
-		// If a sound has been initialized, unitialize it first.
-		if (g_soundInitialized) {
-			ma_sound_uninit(&g_sound);
-		}
-		g_soundInitialized = 1;
-
-		// Initialize a sound from the music file, using the utf8 path.
-		result = ma_sound_init_from_file(&g_engine, utf8path, 0, NULL, NULL, &g_sound);
-
-		// If we can't play the file, raise an event.  The wrapper will
-		// switch to the WMPLIB engine and try to play it.
-		if (result != MA_SUCCESS) {
-			const char* desc = ma_result_description(result);
-			char* copy = _strdup(desc);   // or malloc + strcpy
-			int wlen = MultiByteToWideChar(CP_UTF8, 0, desc, -1, NULL, 0);
-			wchar_t* wmsg = malloc(wlen * sizeof(wchar_t));
-			MultiByteToWideChar(CP_UTF8, 0, desc, -1, wmsg, wlen);
-
-			QueueEvent(SEP_Error, wmsg);
-			QueueEvent(SEP_UnreadableByMA, &info);
-			return result;
-		}
-
-		// Set the callback function address, which will receive
-		// the signal when a song has ended.
-
-		ma_sound_set_end_callback(&g_sound, MediaEndCallback, NULL);
-
-		// Start the sound playing.
-		ma_sound_start(&g_sound);
-
-		// Send SongChanged event.
-		QueueEvent(SEP_SongChanged, &info);
-
-		return MA_SUCCESS;
-	}
-	// ************************************************************
 	// Function to test for .wma files, which miniaudio cannot play.
 	// ************************************************************
 	int IsWMA(const char* path)
@@ -807,40 +862,8 @@ extern "C" {
 	// ************************************************************
 	void MediaEndCallback(ma_sound* pSound, void* pUserData)
 	{
-		// Trigger the playstate change event with MediaEnded.
-		playstate = SEP_MediaEnded;
-		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
-
-	}
-
-	// ************************************************************
-	// GetAutostart function.
-	// ************************************************************
-	DLL_EXPORT int GetAutostart(void)
-	{
-		return autostart;
-	}
-	// ************************************************************
-	// SetAutostart function
-	// ************************************************************
-	DLL_EXPORT void SetAutostart(int i)
-	{
-		autostart = i;
-	}
-	// ************************************************************
-	// Playstate function
-	// ************************************************************
-	DLL_EXPORT int GetPlaystate(void)
-	{
-		return playstate;
-
-	}
-	// ************************************************************
-	//  Simple test function (optional)
-	// ************************************************************
-	DLL_EXPORT int Ping(void)
-	{
-		return 42;
+			playstate = SEP_MediaEnded;
+			QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
 	}
 
 	// ************************************************************

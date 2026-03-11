@@ -1,6 +1,7 @@
 ﻿Imports System.Data.SqlClient
 Imports System.Drawing.Drawing2D
 Imports System.Drawing.Imaging
+Imports System.Globalization
 Imports System.IO
 Imports System.Text
 Imports System.Text.RegularExpressions
@@ -69,7 +70,7 @@ Public Class frmMain
 
 		Dim ii As Integer
 		Dim zx As String
-		Dim g As Graphics = PictureBox1.CreateGraphics
+		Dim g As Graphics = picLibraryDisplay.CreateGraphics
 		Dim rect As Rectangle
 
 		ProgramName = "Sirius EasyPlayer"
@@ -162,7 +163,7 @@ Public Class frmMain
 		' Cause the list to display.
 
 		Show()
-		PictureBox1.Invalidate()
+		picLibraryDisplay.Invalidate()
 
 		' If we were passed the name of a playlist, open it now.
 
@@ -199,9 +200,9 @@ Public Class frmMain
 	Private Sub frmMain_Resize(sender As Object, e As EventArgs) Handles Me.Resize
 
 		If Me.WindowState = FormWindowState.Normal Then
-			PictureBox1.Height = SplitContainer1.Panel1.Height - 50
-			Panel1.Height = PictureBox1.Height
-			Panel1.Left = PictureBox1.Width - Panel1.Width
+			picLibraryDisplay.Height = SplitContainer1.Panel1.Height - 50
+			Panel1.Height = picLibraryDisplay.Height
+			Panel1.Left = picLibraryDisplay.Width - Panel1.Width
 			VScrollBar1.Height = Panel1.Height
 			VScrollBar1.Location = New Point(5, 0)
 			lstPlayList.Location = New Point(0, lblHeader_0.Top + lblHeader_0.Height)
@@ -246,8 +247,8 @@ Public Class frmMain
 			' Clear out the display lines collection, and erase the picturebox.
 
 			DisplayLines.Clear()
-			Using g As Graphics = PictureBox1.CreateGraphics
-				g.FillRectangle(Brushes.White, PictureBox1.Bounds)
+			Using g As Graphics = picLibraryDisplay.CreateGraphics
+				g.FillRectangle(Brushes.White, picLibraryDisplay.Bounds)
 			End Using
 
 			' Recreate the new database.  The SQL commands will drop the existing one first, then
@@ -272,7 +273,7 @@ Public Class frmMain
 
 				' Force the newly-recreated library to display.
 
-				PictureBox1.Invalidate()
+				picLibraryDisplay.Invalidate()
 			End If
 		End If
 	End Sub
@@ -320,7 +321,7 @@ Public Class frmMain
 	' A paint event has ocurred.  Display the song records.
 	'
 	'*********************************************************
-	Private Sub PictureBox1_Paint(ByVal sender As Object, e As PaintEventArgs) Handles PictureBox1.Paint
+	Private Sub picLibraryDisplay_Paint(ByVal sender As Object, e As PaintEventArgs) Handles picLibraryDisplay.Paint
 
 		' Declare variables
 
@@ -359,7 +360,7 @@ Public Class frmMain
 			Try
 				' Make sure we have enough room to draw another row.
 
-				If y + SongLineHeight > PictureBox1.Height Then Exit For
+				If y + SongLineHeight > picLibraryDisplay.Height Then Exit For
 
 				Artist = GetR(LibraryTable.Rows(jj), "ArtistName")
 				Album = GetR(LibraryTable.Rows(jj), "AlbumName")
@@ -385,14 +386,14 @@ Public Class frmMain
 
 				Select Case ItemType
 					Case MusicItemType.Artist
-						rect = New Rectangle(INDENT, y, PictureBox1.Width, ArtistLineHeight)
+						rect = New Rectangle(INDENT, y, picLibraryDisplay.Width, ArtistLineHeight)
 						dl.Bounds = rect
 						dl.ArtistName = Artist
 						y = DrawOneLine(dl, e.Graphics)
 
 					Case MusicItemType.Album
 						dl.ImageBounds = New Rectangle(INDENT, y, 32, 32)
-						rect = New Rectangle(INDENT + 34, y + (34 - g.MeasureString("X", fAlbum).Height) / 2, PictureBox1.Width - 34, 34)
+						rect = New Rectangle(INDENT + 34, y + (34 - g.MeasureString("X", fAlbum).Height) / 2, picLibraryDisplay.Width - 34, 34)
 						dl.Bounds = rect
 						dl.ArtistName = Artist
 						dl.AlbumName = Album
@@ -400,7 +401,7 @@ Public Class frmMain
 						y = DrawOneLine(dl, e.Graphics)
 
 					Case MusicItemType.Song
-						rect = New Rectangle(INDENT + 34, y, PictureBox1.Width, SongLineHeight)
+						rect = New Rectangle(INDENT + 34, y, picLibraryDisplay.Width, SongLineHeight)
 						dl.Bounds = rect
 						dl.ArtistName = Artist
 						dl.AlbumName = Album
@@ -441,7 +442,7 @@ Public Class frmMain
 	' The mouse is pressed over an item.  Highlight it.
 
 	'**********************************************************
-	Private Sub PictureBox1_MouseUp(sender As Object, e As MouseEventArgs) Handles PictureBox1.MouseUp
+	Private Sub picLibraryDisplay_MouseUp(sender As Object, e As MouseEventArgs) Handles picLibraryDisplay.MouseUp
 
 		' Get the previously-selected line, if any, and the
 		' newly selected line.
@@ -452,7 +453,28 @@ Public Class frmMain
 		' If the right mouse button is clicked over the album image, bring up the context menu.
 
 		If e.Button = MouseButtons.Right AndAlso dl2 IsNot Nothing AndAlso dl2.ImageBounds.Contains(e.Location) Then
-			ContextMenuStrip2.Show(PictureBox1, e.Location)
+			ContextMenuStrip2.Show(picLibraryDisplay, e.Location)
+		End If
+
+		' If the right mouse button is clicked over an artist name, an album name or a song name,
+		' bring up the context menu.
+
+		If e.Button = MouseButtons.Right AndAlso dl2 IsNot Nothing AndAlso Not dl2.ImageBounds.Contains(e.Location) Then
+			If frmMusicPlayer.IsOpen Then mnuCMPlayItem.Enabled = False Else mnuCMPlayItem.Enabled = True
+
+			' Determine whether we're playing an album
+			Select Case dl2.ItemType
+				Case MusicItemType.Artist
+					mnuCMPlayItem.Text = "&Play Artist"
+					mnuCMPlayItem.Tag = MusicItemType.Artist & ":Artist:" & dl2.ArtistName
+				Case MusicItemType.Album
+					mnuCMPlayItem.Text = "&Play Album"
+					mnuCMPlayItem.Tag = MusicItemType.Album & ":Artist:" & dl2.ArtistName & ":Album:" & dl2.AlbumName
+				Case MusicItemType.Song
+					mnuCMPlayItem.Text = "&Play Song"
+					mnuCMPlayItem.Tag = MusicItemType.Song & ":Artist:" & dl2.ArtistName & ":Album:" & dl2.AlbumName & ":Song:" & dl2.SongName
+			End Select
+			ContextMenuStrip3.Show(picLibraryDisplay, e.Location)
 		End If
 
 		' If we have a valid line selected, then make it the 
@@ -464,7 +486,7 @@ Public Class frmMain
 		' The DrawOneLine routine will highlight a selected line
 		' and un-highlight any other.
 
-		Using g As Graphics = PictureBox1.CreateGraphics
+		Using g As Graphics = picLibraryDisplay.CreateGraphics
 			If dl1 IsNot Nothing Then DrawOneLine(dl1, g)
 			If dl2 IsNot Nothing Then DrawOneLine(dl2, g)
 		End Using
@@ -475,7 +497,7 @@ Public Class frmMain
 	' An item is double-clicked in the library display.
 
 	'***********************************************************************
-	Private Sub Picturebox1_DoubleClick(sender As Object, e As EventArgs) Handles PictureBox1.DoubleClick
+	Private Sub picLibraryDisplay_DoubleClick(sender As Object, e As EventArgs) Handles picLibraryDisplay.DoubleClick
 
 		' Declare variables.
 
@@ -565,7 +587,7 @@ Public Class frmMain
 		Dim y As Integer
 		Dim AlbumImage As Bitmap = Nothing
 		Dim bH As New SolidBrush(Color.FromArgb(128, Color.DarkGoldenrod))
-		Dim bB1 As New SolidBrush(PictureBox1.BackColor)
+		Dim bB1 As New SolidBrush(picLibraryDisplay.BackColor)
 
 		' Begin drawing the specified DisplayLine object to the picturebox.
 
@@ -792,7 +814,7 @@ Public Class frmMain
 
 			' Now redraw the list.
 
-			PictureBox1.Invalidate()
+			picLibraryDisplay.Invalidate()
 		Catch e As Exception
 			MsgBox("MoveDown failed." & vbCrLf & e.Message, MsgBoxStyle.Exclamation, "Scroll Down")
 		End Try
@@ -831,7 +853,7 @@ Public Class frmMain
 
 			' Now redraw the list.
 
-			PictureBox1.Invalidate()
+			picLibraryDisplay.Invalidate()
 
 
 		Catch e As Exception
@@ -936,7 +958,7 @@ Public Class frmMain
 	' The Play Music menu option is selected.
 
 	'***********************************************************************
-	Private Sub mnuPlay_Click(sender As Object, e As EventArgs) Handles mnuPlay.Click
+	Private Sub mnuOpenPlayer_Click(sender As Object, e As EventArgs) Handles mnuOpenPlayer.Click
 		frmMusicPlayer.Show()
 		frmMain_Resize(Me, EventArgs.Empty)
 	End Sub
@@ -1101,6 +1123,19 @@ Public Class frmMain
 	'**************************************************
 	Private Sub Play_Click(sender As Object, e As EventArgs) Handles mnuCMPlay.Click
 
+		' Declare variables
+
+		Dim ii As Integer
+		Dim sb As New StringBuilder
+
+		' Create a songlist for the music player.
+
+		For ii = 0 To lstPlayList.Items.Count - 1
+			sb.Append(lstPlayList.Items(ii) & vbCrLf)
+		Next ii
+
+		' Assemble a song list of the selected song.
+
 		'   Create a music player in the panel below the playlist list box.'
 
 		MP = New MediaPlayer
@@ -1110,11 +1145,21 @@ Public Class frmMain
 
 		AddHandler MP.PlayerStop, AddressOf MP_PlayerStop
 
+		' Position the music player over the playlist list box.
+
 		MP.Location = New Point((SplitContainer1.Panel2.Width - MP.Width) / 2, 0)
 		lstPlayList.Height = SplitContainer1.Panel2.Height - MP.Height - lblHeader_0.Height
 		pnlMusicPlayer.Visible = True
 
+		' Add the songlist to the music player. It will play automatically since autostart defaults to true.
+
+		MP.Songlist = sb.ToString
+
+		' Disable the listbox and the Open Music Player menu options.
+
 		lstPlayList.Enabled = False
+		mnuOpenPlayer.Enabled = False
+
 	End Sub
 	'***********************************************************************
 
@@ -1156,7 +1201,7 @@ Public Class frmMain
 			DisplayLines.SelectedLine = dl
 
 			AlbumArt = Image.FromFile(zx)
-			Using g As Graphics = PictureBox1.CreateGraphics
+			Using g As Graphics = picLibraryDisplay.CreateGraphics
 				g.DrawImage(AlbumArt, DisplayLines.SelectedLine.ImageBounds)
 			End Using
 		Else
@@ -1192,7 +1237,7 @@ Public Class frmMain
 
 						' Redraw the album image to show the new art.
 
-						Using g As Graphics = PictureBox1.CreateGraphics
+						Using g As Graphics = picLibraryDisplay.CreateGraphics
 							g.DrawImage(smallArt, DisplayLines.SelectedLine.ImageBounds)
 						End Using
 					End Using
@@ -1213,6 +1258,77 @@ Public Class frmMain
 			End Try
 		End If
 	End Sub
+	'**********************************************************
+
+	' Event handler for the context menu Play (artist, album, song)
+	' menu click event.
+
+	'**********************************************************
+	Private Sub mnuCMPlayItem_Click(sender As Object, e As EventArgs) Handles mnuCMPlayItem.Click
+
+		' Declare variables
+
+		Dim zx As String = DirectCast(sender, ToolStripMenuItem).Tag
+		Dim parts = zx.Split(":")
+		Dim Songs As IReadOnlyCollection(Of String) = Nothing
+		Dim MusicFolder As String = AddDirSeparator(GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", ""))
+		Dim song As String
+		Dim sb As New StringBuilder
+
+		' Determine whether we are going to play an artist, an album or a song.
+
+		Select Case parts(0)
+			Case 0 ' "Artist"
+				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3")
+			Case 1 ' "Album"
+				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2) & "\" & parts(4), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3")
+			Case 2 ' "Song"
+				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2) & "\" & parts(4) & "\" & parts(6), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3")
+		End Select
+
+		' Create a sorted list of the songs.
+
+		Dim Sorted = Songs.OrderBy(Function(s) s).ToArray()
+
+		' Assemble a song list of the selected song.
+
+		If Not Songs Is Nothing Then
+			For Each song In Sorted
+				sb.Append(song & vbCrLf)
+			Next song
+
+			'   Create a music player in the panel below the playlist list box.'
+
+			MP = New MediaPlayer
+			pnlMusicPlayer.Controls.Add(MP)
+
+			' Wire up the handler.
+
+			AddHandler MP.PlayerStop, AddressOf MP_PlayerStop
+
+			MP.Location = New Point((SplitContainer1.Panel2.Width - MP.Width) / 2, 0)
+			lstPlayList.Height = SplitContainer1.Panel2.Height - MP.Height - lblHeader_0.Height
+
+			MP.Songlist = sb.ToString ' This will start the player automatically since autostart defaults to true
+			pnlMusicPlayer.Visible = True
+
+			' Disable the open player menu option.
+
+			mnuOpenPlayer.Enabled = False
+
+		End If
+	End Sub
+	'**********************************************************
+
+	' Event handler for the context menu Paste Album Art menu
+	' click event.
+
+	'**********************************************************
+	Private Sub mnuCMPasteAlbumArt_Click(sender As Object, e As EventArgs) Handles mnuCMPasteAlbumArt.Click
+
+
+	End Sub
+
 	'**********************************************************
 
 	' Event handler for the status label Text Changed event.
@@ -1250,6 +1366,10 @@ Public Class frmMain
 		' Remove the handler.
 
 		RemoveHandler MP.PlayerStop, AddressOf MP_PlayerStop
+
+		' Enable the Open Music Player menu option again.
+
+		mnuOpenPlayer.Enabled = True
 
 	End Sub
 	'***********************************************************************
@@ -1298,7 +1418,7 @@ Public Class frmMain
 	'***********************************************************************
 	Public Sub RefreshDisplay()
 
-		Using g As Graphics = PictureBox1.CreateGraphics
+		Using g As Graphics = picLibraryDisplay.CreateGraphics
 			For Each dl In DisplayLines.DisplayLines
 				DrawOneLine(dl, g)
 			Next dl
@@ -1328,7 +1448,7 @@ Public Class frmMain
 		sb.AppendLine("<smil>")
 		sb.AppendLine("  <head>")
 		'sb.AppendLine("      <meta name = ""Generator"" content=""Microsoft Windows Media Player -- 12.0.26100.3624""/>")
-		sb.AppendLine("      <meta name = ""Generator"" content=""Sirius Sirius EasyPlayer -- 1.0.0.0""/>")
+		sb.AppendLine("      <meta name = ""Generator"" content=""Sirius EasyPlayer -- 1.0.0.0""/>")
 		sb.AppendLine("      <meta name = ""ItemCount"" content=""" & ListBox1.Items.Count & """/>")
 		sb.AppendLine("    <title>" & EscapeXml(playlistTitle) & "</title>")
 		sb.AppendLine("  </head>")
@@ -1341,8 +1461,8 @@ Public Class frmMain
 			For jj = 0 To ListBox1.Items.Count - 1
 				zx = ListBox1.Items(jj)
 				Dim fixed As String = Regex.Replace(zx, "^[A-Za-z]:\\Music\\", "..\")
-				zx = zx.Replace("&", "&amp;").Replace("'", "&apos;")
-				sb.AppendLine($"      <media src=""{fixed}""/>")
+				zx = EscapeXml(fixed)
+				sb.AppendLine($"      <media src=""{zx}""/>")
 			Next jj
 		End If
 
@@ -1523,7 +1643,4 @@ Public Class frmMain
 		End Select
 	End Sub
 
-	Private Sub PictureBox1_Click(sender As Object, e As EventArgs) Handles PictureBox1.Click
-
-	End Sub
 End Class

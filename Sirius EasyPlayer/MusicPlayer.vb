@@ -11,10 +11,6 @@ Imports System.Security.Cryptography
 Imports System.Xml
 Imports TagLib
 Imports WMPLib
-
-
-
-
 '*******************************************************
 
 ' Media Player Control
@@ -57,7 +53,6 @@ Public Class MediaPlayer
 	Private VolumeRect As New Rectangle(60, ButtonY, 32, 32)
 	Private mPlayer As New SiriusAudio
 	Private mAlbumArt As Image
-
 	Private AlbumImage As Image = Nothing
 
 	Private Enum MediaPlayerAction
@@ -111,11 +106,17 @@ Public Class MediaPlayer
 		AddHandler mPlayer.SongChanged, AddressOf saSongChanged
 		AddHandler mPlayer.PlaylistLoading, AddressOf PlaylistLoading
 		AddHandler mPlayer.PlaylistLoaded, AddressOf PlaylistLoaded
+		AddHandler mPlayer.PlayStateChanged, AddressOf PlayStateChange
+
+		If lstPlayList IsNot Nothing Then
+
+			AddHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
+			AddHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
+		End If
 
 		MusicFolder = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
 
 		Me.SetStyle(ControlStyles.UserMouse, True) ' This makes sure mouse events work.
-
 	End Sub
 	'*******************************************************
 
@@ -129,12 +130,12 @@ Public Class MediaPlayer
 		RemoveHandler mPlayer.SongChanged, AddressOf saSongChanged
 		RemoveHandler mPlayer.PlaylistLoading, AddressOf PlaylistLoading
 		RemoveHandler mPlayer.PlaylistLoaded, AddressOf PlaylistLoaded
+		RemoveHandler mPlayer.PlayStateChanged, AddressOf PlayStateChange
 		If lstPlayList IsNot Nothing Then
 			RemoveHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
 			RemoveHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
 		End If
 		mPlayer.StopAll()
-
 		MyBase.Dispose()
 	End Sub
 
@@ -193,18 +194,34 @@ Public Class MediaPlayer
 				DrawButton(g, Button4, Color.Gray, Color.LightGray, "Stop", "Pressed")
 				RaiseEvent ButtonPressed(CInt(MediaPlayerAction.ActionStop))
 			ElseIf Math.Abs(distance - radius) <= 8 Then ' Only recognize clicks close to the outer edge
-				' Convert clicked position to an angle relative to center
-				Dim rawAngle As Single = 360 - (Math.Atan2(center.Y - adjustedPointF.Y, adjustedPointF.X - center.X) * (180 / Math.PI))
-				rawAngle = rawAngle Mod 360
 
-				Dim MappedVolume As Integer
-				If rawAngle >= 120 And rawAngle < 360 Then MappedVolume = (rawAngle - 120) / 240 * 100 Else MappedVolume = (67 + CInt(rawAngle / 60 * 34)) Mod 100
+				' Normalize rawAngle into a continuous 150–300 sweep
 
-				' Convert angle to volume (150° → 0%, 30° → 100%)
-				'Dim mappedVolume As Integer = CInt(Math.Max(0, Math.Min(100, (150 - rawAngle) / (150 - 30) * 100)))
-				' Apply volume change
-				'mPlayer.settings.volume = MappedVolume
-				DrawVolumeControl(g)
+				Dim angle As Single = CSng(Math.Atan2(adjustedPointF.Y - center.Y, adjustedPointF.X - center.X) * (180 / Math.PI))
+
+				If angle < 0 Then angle += 360                    ' Rotate coordinate system so 150° becomes 0°
+
+
+				Const minAngle As Single = 150
+				Const maxAngle As Single = 300
+				Const sweep As Single = maxAngle - minAngle   ' = 150	
+
+				' If the click is outside the usable arc, do nothing
+				If angle < minAngle And angle > maxAngle Then
+					Return
+				End If
+
+				' Normalize angle into the 150–300 band
+				If angle < minAngle Then angle += 360
+
+				' Convert angle to volume
+
+				Dim vol As Single = (angle - 150) / 150   ' 0.0 → 1.0
+				Dim MappedVolume As Int16 = CInt(vol * 100)
+
+				' Apply Volume change
+				mPlayer.Volume = MappedVolume / 100
+				DrawVolumeControl(g, minAngle, sweep)
 			End If
 		End Using
 		picControl.Refresh()
@@ -315,7 +332,7 @@ Public Class MediaPlayer
 
 		' Draw the volume control.
 
-		DrawVolumeControl(g)
+		DrawVolumeControl(g, 150, 270)
 
 		' Cleanup
 		pen.Dispose()
@@ -400,7 +417,7 @@ Public Class MediaPlayer
 	' Sub to draw the volume control.
 
 	'**********************************************************
-	Sub DrawVolumeControl(ByVal g As Graphics)
+	Sub DrawVolumeControl(ByVal g As Graphics, minAngle As Single, sweep As Single)
 
 		' Declare variables.
 
@@ -425,10 +442,10 @@ Public Class MediaPlayer
 				g.DrawEllipse(Pens.Black, insetRect) 'Adds smooth edge to circle.
 			End Using
 		End Using
-
+		indicatorAngle = minAngle + (sweep * mPlayer.Volume)
 		' Draw volume indicator reaching full radius
 		Using indicatorPen As New Pen(Color.White, 2)
-			'If mPlayer.settings.volume <= 67 Then indicatorAngle = 150 + (210 * mPlayer.settings.volume / 100) Else indicatorAngle = mPlayer.settings.volume / 100 * 30
+			indicatorAngle = 150 + (150 * mPlayer.Volume)
 			Dim indicatorStart As PointF = PolarToCartesian(center, radius * 0.2, indicatorAngle)
 			Dim indicatorEnd As PointF = PolarToCartesian(center, radius, indicatorAngle)
 			g.DrawLine(indicatorPen, indicatorStart, indicatorEnd)
@@ -484,7 +501,7 @@ Public Class MediaPlayer
 				zx = zx.Substring(1)
 			End If
 
-			' Parse the entry to get artist, album and song.
+			'	' Parse the entry to get artist, album and song.
 
 			Dim wx As String() = zx.Split("\")
 			Dim Artist As String = wx(1)
@@ -507,13 +524,51 @@ Public Class MediaPlayer
 
 			If ContainsError Then g.DrawString("V", New Font("Wingdings 2", e.Font.SizeInPoints), Brushes.Red, e.Bounds.Location)
 
-			' See if the item is selected.
+			'	' See if the item is selected.
 
-			If isSelected Then
-				g.DrawString(Song, f, Brushes.Goldenrod, rect)
-			Else
-				g.DrawString(Song, f, Brushes.Black, rect)
+			'	If isSelected Then
+			'		g.DrawString(Song, f, Brushes.Goldenrod, rect)
+			'	Else
+			'		g.DrawString(Song, f, Brushes.Black, rect)
+			'	End If
+			'End If
+
+			g.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
+
+			Dim isCurrent As Boolean = (e.Index = lstPlayList.SelectedIndex)
+
+			' Normal background
+			Using bg As New SolidBrush(lstPlayList.BackColor)
+				g.FillRectangle(bg, e.Bounds)
+			End Using
+
+			' Oval highlight for current item
+			If isCurrent Then
+				Dim inset As Integer = 4
+
+				Dim ovalRect As New Rectangle(
+				    e.Bounds.Left + inset,
+				    e.Bounds.Top + inset,
+				    e.Bounds.Width - inset * 2,
+				    e.Bounds.Height - inset * 2
+				)
+
+				Using br As New SolidBrush(Color.FromArgb(90, 255, 215, 0)) ' soft gold glow
+					g.FillEllipse(br, ovalRect)
+				End Using
 			End If
+
+			' Draw text
+			Dim textColor As Color = If(isCurrent, Color.Black, lstPlayList.ForeColor)
+
+			TextRenderer.DrawText(
+			    g,
+			    Song,
+			    lstPlayList.Font,
+			    e.Bounds,
+			    textColor,
+			    TextFormatFlags.Left Or TextFormatFlags.VerticalCenter
+			)
 		End If
 	End Sub
 
@@ -606,11 +661,30 @@ Public Class MediaPlayer
 		RaiseEvent PlayListStartLoad()
 	End Sub
 	'**********************************************************
+
 	' Handler for the playlist endload event.
+
 	'**********************************************************
 	Private Sub PlaylistLoaded()
 		RaiseEvent PlayListEndLoad()
 	End Sub
+	'**********************************************************
+
+	' Handler for the PlayStateChanged event.
+
+	'**********************************************************
+	Private Sub PlayStateChange(ev As Integer)
+		RaiseEvent PlayStateChanged(ev)
+	End Sub
+	'**********************************************************
+
+	' The play method.
+
+	'**********************************************************
+	Public Sub Play()
+		mPlayer.Play()
+	End Sub
+
 	'**********************************************************
 
 	' The current song has changed.
@@ -681,11 +755,13 @@ Public Class MediaPlayer
 
 		' Set the current song as the selected item in the list box.
 
-		lstPlayList.SelectedIndex = idx
+		If Not lstPlayList Is Nothing Then
+			lstPlayList.SelectedIndex = idx
 
-		' Make sure the selected song is visible in the list box.
+			' Make sure the selected song is visible in the list box.
 
-		lstPlayList.TopIndex = Math.Max(0, lstPlayList.SelectedIndex - 10)
+			lstPlayList.TopIndex = Math.Max(0, lstPlayList.SelectedIndex - 10)
+		End If
 
 		' Cleaup
 		panelbrush.Dispose()
@@ -694,6 +770,7 @@ Public Class MediaPlayer
 
 		RaiseEvent SongChanged()
 	End Sub
+
 	'**********************************************************
 
 	' The listbox property.
@@ -746,33 +823,44 @@ Public Class MediaPlayer
 	End Property
 	'**********************************************************
 
-	' The Volume property.
+	' The Volume property.  This is a value from 0.0-1.0
 
 	'**********************************************************
-	Public Property Volume As Integer
+	Public Property Volume As Single
 		Get
-			Volume = 100
+			Volume = mPlayer.Volume  ' The player requires 0.0-1.0
 		End Get
-		Set(value As Integer)
-			Using g As Graphics = Me.CreateGraphics
-				DrawVolumeControl(g)
-			End Using
+		Set(value As Single)
+			If value >= 0.0 And value <= 1.0 Then
+				mPlayer.Volume = value
+
+				Using g As Graphics = Me.CreateGraphics
+					'DrawVolumeControl(g)
+				End Using
+			End If
 		End Set
 	End Property
 	'**********************************************************
-
-	' The Playlist property.
-
+	' The Songlist property.  This takes a list of songs
+	' separated by CrLf.
+	'**********************************************************
+	Public Property Songlist As String
+		Get
+			Return mPlayer.Songlist
+		End Get
+		Set(value As String)
+			mPlayer.Songlist = value
+		End Set
+	End Property
+	'**********************************************************
+	' The Playlist property. This takes the name of a Windows
+	' Playlist (.wmp) file.
 	'**********************************************************
 	Public Property Playlist As String
 		Get
 			Playlist = mPlaylist
 		End Get
 		Set(value As String)
-
-			' Declare variables
-
-			Dim i As Integer
 
 			' If the media player has not been set, raise an error.
 
@@ -784,7 +872,8 @@ Public Class MediaPlayer
 
 			mPlaylist = value
 
-			' Set the playlist property to the name of the playlist file.
+			' Set the playlist property to the name of the playlist file.  It will play automatically
+			' as the player defaults to autostart.
 
 			mPlayer.Playlist = mPlaylist
 

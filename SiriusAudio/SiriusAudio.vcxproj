@@ -114,8 +114,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>copy "D:\Sirius EasyPlayer\x64\debug\SiriusAudio.dll" "D:\Sirius EasyPlayer\Test SiriusAudio\bin\Debug\SiriusAudio.dll"
-copy "d:\sirius easyplayer\x64\debug\siriusaudio.dll" "d:\sirius easyplayer\sirius easyplayer\bin\debug\SiriusAudio.dll"</Command>
+      <Command>copy "d:\sirius easyplayer\x64\debug\siriusaudio.dll" "d:\sirius easyplayer\sirius easyplayer\bin\debug\SiriusAudio.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
