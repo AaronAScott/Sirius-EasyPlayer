@@ -55,6 +55,7 @@ extern "C" {
 	static wchar_t* currentptr;
 	static int plidx;
 	static size_t pllen;
+	static int count = 0;
 	static struct SongInfo info;
 	static wchar_t* currentfilename = NULL;
 	static int autostart = 1; // 0 = false; 1 = true
@@ -320,7 +321,7 @@ extern "C" {
 		if (!plptr || pllen == 0)
 			return 0;
 
-		int count = 0;
+		count = 0;
 		wchar_t* p = plptr;
 
 		while (*p != L'\0')
@@ -516,12 +517,16 @@ extern "C" {
 		}
 		currentfilename = GetNextSongName();
 
-		// Stop any song currently playing
-		ma_sound_stop(&g_sound);
+		// Make sure we got a next name.  If repeat is turned off,
+		// it could be NULL.
 
-		// Pass the name to the LoadAndPlaySong function
-		LoadAndPlaySong(currentfilename);
+		if (currentfilename) {
+			// Stop any song currently playing
+			ma_sound_stop(&g_sound);
 
+			// Pass the name to the LoadAndPlaySong function
+			LoadAndPlaySong(currentfilename);
+		}
 	}
 	// ************************************************************
 	//  PlayPrevious function.
@@ -675,12 +680,12 @@ extern "C" {
 			return SysAllocStringLen(L"", 0);
 
 		// If repeat is turned on, and we've just played the last song,
-		// then restart, by resetting the index.
+		// and repeat is on, then restart, by resetting the index.
 		
-		if (plidx == count - 1)
+		if (plidx == count - 1 && repeat == 1)
 			plidx = -1;
 
-		else if (plidx == -1 && repeat == 0)
+		else if (plidx == count - 1)
 			return NULL;
 
 		// Initialize plidx if needed
@@ -862,8 +867,22 @@ extern "C" {
 	// ************************************************************
 	void MediaEndCallback(ma_sound* pSound, void* pUserData)
 	{
+
+		// Determine if we've reached the end of a playlist, which
+		// only happens if repeat is 0, as otherwise, it just
+		// starts over at the beginning.
+
+		if (!repeat && plidx == PlaylistItemCount() - 1) {
+			playstate = SEP_PlaylistEnded;
+			QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
+			plidx = -1; // reset to start of playlist.
+		}
+		else {
 			playstate = SEP_MediaEnded;
 			QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
+		}
+	
+
 	}
 
 	// ************************************************************

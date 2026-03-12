@@ -28,7 +28,12 @@ Public Class KeyboardHook
      Private Function HookCallback(ByVal nCode As Integer, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As IntPtr
           If nCode >= 0 AndAlso wParam.ToInt32() = WM_KEYDOWN Then
                Dim vkCode As Integer = Marshal.ReadInt32(lParam)
-               frmMusicPlayer.OnShortcutKeyPressed(CType(vkCode, Keys))
+               If frmMusicPlayer.IsOpen Then
+                    frmMusicPlayer.OnShortcutKeyPressed(CType(vkCode, Keys))
+               Else
+
+                    frmMain.OnShortcutKeyPressed(CType(vkCode, Keys))
+               End If
           End If
           Return CallNextHookEx(_hookID, nCode, wParam, lParam)
      End Function

@@ -20,11 +20,12 @@ enum SEP_PlayState {
 	SEP_Stopped = 1,
 	SEP_Paused = 2,
 	SEP_Playing = 3,
-	SEP_ScanForward = 4,
-	SEP_ScanReverse = 5,
-	SEP_MediaEnded = 6,
-	SEP_PlayingExternal = 7,
-	SEP_Ready = 8
+	SEP_PlayingExternal = 4,
+	SEP_ScanForward = 5,
+	SEP_ScanReverse = 6,
+	SEP_MediaEnded = 7,
+	SEP_PlaylistEnded = 8,
+	SEP_Ready = 9
 };
 
 #endif

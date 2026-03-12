@@ -46,16 +46,16 @@ Public Class MediaPlayer
 	Private SongNameRect As New Rectangle(StatusRect.X + 5, StatusRect.Y + 29, StatusRect.Width - 5, StatusRect.Height / 4) ' The name of the current song will display here.
 	Private ButtonX As Integer = AlbumImageRect.Width + (StatusRect.Width - 144) / 2 ' Center buttons beneath status display. 144 is the width of 4 buttons plus space between. 
 	Private ButtonY As Integer = ControlSize.Height \ 2 + 7 ' Center buttons in bottom half of control's height.
-	Private Button1 As New Rectangle(ButtonX, ButtonY, 32, 32)
-	Private Button2 As New Rectangle(ButtonX + 36, ButtonY, 32, 32)
-	Private Button3 As New Rectangle(ButtonX + 72, ButtonY, 32, 32)
-	Private Button4 As New Rectangle(ButtonX + 108, ButtonY, 32, 32)
+	Private btnPrevious As New Rectangle(ButtonX, ButtonY, 32, 32)
+	Private btnPlayPause As New Rectangle(ButtonX + 36, ButtonY, 32, 32)
+	Private btnNext As New Rectangle(ButtonX + 72, ButtonY, 32, 32)
+	Private btnStop As New Rectangle(ButtonX + 108, ButtonY, 32, 32)
 	Private VolumeRect As New Rectangle(60, ButtonY, 32, 32)
 	Private mPlayer As New SiriusAudio
 	Private mAlbumArt As Image
 	Private AlbumImage As Image = Nothing
 
-	Private Enum MediaPlayerAction
+	Public Enum MediaPlayerAction
 		ActionPrevious
 		ActionPlay
 		ActionPause
@@ -68,6 +68,7 @@ Public Class MediaPlayer
 	Public Event PlayListStartLoad()
 	Public Event PlayListEndLoad()
 	Public Event PlayerStop()
+	Public Event MediaError(idx As Integer)
 	Private Event ButtonPressed(Action As MediaPlayerAction)
 	'*******************************************************
 
@@ -107,7 +108,7 @@ Public Class MediaPlayer
 		AddHandler mPlayer.PlaylistLoading, AddressOf PlaylistLoading
 		AddHandler mPlayer.PlaylistLoaded, AddressOf PlaylistLoaded
 		AddHandler mPlayer.PlayStateChanged, AddressOf PlayStateChange
-
+		AddHandler mPlayer.MediaError, AddressOf saMediaError
 		If lstPlayList IsNot Nothing Then
 
 			AddHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
@@ -131,6 +132,7 @@ Public Class MediaPlayer
 		RemoveHandler mPlayer.PlaylistLoading, AddressOf PlaylistLoading
 		RemoveHandler mPlayer.PlaylistLoaded, AddressOf PlaylistLoaded
 		RemoveHandler mPlayer.PlayStateChanged, AddressOf PlayStateChange
+		RemoveHandler mPlayer.MediaUnplayable, AddressOf saMediaError
 		If lstPlayList IsNot Nothing Then
 			RemoveHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
 			RemoveHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
@@ -175,23 +177,23 @@ Public Class MediaPlayer
 		' Check to see what button was pressed, or if the volume control was pressed.
 
 		Using g As Graphics = Me.CreateGraphics
-			If Button1.Contains(adjustedPoint) Then
-				DrawButton(g, Button1, Color.Gray, Color.LightGray, "Previous", "Pressed")
+			If btnPrevious.Contains(adjustedPoint) Then
+				DrawButton(g, btnPrevious, Color.Gray, Color.LightGray, "Previous", "Pressed")
 				RaiseEvent ButtonPressed(CInt(MediaPlayerAction.ActionPrevious))
-			ElseIf Button2.Contains(adjustedPoint) Then
+			ElseIf btnPlayPause.Contains(adjustedPoint) Then
 				If MediaPlaying Then
-					DrawButton(g, Button2, Color.Gray, Color.LightGray, "Pause", "Pressed")
+					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Pause", "Pressed")
 					RaiseEvent ButtonPressed(CInt(MediaPlayerAction.ActionPause))
 				Else
-					DrawButton(g, Button2, Color.Gray, Color.LightGray, "Play", "Pressed")
+					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play", "Pressed")
 					RaiseEvent ButtonPressed(CInt(MediaPlayerAction.ActionPlay))
 				End If
 				MediaPlaying = Not MediaPlaying
-			ElseIf Button3.Contains(adjustedPoint) Then
-				DrawButton(g, Button3, Color.Gray, Color.LightGray, "Next", "Pressed")
+			ElseIf btnNext.Contains(adjustedPoint) Then
+				DrawButton(g, btnNext, Color.Gray, Color.LightGray, "Next", "Pressed")
 				RaiseEvent ButtonPressed(CInt(MediaPlayerAction.ActionNext))
-			ElseIf Button4.Contains(adjustedPoint) Then
-				DrawButton(g, Button4, Color.Gray, Color.LightGray, "Stop", "Pressed")
+			ElseIf btnStop.Contains(adjustedPoint) Then
+				DrawButton(g, btnStop, Color.Gray, Color.LightGray, "Stop", "Pressed")
 				RaiseEvent ButtonPressed(CInt(MediaPlayerAction.ActionStop))
 			ElseIf Math.Abs(distance - radius) <= 8 Then ' Only recognize clicks close to the outer edge
 
@@ -241,18 +243,18 @@ Public Class MediaPlayer
 		' Determine which button was released and redraw it in gray, with a black icon (normal).
 
 		Using g As Graphics = Me.CreateGraphics
-			If Button1.Contains(adjustedPoint) Then
-				DrawButton(g, Button1, Color.Gray, Color.LightGray, "Previous")
-			ElseIf Button2.Contains(adjustedPoint) Then
+			If btnPrevious.Contains(adjustedPoint) Then
+				DrawButton(g, btnPrevious, Color.Gray, Color.LightGray, "Previous")
+			ElseIf btnPlayPause.Contains(adjustedPoint) Then
 				If MediaPlaying Then
-					DrawButton(g, Button2, Color.Gray, Color.LightGray, "Pause")
+					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Pause")
 				Else
-					DrawButton(g, Button2, Color.Gray, Color.LightGray, "Play")
+					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play")
 				End If
-			ElseIf Button3.Contains(adjustedPoint) Then
-				DrawButton(g, Button3, Color.Gray, Color.LightGray, "Next")
+			ElseIf btnNext.Contains(adjustedPoint) Then
+				DrawButton(g, btnNext, Color.Gray, Color.LightGray, "Next")
 			Else
-				DrawButton(g, Button4, Color.Gray, Color.LightGray, "Stop")
+				DrawButton(g, btnStop, Color.Gray, Color.LightGray, "Stop")
 			End If
 		End Using
 
@@ -307,20 +309,20 @@ Public Class MediaPlayer
 		End If
 
 		' Draw Previous button
-		DrawButton(g, Button1, Color.Gray, Color.LightGray, "Previous")
+		DrawButton(g, btnPrevious, Color.Gray, Color.LightGray, "Previous")
 
 		' Draw Playing button or pause button
 		If Not MediaPlaying Then
-			DrawButton(g, Button2, Color.Gray, Color.LightGray, "Play")
+			DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play")
 		Else
 			' Draw Pause button
-			DrawButton(g, Button2, Color.Gray, Color.LightGray, "Pause")
+			DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Pause")
 		End If
 		' Draw Next button
-		DrawButton(g, Button3, Color.Gray, Color.LightGray, "Next")
+		DrawButton(g, btnNext, Color.Gray, Color.LightGray, "Next")
 
 		' Draw Stop button
-		DrawButton(g, Button4, Color.Gray, Color.LightGray, "Stop")
+		DrawButton(g, btnStop, Color.Gray, Color.LightGray, "Stop")
 
 		' Draw the album image, or a default image.
 
@@ -478,7 +480,6 @@ Public Class MediaPlayer
 
 	'**********************************************************
 	Private Sub lstPlaylist_DrawItem(sender As Object, e As DrawItemEventArgs)
-
 		' Declare variables
 
 		Dim ContainsError As Boolean = False
@@ -501,7 +502,7 @@ Public Class MediaPlayer
 				zx = zx.Substring(1)
 			End If
 
-			'	' Parse the entry to get artist, album and song.
+			' Parse the entry to get artist, album and song.
 
 			Dim wx As String() = zx.Split("\")
 			Dim Artist As String = wx(1)
@@ -524,54 +525,35 @@ Public Class MediaPlayer
 
 			If ContainsError Then g.DrawString("V", New Font("Wingdings 2", e.Font.SizeInPoints), Brushes.Red, e.Bounds.Location)
 
-			'	' See if the item is selected.
+			' See if the item is selected.
 
-			'	If isSelected Then
-			'		g.DrawString(Song, f, Brushes.Goldenrod, rect)
-			'	Else
-			'		g.DrawString(Song, f, Brushes.Black, rect)
-			'	End If
-			'End If
+			If isSelected Then
 
-			g.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
+				' Set the smoothingmode for drawing an oval highlight for the current item.
 
-			Dim isCurrent As Boolean = (e.Index = lstPlayList.SelectedIndex)
+				g.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
 
-			' Normal background
-			Using bg As New SolidBrush(lstPlayList.BackColor)
-				g.FillRectangle(bg, e.Bounds)
-			End Using
-
-			' Oval highlight for current item
-			If isCurrent Then
-				Dim inset As Integer = 4
+				' Draw oval highlight for current item.
 
 				Dim ovalRect As New Rectangle(
-				    e.Bounds.Left + inset,
-				    e.Bounds.Top + inset,
-				    e.Bounds.Width - inset * 2,
-				    e.Bounds.Height - inset * 2
-				)
-
-				Using br As New SolidBrush(Color.FromArgb(90, 255, 215, 0)) ' soft gold glow
-					g.FillEllipse(br, ovalRect)
-				End Using
-			End If
-
-			' Draw text
-			Dim textColor As Color = If(isCurrent, Color.Black, lstPlayList.ForeColor)
-
-			TextRenderer.DrawText(
-			    g,
-			    Song,
-			    lstPlayList.Font,
-			    e.Bounds,
-			    textColor,
-			    TextFormatFlags.Left Or TextFormatFlags.VerticalCenter
+			    e.Bounds.Left + INDENT,
+			    e.Bounds.Top + INDENT,
+			    e.Bounds.Width - INDENT * 2,
+			    e.Bounds.Height - INDENT * 2
 			)
+				g.FillEllipse(New SolidBrush(Color.LightGreen), ovalRect)
+
+				' Draw the text of the line, bolded.
+
+				g.DrawString(Song, New Font(f, FontStyle.Bold), Brushes.Black, rect)
+
+				' If not selected, draw the text normally.
+
+			Else
+				g.DrawString(Song, f, Brushes.Black, rect)
+			End If
 		End If
 	End Sub
-
 	'**********************************************************
 
 	' Event handler for the listbox Double-click event
@@ -589,7 +571,7 @@ Public Class MediaPlayer
 
 		MediaPlaying = True
 		Using g As Graphics = Me.CreateGraphics
-			DrawButton(g, Button2, Color.Gray, Color.LightGray, "Pause")
+			DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Pause")
 		End Using
 	End Sub
 	'**********************************************************
@@ -673,8 +655,28 @@ Public Class MediaPlayer
 	' Handler for the PlayStateChanged event.
 
 	'**********************************************************
-	Private Sub PlayStateChange(ev As Integer)
-		RaiseEvent PlayStateChanged(ev)
+	Private Sub PlayStateChange(NewState As Integer)
+
+		' Redraw the play or pause button depending on the new
+		' playstate of the DLL.
+
+		Select Case NewState
+			Case SiriusAudio.SEP_Playstate.SEP_Paused, SiriusAudio.SEP_Playstate.SEP_PlaylistEnded
+				Using g = Me.CreateGraphics
+					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play")
+				End Using
+
+			Case SiriusAudio.SEP_Playstate.SEP_Playing
+				Using g = Me.CreateGraphics
+					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Pause")
+				End Using
+		End Select
+
+		' Pass the event on.
+
+		RaiseEvent PlayStateChanged(NewState)
+
+
 	End Sub
 	'**********************************************************
 
@@ -697,17 +699,6 @@ Public Class MediaPlayer
 		Dim wx As String = ""
 		Dim parts() As String
 
-		' Make sure the song can be found.  If not, mark the listbox entry as containing
-		' an error.
-
-		If Not My.Computer.FileSystem.FileExists(filename) Then
-			If CType(lstPlayList, ListBox).SelectedIndex >= 0 Then
-				wx = "*" & lstPlayList.Items(lstPlayList.SelectedIndex)
-				lstPlayList.Items(lstPlayList.SelectedIndex) = wx
-			End If
-			Exit Sub
-		End If
-
 		' Get the song information from the metadata.  Do not use the Item
 		' for the information, as it sometimes returns incorrect artist
 		' information, which prevents finding the album art.
@@ -716,6 +707,18 @@ Public Class MediaPlayer
 		ArtistName = parts(2)
 		AlbumName = parts(3)
 		SongTitle = SanitizeSongName(Path.GetFileNameWithoutExtension(filename))
+
+		' If the song cannot be found, call the unplayable event handler.  This must be
+		' done as only the DLL will refuse to trigger an error condition on
+		' a non-existent file.  It hands off the non-existent file to WMP as 
+		' a fallback, which simply does nothing and generates no error.  So
+		' saMediaError never gets called for a non-existent file, only if
+		' WMP actually generates an error.  
+
+		If Not My.Computer.FileSystem.FileExists(filename) Then
+			saMediaError(idx)
+			Exit Sub
+		End If
 
 		' Get the duration from metadata.
 
@@ -770,7 +773,39 @@ Public Class MediaPlayer
 
 		RaiseEvent SongChanged()
 	End Sub
+	'**********************************************************
 
+	' Event handler media error event.  This event only gets
+	' triggered after the DLL triggers an "UnplayableByMA"
+	' event, which causes the wrapper to attempt to play the
+	' song by WMPLIB.  If *it* fails to play the song, it raises
+	' the MediaError event, which is handled here.
+
+	' This sub also gets *called* not as an event, from 
+	' saSongChanged, if a song file cannot be found.
+
+	'**********************************************************
+	Private Sub saMediaError(idx As Integer)
+
+		' Declare variables.
+
+		Dim zx As String
+
+		' Get the listbox entry for the failed song.
+
+		If Not lstPlayList Is Nothing Then
+			If idx >= 0 And idx < lstPlayList.Items.Count Then
+				zx = lstPlayList.Items(idx)
+				zx = "*" & zx
+				lstPlayList.Items(idx) = zx
+			End If
+		End If
+
+		' Play the next song .
+
+		mPlayer.NextSong()
+
+	End Sub
 	'**********************************************************
 
 	' The listbox property.

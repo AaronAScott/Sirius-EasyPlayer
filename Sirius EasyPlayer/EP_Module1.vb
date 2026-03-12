@@ -50,18 +50,6 @@ Public Module EP_Module1
 		Small
 		Large
 	End Enum
-	Public Enum SEP_Playstate
-		SEP_Undefined
-		SEP_Stopped
-		SEP_Paused
-		SEP_Playing
-		SEP_ScanForward
-		SEP_ScanReverse
-		SEP_MediaEnded
-		SEP_PlayingExternal
-		SEP_Ready
-	End Enum
-
 
 	'***********************************************************************
 

@@ -62,6 +62,9 @@ Public Class SiriusAudio
 	Private Shared Function GetPlaystate() As Integer
 	End Function
 	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
+	Private Shared Function PlaylistItemCount() As Integer
+	End Function
+	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
 	Private Shared Function HasPendingEvents() As Integer
 	End Function
 	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
@@ -89,10 +92,11 @@ Public Class SiriusAudio
 		SEP_Stopped
 		SEP_Paused
 		SEP_Playing
+		SEP_PlayingExternal
 		SEP_ScanForward
 		SEP_ScanReverse
 		SEP_MediaEnded
-		SEP_PlayingExternal
+		SEP_PlaylistEnded
 		SEP_Ready
 	End Enum
 
@@ -103,10 +107,12 @@ Public Class SiriusAudio
 	Public Event SongChanged(idx As Integer, Filename As String)
 	Public Event PlayStateChanged(ps As Integer)
 	Public Event MediaError(Msg As String)
+	Public Event MediaUnplayable(idx As Integer)
 
 	' Declare private variables.
 
 	Private mPlaylist As String
+	Private currentindex As Integer
 
 	' Declare a structure to allow passing SongChanged information to the callback.
 
@@ -131,10 +137,14 @@ Public Class SiriusAudio
 	'****************************************************************
 	Public Sub New()
 		InitializeAudio()
+		AddHandler wmPlayer.Error, AddressOf wmp_Error
+		AddHandler wmPlayer.PlayStateChange, AddressOf wmpPlayStateChanged
 	End Sub
 	Public Sub Dispose() Implements IDisposable.Dispose
 		ShutdownAudio()
 		GC.SuppressFinalize(Me)
+		RemoveHandler wmPlayer.Error, AddressOf wmp_Error
+		RemoveHandler wmPlayer.PlayStateChange, AddressOf wmpPlayStateChanged
 	End Sub
 
 	Protected Overrides Sub Finalize()
@@ -150,10 +160,10 @@ Public Class SiriusAudio
 
 		' wmPlayer is used for files miniaudio can't play.
 
-		If wmPlayer.playState = SiriusAudio.SEP_Playstate.SEP_Playing Then
+		If wmPlayer.playState = SEP_Playstate.SEP_Playing Then
 			wmPlayer.controls.pause()
 			Exit Sub
-		ElseIf wmPlayer.playState = SiriusAudio.SEP_Playstate.SEP_Paused Then
+		ElseIf wmPlayer.playState = SEP_Playstate.SEP_Paused Then
 			wmPlayer.controls.play()
 			Exit Sub
 		End If
@@ -219,7 +229,29 @@ Public Class SiriusAudio
 		media = wmPlayer.newMedia(filename)
 		wmPlayer.currentMedia = media
 		wmPlayer.controls.play()
+
+		' Remember the index of the current song.  In case
+		' WMP cannot play it, we'll return that index with
+		' the "Unplayable" event.
+
+		currentindex = idx
+
+		' Raise the songchanged event.
+
+		RaiseEvent SongChanged(idx, filename)
+
 	End Sub
+	'**********************************************************
+
+	' An error has occurred during playback.
+
+	'**********************************************************
+	Private Sub wmp_Error()
+		If wmPlayer.Error.count > 0 Then
+			RaiseEvent MediaUnplayable(currentindex)
+		End If
+	End Sub
+
 	'****************************************************************
 	' Sub to process error messages received.
 	'****************************************************************
@@ -246,17 +278,20 @@ Public Class SiriusAudio
 
 		' Process the message.  We only handle media ended.
 
-		Select Case newState
+		' If the last song in a playlist was played by WMP, we'll get only a MediaEnded
+		' event.  So we need to test to see if we are at the end of the playlist before
+		' calling PlayNext.
 
-			Case WMPPlayState.wmppsMediaEnded
+		If newState = WMPPlayState.wmppsMediaEnded Then
+			Dim c As Integer = PlaylistItemCount()
+			Dim info As SongInfo = Marshal.PtrToStructure(Of SongInfo)(GetCurrentSong)
+			If info.index < c - 1 Then
 				PlayNext()
-		End Select
+			Else
+				RaiseEvent PlayStateChanged(SEP_Playstate.SEP_PlaylistEnded)
+			End If
 
-		' Pass the event on to the next layer.
-
-		' Send the event to the form containing this control.
-
-		RaiseEvent PlayStateChanged(newState)
+		End If
 
 	End Sub
 
@@ -363,6 +398,23 @@ Public Class SiriusAudio
 		End Get
 	End Property
 	'****************************************************************
+	' The Repeat property.  This returns and sets the flag that
+	' determines if the audio engine replays a playlist after
+	' reaching the end of the last song.
+	'****************************************************************
+	Public Property Repeat() As Integer
+		Get
+			Return GetRepeat()
+		End Get
+		Set(value As Integer)
+			If value = 0 Or value = 1 Then
+				SetRepeat(value)
+			Else
+				RaiseEvent MediaError("Repeat must be '0' or '1'.")
+			End If
+		End Set
+	End Property
+	'****************************************************************
 	' The Autostart property.  This returns and sets the flag that
 	' determines if the audio engine begins playing automatically
 	' after a playlist is loaded.
@@ -429,13 +481,11 @@ Public Class SiriusAudio
 				Case SiriusEvent.PlayStateChanged
 					Dim ev As Integer = payload.ToInt32
 					RaiseEvent PlayStateChanged(ev)
-					If ev = SiriusAudio.SEP_Playstate.SEP_MediaEnded AndAlso GetRepeat() Then PlayNext()
+					If ev = SEP_Playstate.SEP_MediaEnded Then PlayNext()
 
 				Case SiriusEvent.UnreadableByMA
 					Dim info As SongInfo = Marshal.PtrToStructure(Of SongInfo)(payload)
-					RaiseEvent SongChanged(info.index, info.filename)
 					PlayByWMP(info.index, info.filename)
-
 
 				Case SiriusEvent._Error
 					ProcessErrorMsg(Marshal.PtrToStringUni(payload))

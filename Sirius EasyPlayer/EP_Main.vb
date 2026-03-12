@@ -1300,11 +1300,14 @@ Public Class frmMain
 			'   Create a music player in the panel below the playlist list box.'
 
 			MP = New MediaPlayer
+			MP.Player.Repeat = 0
 			pnlMusicPlayer.Controls.Add(MP)
 
 			' Wire up the handler.
 
 			AddHandler MP.PlayerStop, AddressOf MP_PlayerStop
+			AddHandler MP.SongChanged, AddressOf MP_SongChanged
+			AddHandler MP.PlayStateChanged, AddressOf MP_PlayStateChanged
 
 			MP.Location = New Point((SplitContainer1.Panel2.Width - MP.Width) / 2, 0)
 			lstPlayList.Height = SplitContainer1.Panel2.Height - MP.Height - lblHeader_0.Height
@@ -1366,10 +1369,47 @@ Public Class frmMain
 		' Remove the handler.
 
 		RemoveHandler MP.PlayerStop, AddressOf MP_PlayerStop
+		RemoveHandler MP.SongChanged, AddressOf MP_SongChanged
+		RemoveHandler MP.PlayStateChanged, AddressOf MP_PlayStateChanged
+
 
 		' Enable the Open Music Player menu option again.
 
 		mnuOpenPlayer.Enabled = True
+
+	End Sub
+	'***********************************************************************
+
+	' Event Handler for the player SongChanged event.
+
+	'***********************************************************************
+	Private Sub MP_SongChanged()
+
+		' Get the duration of the new song and display it below the album art.
+
+		Dim minutes As Integer = Fix(MP.Duration)
+		Dim seconds As Integer = (MP.Duration - minutes) * 60
+		'lblDuration.Text = minutes.ToString("00") & ":" & seconds.ToString("00")
+
+		' Reset the elapsed time and start the timer.
+
+		'ElapsedTime = 0
+		'If MP.Player.PlayState = SiriusAudio.SEP_Playstate.SEP_Playing Or MP.Player.PlayState = SiriusAudio.SEP_Playstate.SEP_PlayingExternal Then Timer1.Enabled = True
+
+		' Get the new album art and force it to be displayed.
+
+		'AlbumArt = MP.AlbumArt
+		'picAlbumArt.Invalidate()
+
+	End Sub
+	'***********************************************************************
+
+	' Event handler for the PlayStateChanged event.
+
+	'***********************************************************************
+	Private Sub MP_PlayStateChanged(NewState As Integer)
+
+		If NewState = SiriusAudio.SEP_Playstate.SEP_PlaylistEnded Then MP_PlayerStop()
 
 	End Sub
 	'***********************************************************************
@@ -1640,6 +1680,24 @@ Public Class frmMain
 
 			Case "Copy"
 				' Ignore copy—it doesn't alter the list
+		End Select
+	End Sub
+	'***********************************************************************
+
+	' This routine is called by the keyboard hook, when it intercepts a
+	' media control button.  This ensures that the player always responds
+	' to a media control button even when this program does not have the
+	' focus.
+
+	'***********************************************************************
+	Public Sub OnShortcutKeyPressed(KeyCode As Keys)
+		Select Case KeyCode
+			Case Keys.MediaNextTrack
+				MP.Player.NextSong()
+			Case Keys.MediaPreviousTrack
+				MP.Player.PreviousSong()
+			Case Keys.MediaPlayPause
+				MP.Player.Play()
 		End Select
 	End Sub
 

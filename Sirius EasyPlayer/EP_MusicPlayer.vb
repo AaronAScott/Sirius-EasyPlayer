@@ -2,6 +2,7 @@
 Imports System.IO
 Imports System.Runtime.CompilerServices.RuntimeHelpers
 Imports System.Runtime.InteropServices
+Imports Sirius_EasyPlayer.MediaPlayer
 
 Public Class frmMusicPlayer
 	Inherits System.Windows.Forms.Form
@@ -193,64 +194,6 @@ Public Class frmMusicPlayer
 	End Sub
 	'***********************************************************************
 
-	' Event Handler for the music player PlayStateChanged event.
-
-	'***********************************************************************
-
-	Private Sub PlayStateChanged(NewState As Integer)
-
-		' Check the player playstate
-		' Undefined = 0,
-		' Stopped = 1,
-		' Paused = 2,
-		' Playing = 3,
-		' ScanForward = 4,
-		' ScanReverse = 5,
-		' MediaEnded = 6
-		' PlayingExternal = 7,
-		' Ready = 8,
-
-		' Start/Stop the timer as needed, or reset
-		' the elapsed time when the music is changing.
-
-		Select Case NewState
-			Case SEP_Playstate.SEP_Stopped
-				Timer1.Enabled = False
-			Case SEP_Playstate.SEP_Paused
-				Timer1.Enabled = False
-			Case SEP_Playstate.SEP_Playing, SEP_Playstate.SEP_PlayingExternal
-				Timer1.Enabled = True
-			Case SEP_Playstate.SEP_ScanForward, SEP_Playstate.SEP_ScanReverse, SEP_Playstate.SEP_MediaEnded
-				Timer1.Enabled = False
-		End Select
-
-	End Sub
-	'***********************************************************************
-
-	' Event Handler for the SongChanged event.
-
-	'***********************************************************************
-	Private Sub MP_SongChanged()
-
-		' Get the duration of the new song and display it below the album art.
-
-		Dim minutes As Integer = Fix(MP.Duration)
-		Dim seconds As Integer = (MP.Duration - minutes) * 60
-		lblDuration.Text = minutes.ToString("00") & ":" & seconds.ToString("00")
-
-		' Reset the elapsed time and start the timer.
-
-		ElapsedTime = 0
-		If MP.Player.PlayState = SEP_Playstate.SEP_Playing Or MP.Player.PlayState = SEP_Playstate.SEP_PlayingExternal Then Timer1.Enabled = True
-
-		' Get the new album art and force it to be displayed.
-
-		AlbumArt = MP.AlbumArt
-		picAlbumArt.Invalidate()
-
-	End Sub
-	'***********************************************************************
-
 	' The Play Me to Sleep menu option is selected.
 
 	'***********************************************************************
@@ -258,16 +201,6 @@ Public Class frmMusicPlayer
 
 		frmSleepTimer.Show()
 
-	End Sub
-	Public Sub OnShortcutKeyPressed(KeyCode As Keys)
-		Select Case KeyCode
-			Case Keys.MediaNextTrack
-				MP.Player.NextSong()
-			Case Keys.MediaPreviousTrack
-				MP.Player.PreviousSong()
-			Case Keys.MediaPlayPause
-				MP.Player.Play()
-		End Select
 	End Sub
 	'***********************************************************************
 
@@ -316,6 +249,64 @@ Public Class frmMusicPlayer
 		' Remind the system that this form is busy.  
 
 		SetThreadExecutionState(EXECUTION_STATE.ES_CONTINUOUS Or EXECUTION_STATE.ES_DISPLAY_REQUIRED Or EXECUTION_STATE.ES_SYSTEM_REQUIRED)
+
+	End Sub
+	'***********************************************************************
+
+	' Event Handler for the music player PlayStateChanged event.
+
+	'***********************************************************************
+
+	Private Sub PlayStateChanged(NewState As Integer)
+
+		' Check the player playstate
+		' Undefined = 0,
+		' Stopped = 1,
+		' Paused = 2,
+		' Playing = 3,
+		' ScanForward = 4,
+		' ScanReverse = 5,
+		' MediaEnded = 6
+		' PlayingExternal = 7,
+		' Ready = 8,
+
+		' Start/Stop the timer as needed, or reset
+		' the elapsed time when the music is changing.
+
+		Select Case NewState
+			Case SiriusAudio.SEP_Playstate.SEP_Stopped
+				Timer1.Enabled = False
+			Case SiriusAudio.SEP_Playstate.SEP_Paused
+				Timer1.Enabled = False
+			Case SiriusAudio.SEP_Playstate.SEP_Playing, SiriusAudio.SEP_Playstate.SEP_PlayingExternal
+				Timer1.Enabled = True
+			Case SiriusAudio.SEP_Playstate.SEP_ScanForward, SiriusAudio.SEP_Playstate.SEP_ScanReverse, SiriusAudio.SEP_Playstate.SEP_MediaEnded
+				Timer1.Enabled = False
+		End Select
+
+	End Sub
+	'***********************************************************************
+
+	' Event Handler for the SongChanged event.
+
+	'***********************************************************************
+	Private Sub MP_SongChanged()
+
+		' Get the duration of the new song and display it below the album art.
+
+		Dim minutes As Integer = Fix(MP.Duration)
+		Dim seconds As Integer = (MP.Duration - minutes) * 60
+		lblDuration.Text = minutes.ToString("00") & ":" & seconds.ToString("00")
+
+		' Reset the elapsed time and start the timer.
+
+		ElapsedTime = 0
+		If MP.Player.PlayState = SiriusAudio.SEP_Playstate.SEP_Playing Or MP.Player.PlayState = SiriusAudio.SEP_Playstate.SEP_PlayingExternal Then Timer1.Enabled = True
+
+		' Get the new album art and force it to be displayed.
+
+		AlbumArt = MP.AlbumArt
+		picAlbumArt.Invalidate()
 
 	End Sub
 	'***********************************************************************
@@ -385,5 +376,23 @@ Public Class frmMusicPlayer
 
 	End Sub
 
+	'***********************************************************************
+
+	' This routine is called by the keyboard hook, when it intercepts a
+	' media control button.  This ensures that the player always responds
+	' to a media control button even when this program does not have the
+	' focus.
+
+	'***********************************************************************
+	Public Sub OnShortcutKeyPressed(KeyCode As Keys)
+		Select Case KeyCode
+			Case Keys.MediaNextTrack
+				MP.Player.NextSong()
+			Case Keys.MediaPreviousTrack
+				MP.Player.PreviousSong()
+			Case Keys.MediaPlayPause
+				MP.Player.Play()
+		End Select
+	End Sub
 
 End Class
