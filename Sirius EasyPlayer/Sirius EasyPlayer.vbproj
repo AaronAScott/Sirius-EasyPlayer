@@ -27,7 +27,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <DefineDebug>false</DefineDebug>
     <DefineTrace>true</DefineTrace>
@@ -95,7 +95,9 @@
     </Compile>
     <Compile Include="AlbumSong.vb" />
     <Compile Include="ApplicationEvents.vb" />
-    <Compile Include="ColorPicker.designer.vb" />
+    <Compile Include="ColorPicker.designer.vb">
+      <DependentUpon>ColorPicker.vb</DependentUpon>
+    </Compile>
     <Compile Include="ColorPicker.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -107,9 +109,20 @@
     <Compile Include="DoubleBufferedListBox.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="EP_Theme1.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>EP_Theme.resx</DependentUpon>
+    </Compile>
     <Compile Include="Global.vb" />
     <Compile Include="KeyboardHook.vb" />
     <Compile Include="Lib.vb" />
+    <Compile Include="LocateMusicFolder.Designer.vb">
+      <DependentUpon>LocateMusicFolder.vb</DependentUpon>
+    </Compile>
+    <Compile Include="LocateMusicFolder.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="MessageBox.vb" />
     <Compile Include="MusicPlayer.designer.vb">
       <DependentUpon>MusicPlayer.vb</DependentUpon>
@@ -170,8 +183,13 @@
     <EmbeddedResource Include="About.resx">
       <DependentUpon>About.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ColorPicker.resx" />
+    <EmbeddedResource Include="ColorPicker.resx">
+      <DependentUpon>ColorPicker.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ControlTableEditor.resX" />
+    <EmbeddedResource Include="LocateMusicFolder.resx">
+      <DependentUpon>LocateMusicFolder.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MusicPlayer.resx">
       <DependentUpon>MusicPlayer.vb</DependentUpon>
     </EmbeddedResource>
@@ -184,7 +202,10 @@
     <EmbeddedResource Include="EP_Main.resx">
       <DependentUpon>EP_Main.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EP_Theme.resx" />
+    <EmbeddedResource Include="EP_Theme.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>EP_Theme1.Designer.vb</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="EP_MusicPlayer.resx">
       <DependentUpon>EP_MusicPlayer.vb</DependentUpon>
     </EmbeddedResource>

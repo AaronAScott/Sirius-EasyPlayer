@@ -683,6 +683,10 @@ Public Class MediaPlayer
 
 		End Select
 
+		' If we received a PlaylistEnded event,close the player.
+
+		If NewState = SiriusAudio.SEP_Playstate.SEP_PlaylistEnded Then RaiseEvent PlayerStop()
+
 	End Sub
 	'**********************************************************
 

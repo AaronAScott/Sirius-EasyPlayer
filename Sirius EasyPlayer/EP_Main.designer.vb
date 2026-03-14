@@ -69,6 +69,14 @@ Partial Class frmMain
 		Me.ToolStripSeparator3 = New System.Windows.Forms.ToolStripSeparator()
 		Me.mnuCMEdit = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuCMPlay = New System.Windows.Forms.ToolStripMenuItem()
+		Me.pnlDisplay = New System.Windows.Forms.Panel()
+		Me.lblArtist = New System.Windows.Forms.Label()
+		Me.lblAlbum = New System.Windows.Forms.Label()
+		Me.lblDuration = New System.Windows.Forms.Label()
+		Me.picAlbumArt = New System.Windows.Forms.PictureBox()
+		Me.ProgressBar1 = New System.Windows.Forms.ProgressBar()
+		Me.lblElapsedTime = New System.Windows.Forms.Label()
+		Me.pnlMusicPlayer = New System.Windows.Forms.Panel()
 		Me.lblHeader_1 = New System.Windows.Forms.Label()
 		Me.lblHeader_0 = New System.Windows.Forms.Label()
 		Me.OpenFileDialog1 = New System.Windows.Forms.OpenFileDialog()
@@ -83,6 +91,7 @@ Partial Class frmMain
 		Me.mnuCMAddToPlaylist = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuCMPlayItem = New System.Windows.Forms.ToolStripMenuItem()
 		Me.timElapsedTime = New System.Windows.Forms.Timer(Me.components)
+		Me.mnuChangeLocation = New System.Windows.Forms.ToolStripMenuItem()
 		Me.MenuStrip1.SuspendLayout()
 		Me.StatusStrip1.SuspendLayout()
 		CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -91,6 +100,7 @@ Partial Class frmMain
 		Me.SplitContainer1.SuspendLayout()
 		Me.Panel1.SuspendLayout()
 		CType(Me.picLibraryDisplay, System.ComponentModel.ISupportInitialize).BeginInit()
+		Me.ContextMenuStrip1.SuspendLayout()
 		Me.pnlDisplay.SuspendLayout()
 		CType(Me.picAlbumArt, System.ComponentModel.ISupportInitialize).BeginInit()
 		Me.ContextMenuStrip1.SuspendLayout()
@@ -205,27 +215,33 @@ Partial Class frmMain
 		'
 		'ToolStripMenuItem1
 		'
-		Me.ToolStripMenuItem1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuControlTableEditor, Me.mnuRecreate, Me.mnuRepairMetadata})
+		Me.ToolStripMenuItem1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuControlTableEditor, Me.mnuRecreate, Me.mnuRepairMetadata, Me.mnuChangeLocation})
+		Me.ToolStripMenuItem1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuControlTableEditor, Me.mnuRecreate, Me.mnuRepairMetadata, Me.mnuChangeLocation})
+		Me.ToolStripMenuItem1.Size = New System.Drawing.Size(47, 20)
+		Me.ToolStripMenuItem1.Text = "&Tools"
 		Me.ToolStripMenuItem1.Name = "ToolStripMenuItem1"
-		Me.ToolStripMenuItem1.Size = New System.Drawing.Size(62, 20)
-		Me.ToolStripMenuItem1.Text = "&Utiltities"
+		Me.ToolStripMenuItem1.Size = New System.Drawing.Size(47, 20)
+		Me.ToolStripMenuItem1.Text = "&Tools"
 		'
+		Me.mnuControlTableEditor.Size = New System.Drawing.Size(203, 22)
 		'mnuControlTableEditor
 		'
 		Me.mnuControlTableEditor.Name = "mnuControlTableEditor"
-		Me.mnuControlTableEditor.Size = New System.Drawing.Size(190, 22)
+		Me.mnuControlTableEditor.Size = New System.Drawing.Size(203, 22)
 		Me.mnuControlTableEditor.Text = "Control Table &Editor"
+		Me.mnuRecreate.Size = New System.Drawing.Size(203, 22)
 		'
 		'mnuRecreate
 		'
 		Me.mnuRecreate.Name = "mnuRecreate"
-		Me.mnuRecreate.Size = New System.Drawing.Size(190, 22)
+		Me.mnuRecreate.Size = New System.Drawing.Size(203, 22)
+		Me.mnuRepairMetadata.Size = New System.Drawing.Size(203, 22)
 		Me.mnuRecreate.Text = "Recreate &Library"
 		'
 		'mnuRepairMetadata
 		'
 		Me.mnuRepairMetadata.Name = "mnuRepairMetadata"
-		Me.mnuRepairMetadata.Size = New System.Drawing.Size(190, 22)
+		Me.mnuRepairMetadata.Size = New System.Drawing.Size(203, 22)
 		Me.mnuRepairMetadata.Text = "&Repair Song Metadata"
 		'
 		'HelpToolStripMenuItem
@@ -307,6 +323,68 @@ Partial Class frmMain
 		Me.picLibraryDisplay.Size = New System.Drawing.Size(420, 489)
 		Me.picLibraryDisplay.TabIndex = 3
 		Me.picLibraryDisplay.TabStop = False
+		'
+		'lstPlayList
+		'
+		Me.lstPlayList.BorderStyle = System.Windows.Forms.BorderStyle.None
+		Me.lstPlayList.ContextMenuStrip = Me.ContextMenuStrip1
+		Me.lstPlayList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed
+		Me.lstPlayList.FormattingEnabled = True
+		Me.lstPlayList.Location = New System.Drawing.Point(0, 24)
+		Me.lstPlayList.Name = "lstPlayList"
+		Me.lstPlayList.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
+		Me.lstPlayList.Size = New System.Drawing.Size(294, 481)
+		Me.lstPlayList.TabIndex = 0
+		'
+		'ContextMenuStrip1
+		'
+		Me.ContextMenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMCut, Me.mnuCMCopy, Me.mnuCMPaste, Me.mnuCMDelete, Me.ToolStripSeparator3, Me.mnuCMEdit, Me.mnuCMPlay})
+		Me.ContextMenuStrip1.Name = "ContextMenuStrip1"
+		Me.ContextMenuStrip1.Size = New System.Drawing.Size(108, 142)
+		'
+		'mnuCMCut
+		'
+		Me.mnuCMCut.Name = "mnuCMCut"
+		Me.mnuCMCut.Size = New System.Drawing.Size(107, 22)
+		Me.mnuCMCut.Text = "&Cut"
+		Me.mnuCMCut.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+		'
+		'mnuCMCopy
+		'
+		Me.mnuCMCopy.Name = "mnuCMCopy"
+		Me.mnuCMCopy.Size = New System.Drawing.Size(107, 22)
+		Me.mnuCMCopy.Text = "C&opy"
+		Me.mnuCMCopy.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+		'
+		'mnuCMPaste
+		'
+		Me.mnuCMPaste.Name = "mnuCMPaste"
+		Me.mnuCMPaste.Size = New System.Drawing.Size(107, 22)
+		Me.mnuCMPaste.Text = "&Paste"
+		Me.mnuCMPaste.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+		'
+		'mnuCMDelete
+		'
+		Me.mnuCMDelete.Name = "mnuCMDelete"
+		Me.mnuCMDelete.Size = New System.Drawing.Size(107, 22)
+		Me.mnuCMDelete.Text = "&Delete"
+		'
+		'ToolStripSeparator3
+		'
+		Me.ToolStripSeparator3.Name = "ToolStripSeparator3"
+		Me.ToolStripSeparator3.Size = New System.Drawing.Size(104, 6)
+		'
+		'mnuCMEdit
+		'
+		Me.mnuCMEdit.Name = "mnuCMEdit"
+		Me.mnuCMEdit.Size = New System.Drawing.Size(107, 22)
+		Me.mnuCMEdit.Text = "Edit"
+		'
+		'mnuCMPlay
+		'
+		Me.mnuCMPlay.Name = "mnuCMPlay"
+		Me.mnuCMPlay.Size = New System.Drawing.Size(107, 22)
+		Me.mnuCMPlay.Text = "Pla&y"
 		'
 		'pnlDisplay
 		'
@@ -528,6 +606,12 @@ Partial Class frmMain
 		'
 		Me.timElapsedTime.Interval = 1000
 		'
+		'mnuChangeLocation
+		'
+		Me.mnuChangeLocation.Name = "mnuChangeLocation"
+		Me.mnuChangeLocation.Size = New System.Drawing.Size(203, 22)
+		Me.mnuChangeLocation.Text = "&Change Library Location"
+		'
 		'frmMain
 		'
 		Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -550,6 +634,7 @@ Partial Class frmMain
 		Me.SplitContainer1.ResumeLayout(False)
 		Me.Panel1.ResumeLayout(False)
 		CType(Me.picLibraryDisplay, System.ComponentModel.ISupportInitialize).EndInit()
+		Me.ContextMenuStrip1.ResumeLayout(False)
 		Me.pnlDisplay.ResumeLayout(False)
 		Me.pnlDisplay.PerformLayout()
 		CType(Me.picAlbumArt, System.ComponentModel.ISupportInitialize).EndInit()
@@ -620,4 +705,5 @@ Partial Class frmMain
 	Friend WithEvents timElapsedTime As Timer
 	Friend WithEvents lblAlbum As Label
 	Friend WithEvents lblArtist As Label
+	Friend WithEvents mnuChangeLocation As ToolStripMenuItem
 End Class

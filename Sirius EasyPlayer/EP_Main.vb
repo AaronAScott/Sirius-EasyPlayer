@@ -46,6 +46,12 @@ Public Class frmMain
 	Private fAlbum As Font
 	Private fSong As Font
 
+	' Declare the DisplayLines collection as public,
+	' as the routines to re-locate a library might need
+	' to clear them.
+
+	Public DisplayLines As New DisplayLines
+
 	' Unified undo stack structure
 	Class UndoAction
 		Public Property ActionType As String
@@ -112,7 +118,19 @@ Public Class frmMain
 		' See if the library database exists.  If it does, open it.  If not, create it.
 
 		If My.Computer.FileSystem.FileExists(MusicLibraryDatabase) Then
-			DbOpen = OpenADatabase(MusicLibraryDatabase)
+			Dim MusicFolder As String = AddDirSeparator(GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", ""))
+
+			' Check the availablility of the music library.
+
+			If WaitForMusicFolder(MusicFolder, 30) Then
+
+				' Open the database.
+
+				DbOpen = OpenADatabase(MusicLibraryDatabase)
+			Else
+				frmLocateMusicFolder.ShowDialog()
+			End If
+
 		Else
 			If MsgBox("No music library has been created.  Click ""Okay"" to create a music library now.", MsgBoxStyle.OkCancel + MsgBoxStyle.Information, "First Time Setup") = MsgBoxResult.Cancel Then End
 			CreateNewDatabase()
@@ -147,7 +165,7 @@ Public Class frmMain
 		' if the the library is empty, import songs now.
 
 		If LibraryTable.Rows.Count = 0 Then
-			If frmSelectMusicFolder.ShowDialog = DialogResult.OK Then
+			If frmLocateMusicFolder.ShowDialog = DialogResult.OK Then
 				zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
 				ii = ImportMusicList(zx, lblStatus)
 				LibraryDS.Clear()
@@ -278,7 +296,7 @@ Public Class frmMain
 
 			' Ask the user to select a music folder from which to populate the library.
 
-			If frmSelectMusicFolder.ShowDialog = DialogResult.OK Then
+			If frmLocateMusicFolder.ShowDialog = DialogResult.OK Then
 				zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
 
 				' Import the songs into the library table.
@@ -883,7 +901,7 @@ Public Class frmMain
 					' failed to get removed earlier (shouldn't happen).
 
 					wx = $"..\{Artist}\{Album}\{Song}"
-					wx = wx.Replace("&apos;", "'").Replace("&amp;", "&")
+					wx = UnescapeXml(wx)
 
 					' See if just changing the music folder makes the song locatable.
 
@@ -1144,6 +1162,7 @@ Public Class frmMain
 		Dim zx As String = DirectCast(sender, ToolStripMenuItem).Tag
 		Dim parts = zx.Split(":")
 		Dim Songs As IReadOnlyCollection(Of String) = Nothing
+		Dim Filtered As List(Of String)
 		Dim MusicFolder As String = AddDirSeparator(GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", ""))
 		Dim song As String
 		Dim sb As New StringBuilder
@@ -1159,14 +1178,21 @@ Public Class frmMain
 				Songs = Directory.GetFiles(MusicFolder & parts(2) & "\" & parts(4), parts(6))
 		End Select
 
-		' Create a sorted list of the songs.
+		' Disable the "Play" option in the context menu.
 
-		Dim Sorted = Songs.OrderBy(Function(s) s).ToArray()
+		mnuCMPlayItem.Enabled = False
+
+		' Create a sorted list of the songs, filtered to remove duplicates in multiple
+		' musical formats.
+
+		Filtered = FilterPreferredCopies(Songs)
+
+		'Dim Sorted = Songs.OrderBy(Function(s) s).ToArray()
 
 		' Assemble a song list of the selected song.
 
 		If Not Songs Is Nothing Then
-			For Each song In Sorted
+			For Each song In Filtered
 				sb.Append(song & vbCrLf)
 			Next song
 
@@ -1180,6 +1206,8 @@ Public Class frmMain
 			' visible.
 
 			lstPlayList.Visible = False
+			lblHeader_0.Visible = False
+			lblHeader_1.Visible = False
 			pnlMusicPlayer.Visible = True
 			pnlDisplay.Visible = True
 
@@ -1284,7 +1312,8 @@ Public Class frmMain
 		pnlDisplay.Visible = False
 		pnlMusicPlayer.Visible = False
 		lstPlayList.Enabled = True
-		lstPlayList.Visible = True
+		lblHeader_0.Visible = True
+		lblHeader_1.Visible = True
 		MP.Dispose()
 
 		' Call the resize event to reshape everything.
@@ -1304,6 +1333,10 @@ Public Class frmMain
 		' Enable the Open Music Player menu option again.
 
 		mnuOpenPlayer.Enabled = True
+
+		' Enable the "Play" option in the context menu.
+
+		mnuCMPlayItem.Enabled = True
 
 		' Disable the elapsed time timer
 
@@ -1799,6 +1832,74 @@ Public Class frmMain
 				' Ignore copy—it doesn't alter the list
 		End Select
 	End Sub
+	Private Shared ReadOnly ExtensionPrecedence As String() = {".flac", ".mp3", ".wma", ".wav"}
+	'***********************************************************************
+
+	' Function to take a list of songs returned from a search of an album
+	' and filter out duplicates, in order of precedence.
+
+	'***********************************************************************
+	Public Function FilterPreferredCopies(files As IReadOnlyCollection(Of String)) As List(Of String)
+
+		' Group by base filename (no extension)
+		Dim groups = files.
+	   GroupBy(Function(f) Path.GetFileNameWithoutExtension(f),
+			 StringComparer.OrdinalIgnoreCase)
+
+		Dim result As New List(Of String)
+
+		For Each g In groups
+			' For each group, pick the file with the highest-precedence extension
+			Dim chosen = g.
+		  OrderBy(Function(f)
+					Dim ext = Path.GetExtension(f).ToLowerInvariant()
+					Dim idx = Array.IndexOf(ExtensionPrecedence, ext)
+					If idx = -1 Then idx = Integer.MaxValue ' unknown extension = lowest priority
+					Return idx
+				End Function).
+		  First()
+
+			result.Add(chosen)
+		Next g
+
+		' Sort final list alphabetically for deterministic playback
+		result.Sort(StringComparer.OrdinalIgnoreCase)
+
+		Return result
+	End Function
+	'***********************************************************************
+
+	' Function to verify the playlist folder is online and available.
+
+	'***********************************************************************
+	Public Function WaitForMusicFolder(path As String, timeoutSeconds As Integer) As Boolean
+
+		' Declare variables.
+
+		Dim sw As New System.Diagnostics.Stopwatch()
+
+		' Start the stopwatch.  We'll wait just a bit in case it needs "waking up".
+
+		sw.Start()
+
+		' Begin a loop of checking the drive's availablity during the allowed wait period.
+
+		Do While sw.Elapsed.TotalSeconds < timeoutSeconds
+			Try
+				If Directory.Exists(path) Then
+					' Try a harmless operation that forces the drive to wake
+					Dim test = Directory.EnumerateFiles(path).FirstOrDefault()
+					Return True
+				End If
+			Catch
+				' Drive not ready yet — wait and retry
+			End Try
+
+			Threading.Thread.Sleep(500) ' half-second pause
+		Loop
+
+		Return False
+	End Function
 	'***********************************************************************
 
 	' This routine is called by the keyboard hook, when it intercepts a
@@ -1818,5 +1919,8 @@ Public Class frmMain
 		End Select
 	End Sub
 
+	Private Sub mnuChangeLocation_Click(sender As Object, e As EventArgs) Handles mnuChangeLocation.Click
 
+		frmLocateMusicFolder.ShowDialog()
+	End Sub
 End Class
