@@ -36,6 +36,9 @@ Public Class frmMain
 	Private dropIndex As Integer = -1
 	Private dragToolTip As New ToolTip()
 	Private MP As MediaPlayer
+	Private ElapsedTime As Integer
+	Private kbdhook As New KeyboardHook
+	Private mAlbumArt As Image
 
 	' Declare the fonts we'll use
 
@@ -216,6 +219,23 @@ Public Class frmMain
 			lblHeader_1.Width = lstPlayList.Width - lblHeader_0.Width
 			lblHeader_1.Left = lblHeader_0.Width
 			If MP IsNot Nothing Then MP.Left = (SplitContainer1.Panel2.Width - MP.Width) \ 2
+
+			' Rearrange the music display panel.
+
+			If pnlDisplay.Visible Then
+				pnlDisplay.Height = SplitContainer1.Panel2.Height - pnlMusicPlayer.Height
+				pnlDisplay.Width = SplitContainer1.Panel2.Width
+				picAlbumArt.Left = (pnlDisplay.Width - picAlbumArt.Width) / 2
+				lblAlbum.Left = picAlbumArt.Left
+				lblArtist.Left = picAlbumArt.Left
+				lblElapsedTime.Left = picAlbumArt.Left
+				ProgressBar1.Left = lblElapsedTime.Left + lblElapsedTime.Width + 2
+				lblDuration.Left = ProgressBar1.Left + ProgressBar1.Width + 2
+				lblAlbum.Width = pnlDisplay.Width - 20
+				lblAlbum.Left = 10
+				lblArtist.Width = lblAlbum.Width
+				lblArtist.Left = lblAlbum.Left
+			End If
 		End If
 	End Sub
 	'***********************************************************************
@@ -577,87 +597,19 @@ Public Class frmMain
 	End Sub
 	'**********************************************************
 
-	' Sub to draw one line and return the ending y position.
+	' The Album Art picture box needs to be redrawn.
 
 	'**********************************************************
-	Private Function DrawOneLine(dl As DisplayLine, g As Graphics) As Integer
+	Private Sub picAlbumArt_Paint(sender As Object, e As PaintEventArgs) Handles picAlbumArt.Paint
 
-		' Declare variables
+		Dim g As Graphics = e.Graphics
+		If mAlbumArt Is Nothing Then
+			g.DrawImage(GetNoAlbumArtImage(New Drawing.Size(picAlbumArt.Size)), picAlbumArt.ClientRectangle)
+		Else
+			g.DrawImage(mAlbumArt, picAlbumArt.ClientRectangle)
+		End If
 
-		Dim y As Integer
-		Dim AlbumImage As Bitmap = Nothing
-		Dim bH As New SolidBrush(Color.FromArgb(128, Color.DarkGoldenrod))
-		Dim bB1 As New SolidBrush(picLibraryDisplay.BackColor)
-
-		' Begin drawing the specified DisplayLine object to the picturebox.
-
-		Try
-
-			' Clear the background.
-
-			g.FillRectangle(Brushes.White, dl.Bounds)
-
-			' Draw the background.
-
-			If dl.Selected Then
-				g.FillRectangle(bH, dl.Bounds) ' Highlighted if selected
-			Else
-				g.FillRectangle(bB1, dl.Bounds) ' Normal background if not selected.
-			End If
-
-			' Draw the rest of the line based on the type of line
-
-			Select Case dl.ItemType
-				Case MusicItemType.Artist ' The artist name is drawn in a larger font.
-					g.DrawString(dl.ArtistName, fArtist, Brushes.DeepSkyBlue, dl.Bounds)
-					y += dl.Bounds.Y + dl.Bounds.Height
-
-				Case MusicItemType.Album
-
-					' If we have an album image, draw it.
-					If dl.ImageFile <> "" Then
-						Try
-							Using tempImage As Image = Image.FromFile(dl.ImageFile)
-								AlbumImage = New Bitmap(tempImage)
-								' tempImage is automatically disposed when exiting the Using block
-								g.DrawImage(AlbumImage, dl.ImageBounds)
-							End Using
-
-							' If there is no album image, or if we get an error while trying to
-							' draw it, display a default image.
-
-						Catch ex As Exception
-							g.DrawImage(GetNoAlbumArtImage, dl.ImageBounds)
-						End Try
-					Else
-						g.DrawImage(GetNoAlbumArtImage, dl.ImageBounds)
-					End If
-
-					' Draw the name of the album to the right of the image and
-					' centered in the height of it.
-
-					g.DrawString(dl.AlbumName, fAlbum, Brushes.Blue, dl.Bounds)
-					y += dl.Bounds.Y + dl.Bounds.Height
-
-					' For a song, simply draw the song name in normal font.
-
-				Case MusicItemType.Song
-					g.DrawString(SanitizeSongName(dl.SongName), fSong, Brushes.Black, dl.Bounds)
-					y += dl.Bounds.Y + dl.Bounds.Height
-			End Select
-		Catch ex As Exception
-			MsgBox("Error in DrawOneLine: " & ex.Message, MsgBoxStyle.Information, "Draw One Line")
-		End Try
-
-		' Dispose of objects we created
-
-		bH.Dispose()
-		bB1.Dispose()
-		If AlbumImage IsNot Nothing Then AlbumImage.Dispose()
-
-		Return y
-
-	End Function
+	End Sub
 	'**********************************************************
 	'
 	' The scroll bar has been moved.
@@ -783,84 +735,6 @@ Public Class frmMain
 		End If
 
 	End Sub
-	'**********************************************************
-	'
-	' Sub to move down a certain number of lines.
-	'
-	'**********************************************************
-	Private Sub MoveDown(ByRef LinesDown As Integer)
-
-		' Declare variables
-
-		Dim xx As Integer
-
-		Try
-			' Position to the last record row number using the bookmark.
-
-			xx = BottomRowIndex
-
-			' Add the number of lines we are to move to the row number.
-
-			xx += LinesDown
-
-			' If the new row number is larger than the largest row number, 
-			' set it to the largest row number.
-
-			If xx >= LibraryTable.Rows.Count Then xx = LibraryTable.Rows.Count - 1
-
-			' Now set the current top of the list to the row number minus MAXLINES.
-
-			TopRowIndex = xx
-
-			' Now redraw the list.
-
-			picLibraryDisplay.Invalidate()
-		Catch e As Exception
-			MsgBox("MoveDown failed." & vbCrLf & e.Message, MsgBoxStyle.Exclamation, "Scroll Down")
-		End Try
-
-	End Sub
-
-	'**********************************************************
-	'
-	' Sub to move up a specified number of lines.
-	'
-	'**********************************************************
-	Private Sub MoveUp(ByRef LinesUp As Integer)
-
-		' Declare variables
-
-		Dim xx As Integer
-
-		Try
-			' Position to the first record row number using the bookmark.
-
-			xx = TopRowIndex
-
-			' Clear the display data
-
-			' Subtract the number of lines we are to move to the row number.
-
-			xx -= LinesUp
-
-			' If the new row number is less than zero, set it to zero.
-
-			If xx < 0 Then xx = 0
-
-			' Now set the current top of the list to the row number.
-
-			TopRowIndex = xx
-
-			' Now redraw the list.
-
-			picLibraryDisplay.Invalidate()
-
-
-		Catch e As Exception
-			MsgBox("MoveUp failed." & vbCrLf & e.Message, MsgBoxStyle.Exclamation, "Scroll Up")
-		End Try
-	End Sub
-
 	'***********************************************************************
 
 	' The New Playlist menu option is clicked.
@@ -1254,7 +1128,6 @@ Public Class frmMain
 					LibraryTable = LibraryDS.Tables("Table")
 				End If
 			Catch ex As Exception
-				Debug.Print(ex.Message)
 			End Try
 		End If
 	End Sub
@@ -1283,7 +1156,7 @@ Public Class frmMain
 			Case 1 ' "Album"
 				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2) & "\" & parts(4), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3")
 			Case 2 ' "Song"
-				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2) & "\" & parts(4) & "\" & parts(6), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3")
+				Songs = Directory.GetFiles(MusicFolder & parts(2) & "\" & parts(4), parts(6))
 		End Select
 
 		' Create a sorted list of the songs.
@@ -1300,8 +1173,19 @@ Public Class frmMain
 			'   Create a music player in the panel below the playlist list box.'
 
 			MP = New MediaPlayer
-			MP.Player.Repeat = 0
+			MP.Player.Repeat = False
 			pnlMusicPlayer.Controls.Add(MP)
+
+			' Make the listbox invisible and the display and music control panels
+			' visible.
+
+			lstPlayList.Visible = False
+			pnlMusicPlayer.Visible = True
+			pnlDisplay.Visible = True
+
+			' Cause the music player to resize.
+
+			frmMain_Resize(Me, New EventArgs)
 
 			' Wire up the handler.
 
@@ -1309,15 +1193,25 @@ Public Class frmMain
 			AddHandler MP.SongChanged, AddressOf MP_SongChanged
 			AddHandler MP.PlayStateChanged, AddressOf MP_PlayStateChanged
 
+			' Set the location of the music control to the center of its owning panel.
+
 			MP.Location = New Point((SplitContainer1.Panel2.Width - MP.Width) / 2, 0)
-			lstPlayList.Height = SplitContainer1.Panel2.Height - MP.Height - lblHeader_0.Height
+
+			' Set the songlist to be played.
 
 			MP.Songlist = sb.ToString ' This will start the player automatically since autostart defaults to true
-			pnlMusicPlayer.Visible = True
 
 			' Disable the open player menu option.
 
 			mnuOpenPlayer.Enabled = False
+
+			' Install a keyboard hook to capture media action keys.
+
+			kbdhook.Install()
+
+			' Start the elapsed time timer.
+
+			timElapsedTime.Enabled = True
 
 		End If
 	End Sub
@@ -1351,6 +1245,35 @@ Public Class frmMain
 	End Sub
 	'**********************************************************
 
+	' Event handler for the elapsed time tick event.
+
+	'**********************************************************
+	Private Sub timElapsedTime_Tick(sender As Object, e As EventArgs) Handles timElapsedTime.Tick
+
+		' Declare variables
+
+		Dim ii As Integer
+
+		ElapsedTime += 1
+		Dim minutes As Integer = ElapsedTime \ 60
+		Dim seconds As Integer = ElapsedTime Mod 60
+		lblElapsedTime.Text = minutes.ToString("00") & ":" & seconds.ToString("00")
+
+		If MP.Duration > 0 Then ii = ElapsedTime / MP.Duration / 60 * 100 Else ii = 0
+		If ii > 100 Then ii = 100
+		ProgressBar1.Value = ii
+		Application.DoEvents()
+
+		' Reset the selected song it it's been changed in the listbox.
+
+		If Not lstPlayList Is Nothing AndAlso lstPlayList.Items.Count > 0 Then
+			If MP.Player.CurrentSong.index <> lstPlayList.SelectedIndex Then lstPlayList.SelectedIndex = MP.Player.CurrentSong.index
+		End If
+
+
+	End Sub
+	'**********************************************************
+
 	' Event handler for the player stop event.
 
 	'**********************************************************
@@ -1358,12 +1281,14 @@ Public Class frmMain
 
 		' Make the panel holding the music player invisible and dispose of the player
 
-		lstPlayList.Enabled = True
+		pnlDisplay.Visible = False
 		pnlMusicPlayer.Visible = False
-		lstPlayList.DrawMode = DrawMode.Normal
+		lstPlayList.Enabled = True
+		lstPlayList.Visible = True
 		MP.Dispose()
-		lstPlayList.DrawMode = DrawMode.OwnerDrawFixed
-		lstPlayList.Refresh()
+
+		' Call the resize event to reshape everything.
+
 		frmMain_Resize(Me, EventArgs.Empty)
 
 		' Remove the handler.
@@ -1372,10 +1297,17 @@ Public Class frmMain
 		RemoveHandler MP.SongChanged, AddressOf MP_SongChanged
 		RemoveHandler MP.PlayStateChanged, AddressOf MP_PlayStateChanged
 
+		' Uninstall the keyboard hook.
+
+		kbdhook.Uninstall()
 
 		' Enable the Open Music Player menu option again.
 
 		mnuOpenPlayer.Enabled = True
+
+		' Disable the elapsed time timer
+
+		timElapsedTime.Enabled = False
 
 	End Sub
 	'***********************************************************************
@@ -1389,17 +1321,19 @@ Public Class frmMain
 
 		Dim minutes As Integer = Fix(MP.Duration)
 		Dim seconds As Integer = (MP.Duration - minutes) * 60
-		'lblDuration.Text = minutes.ToString("00") & ":" & seconds.ToString("00")
+		lblDuration.Text = minutes.ToString("00") & ":" & seconds.ToString("00")
 
 		' Reset the elapsed time and start the timer.
 
-		'ElapsedTime = 0
-		'If MP.Player.PlayState = SiriusAudio.SEP_Playstate.SEP_Playing Or MP.Player.PlayState = SiriusAudio.SEP_Playstate.SEP_PlayingExternal Then Timer1.Enabled = True
+		ElapsedTime = 0
+		If MP.Player.PlayState = SiriusAudio.SEP_Playstate.SEP_Playing Or MP.Player.PlayState = SiriusAudio.SEP_Playstate.SEP_PlayingExternal Then timElapsedTime.Enabled = True
 
 		' Get the new album art and force it to be displayed.
 
-		'AlbumArt = MP.AlbumArt
-		'picAlbumArt.Invalidate()
+		mAlbumArt = MP.AlbumArt
+		picAlbumArt.Invalidate()
+		lblAlbum.Text = MP.Album
+		lblArtist.Text = MP.Artist
 
 	End Sub
 	'***********************************************************************
@@ -1409,9 +1343,192 @@ Public Class frmMain
 	'***********************************************************************
 	Private Sub MP_PlayStateChanged(NewState As Integer)
 
-		If NewState = SiriusAudio.SEP_Playstate.SEP_PlaylistEnded Then MP_PlayerStop()
+		' Check the player playstate
+		' Undefined = 0,
+		' Stopped = 1,
+		' Paused = 2,
+		' Playing = 3,
+		' ScanForward = 4,
+		' ScanReverse = 5,
+		' MediaEnded = 6
+		' PlayingExternal = 7,
+		' Ready = 8,
+
+		' Start/Stop the timer as needed, or reset
+		' the elapsed time when the music is changing.
+
+		Select Case NewState
+			Case SiriusAudio.SEP_Playstate.SEP_Stopped, SiriusAudio.SEP_Playstate.SEP_Paused
+				timElapsedTime.Enabled = False
+			Case SiriusAudio.SEP_Playstate.SEP_Playing, SiriusAudio.SEP_Playstate.SEP_PlayingExternal
+				timElapsedTime.Enabled = True
+			Case SiriusAudio.SEP_Playstate.SEP_PlaylistEnded
+				MP_PlayerStop()
+		End Select
+
 
 	End Sub
+	'**********************************************************
+
+	' Sub to draw one line and return the ending y position.
+
+	'**********************************************************
+	Private Function DrawOneLine(dl As DisplayLine, g As Graphics) As Integer
+
+		' Declare variables
+
+		Dim y As Integer
+		Dim AlbumImage As Bitmap = Nothing
+		Dim bH As New SolidBrush(Color.FromArgb(128, Color.DarkGoldenrod))
+		Dim bB1 As New SolidBrush(picLibraryDisplay.BackColor)
+
+		' Begin drawing the specified DisplayLine object to the picturebox.
+
+		Try
+
+			' Clear the background.
+
+			g.FillRectangle(Brushes.White, dl.Bounds)
+
+			' Draw the background.
+
+			If dl.Selected Then
+				g.FillRectangle(bH, dl.Bounds) ' Highlighted if selected
+			Else
+				g.FillRectangle(bB1, dl.Bounds) ' Normal background if not selected.
+			End If
+
+			' Draw the rest of the line based on the type of line
+
+			Select Case dl.ItemType
+				Case MusicItemType.Artist ' The artist name is drawn in a larger font.
+					g.DrawString(dl.ArtistName, fArtist, Brushes.DeepSkyBlue, dl.Bounds)
+					y += dl.Bounds.Y + dl.Bounds.Height
+
+				Case MusicItemType.Album
+
+					' If we have an album image, draw it.
+					If dl.ImageFile <> "" Then
+						Try
+							Using tempImage As Image = Image.FromFile(dl.ImageFile)
+								AlbumImage = New Bitmap(tempImage)
+								' tempImage is automatically disposed when exiting the Using block
+								g.DrawImage(AlbumImage, dl.ImageBounds)
+							End Using
+
+							' If there is no album image, or if we get an error while trying to
+							' draw it, display a default image.
+
+						Catch ex As Exception
+							g.DrawImage(GetNoAlbumArtImage, dl.ImageBounds)
+						End Try
+					Else
+						g.DrawImage(GetNoAlbumArtImage, dl.ImageBounds)
+					End If
+
+					' Draw the name of the album to the right of the image and
+					' centered in the height of it.
+
+					g.DrawString(dl.AlbumName, fAlbum, Brushes.Blue, dl.Bounds)
+					y += dl.Bounds.Y + dl.Bounds.Height
+
+					' For a song, simply draw the song name in normal font.
+
+				Case MusicItemType.Song
+					g.DrawString(SanitizeSongName(dl.SongName), fSong, Brushes.Black, dl.Bounds)
+					y += dl.Bounds.Y + dl.Bounds.Height
+			End Select
+		Catch ex As Exception
+			MsgBox("Error in DrawOneLine: " & ex.Message, MsgBoxStyle.Information, "Draw One Line")
+		End Try
+
+		' Dispose of objects we created
+
+		bH.Dispose()
+		bB1.Dispose()
+		If AlbumImage IsNot Nothing Then AlbumImage.Dispose()
+
+		Return y
+
+	End Function
+	'**********************************************************
+	'
+	' Sub to move down a certain number of lines.
+	'
+	'**********************************************************
+	Private Sub MoveDown(ByRef LinesDown As Integer)
+
+		' Declare variables
+
+		Dim xx As Integer
+
+		Try
+			' Position to the last record row number using the bookmark.
+
+			xx = BottomRowIndex
+
+			' Add the number of lines we are to move to the row number.
+
+			xx += LinesDown
+
+			' If the new row number is larger than the largest row number, 
+			' set it to the largest row number.
+
+			If xx >= LibraryTable.Rows.Count Then xx = LibraryTable.Rows.Count - 1
+
+			' Now set the current top of the list to the row number minus MAXLINES.
+
+			TopRowIndex = xx
+
+			' Now redraw the list.
+
+			picLibraryDisplay.Invalidate()
+		Catch e As Exception
+			MsgBox("MoveDown failed." & vbCrLf & e.Message, MsgBoxStyle.Exclamation, "Scroll Down")
+		End Try
+
+	End Sub
+
+	'**********************************************************
+	'
+	' Sub to move up a specified number of lines.
+	'
+	'**********************************************************
+	Private Sub MoveUp(ByRef LinesUp As Integer)
+
+		' Declare variables
+
+		Dim xx As Integer
+
+		Try
+			' Position to the first record row number using the bookmark.
+
+			xx = TopRowIndex
+
+			' Clear the display data
+
+			' Subtract the number of lines we are to move to the row number.
+
+			xx -= LinesUp
+
+			' If the new row number is less than zero, set it to zero.
+
+			If xx < 0 Then xx = 0
+
+			' Now set the current top of the list to the row number.
+
+			TopRowIndex = xx
+
+			' Now redraw the list.
+
+			picLibraryDisplay.Invalidate()
+
+
+		Catch e As Exception
+			MsgBox("MoveUp failed." & vbCrLf & e.Message, MsgBoxStyle.Exclamation, "Scroll Up")
+		End Try
+	End Sub
+
 	'***********************************************************************
 
 	' Sub to open, parse and fill the list box with the
@@ -1700,5 +1817,6 @@ Public Class frmMain
 				MP.Player.Play()
 		End Select
 	End Sub
+
 
 End Class

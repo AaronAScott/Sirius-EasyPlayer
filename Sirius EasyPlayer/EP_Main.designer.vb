@@ -52,9 +52,14 @@ Partial Class frmMain
 		Me.Panel1 = New System.Windows.Forms.Panel()
 		Me.VScrollBar1 = New System.Windows.Forms.VScrollBar()
 		Me.picLibraryDisplay = New System.Windows.Forms.PictureBox()
+		Me.pnlDisplay = New System.Windows.Forms.Panel()
+		Me.lblArtist = New System.Windows.Forms.Label()
+		Me.lblAlbum = New System.Windows.Forms.Label()
+		Me.lblDuration = New System.Windows.Forms.Label()
+		Me.picAlbumArt = New System.Windows.Forms.PictureBox()
+		Me.ProgressBar1 = New System.Windows.Forms.ProgressBar()
+		Me.lblElapsedTime = New System.Windows.Forms.Label()
 		Me.pnlMusicPlayer = New System.Windows.Forms.Panel()
-		Me.lblHeader_1 = New System.Windows.Forms.Label()
-		Me.lblHeader_0 = New System.Windows.Forms.Label()
 		Me.lstPlayList = New System.Windows.Forms.ListBox()
 		Me.ContextMenuStrip1 = New System.Windows.Forms.ContextMenuStrip(Me.components)
 		Me.mnuCMCut = New System.Windows.Forms.ToolStripMenuItem()
@@ -64,6 +69,8 @@ Partial Class frmMain
 		Me.ToolStripSeparator3 = New System.Windows.Forms.ToolStripSeparator()
 		Me.mnuCMEdit = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuCMPlay = New System.Windows.Forms.ToolStripMenuItem()
+		Me.lblHeader_1 = New System.Windows.Forms.Label()
+		Me.lblHeader_0 = New System.Windows.Forms.Label()
 		Me.OpenFileDialog1 = New System.Windows.Forms.OpenFileDialog()
 		Me.SaveFileDialog1 = New System.Windows.Forms.SaveFileDialog()
 		Me.ContextMenuStrip2 = New System.Windows.Forms.ContextMenuStrip(Me.components)
@@ -75,6 +82,7 @@ Partial Class frmMain
 		Me.ContextMenuStrip3 = New System.Windows.Forms.ContextMenuStrip(Me.components)
 		Me.mnuCMAddToPlaylist = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuCMPlayItem = New System.Windows.Forms.ToolStripMenuItem()
+		Me.timElapsedTime = New System.Windows.Forms.Timer(Me.components)
 		Me.MenuStrip1.SuspendLayout()
 		Me.StatusStrip1.SuspendLayout()
 		CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -83,6 +91,8 @@ Partial Class frmMain
 		Me.SplitContainer1.SuspendLayout()
 		Me.Panel1.SuspendLayout()
 		CType(Me.picLibraryDisplay, System.ComponentModel.ISupportInitialize).BeginInit()
+		Me.pnlDisplay.SuspendLayout()
+		CType(Me.picAlbumArt, System.ComponentModel.ISupportInitialize).BeginInit()
 		Me.ContextMenuStrip1.SuspendLayout()
 		Me.ContextMenuStrip2.SuspendLayout()
 		Me.ContextMenuStrip3.SuspendLayout()
@@ -93,7 +103,7 @@ Partial Class frmMain
 		Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.EditToolStripMenuItem, Me.ToolStripMenuItem1, Me.HelpToolStripMenuItem})
 		Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
 		Me.MenuStrip1.Name = "MenuStrip1"
-		Me.MenuStrip1.Size = New System.Drawing.Size(703, 24)
+		Me.MenuStrip1.Size = New System.Drawing.Size(859, 24)
 		Me.MenuStrip1.TabIndex = 0
 		Me.MenuStrip1.Text = "MenuStrip1"
 		'
@@ -234,9 +244,9 @@ Partial Class frmMain
 		'StatusStrip1
 		'
 		Me.StatusStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.lblStatus})
-		Me.StatusStrip1.Location = New System.Drawing.Point(0, 428)
+		Me.StatusStrip1.Location = New System.Drawing.Point(0, 515)
 		Me.StatusStrip1.Name = "StatusStrip1"
-		Me.StatusStrip1.Size = New System.Drawing.Size(703, 22)
+		Me.StatusStrip1.Size = New System.Drawing.Size(859, 22)
 		Me.StatusStrip1.TabIndex = 1
 		Me.StatusStrip1.Text = "StatusStrip1"
 		'
@@ -263,12 +273,13 @@ Partial Class frmMain
 		'
 		'SplitContainer1.Panel2
 		'
+		Me.SplitContainer1.Panel2.Controls.Add(Me.lstPlayList)
+		Me.SplitContainer1.Panel2.Controls.Add(Me.pnlDisplay)
 		Me.SplitContainer1.Panel2.Controls.Add(Me.pnlMusicPlayer)
 		Me.SplitContainer1.Panel2.Controls.Add(Me.lblHeader_1)
 		Me.SplitContainer1.Panel2.Controls.Add(Me.lblHeader_0)
-		Me.SplitContainer1.Panel2.Controls.Add(Me.lstPlayList)
-		Me.SplitContainer1.Size = New System.Drawing.Size(700, 404)
-		Me.SplitContainer1.SplitterDistance = 400
+		Me.SplitContainer1.Size = New System.Drawing.Size(859, 491)
+		Me.SplitContainer1.SplitterDistance = 422
 		Me.SplitContainer1.TabIndex = 2
 		'
 		'Panel1
@@ -276,9 +287,9 @@ Partial Class frmMain
 		Me.Panel1.BackColor = System.Drawing.Color.Tan
 		Me.Panel1.Controls.Add(Me.VScrollBar1)
 		Me.Panel1.Dock = System.Windows.Forms.DockStyle.Right
-		Me.Panel1.Location = New System.Drawing.Point(370, 0)
+		Me.Panel1.Location = New System.Drawing.Point(392, 0)
 		Me.Panel1.Name = "Panel1"
-		Me.Panel1.Size = New System.Drawing.Size(28, 402)
+		Me.Panel1.Size = New System.Drawing.Size(28, 489)
 		Me.Panel1.TabIndex = 4
 		'
 		'VScrollBar1
@@ -293,40 +304,86 @@ Partial Class frmMain
 		Me.picLibraryDisplay.Dock = System.Windows.Forms.DockStyle.Fill
 		Me.picLibraryDisplay.Location = New System.Drawing.Point(0, 0)
 		Me.picLibraryDisplay.Name = "picLibraryDisplay"
-		Me.picLibraryDisplay.Size = New System.Drawing.Size(398, 402)
+		Me.picLibraryDisplay.Size = New System.Drawing.Size(420, 489)
 		Me.picLibraryDisplay.TabIndex = 3
 		Me.picLibraryDisplay.TabStop = False
+		'
+		'pnlDisplay
+		'
+		Me.pnlDisplay.Controls.Add(Me.lblArtist)
+		Me.pnlDisplay.Controls.Add(Me.lblAlbum)
+		Me.pnlDisplay.Controls.Add(Me.lblDuration)
+		Me.pnlDisplay.Controls.Add(Me.picAlbumArt)
+		Me.pnlDisplay.Controls.Add(Me.ProgressBar1)
+		Me.pnlDisplay.Controls.Add(Me.lblElapsedTime)
+		Me.pnlDisplay.Location = New System.Drawing.Point(0, 24)
+		Me.pnlDisplay.Name = "pnlDisplay"
+		Me.pnlDisplay.Size = New System.Drawing.Size(429, 400)
+		Me.pnlDisplay.TabIndex = 4
+		Me.pnlDisplay.Visible = False
+		'
+		'lblArtist
+		'
+		Me.lblArtist.Font = New System.Drawing.Font("Times New Roman", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+		Me.lblArtist.Location = New System.Drawing.Point(50, 308)
+		Me.lblArtist.Name = "lblArtist"
+		Me.lblArtist.Size = New System.Drawing.Size(249, 23)
+		Me.lblArtist.TabIndex = 11
+		Me.lblArtist.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+		'
+		'lblAlbum
+		'
+		Me.lblAlbum.Font = New System.Drawing.Font("Times New Roman", 14.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+		Me.lblAlbum.Location = New System.Drawing.Point(50, 19)
+		Me.lblAlbum.Name = "lblAlbum"
+		Me.lblAlbum.Size = New System.Drawing.Size(249, 23)
+		Me.lblAlbum.TabIndex = 10
+		Me.lblAlbum.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+		'
+		'lblDuration
+		'
+		Me.lblDuration.AutoSize = True
+		Me.lblDuration.BackColor = System.Drawing.Color.Transparent
+		Me.lblDuration.Location = New System.Drawing.Point(276, 349)
+		Me.lblDuration.Name = "lblDuration"
+		Me.lblDuration.Size = New System.Drawing.Size(34, 13)
+		Me.lblDuration.TabIndex = 7
+		Me.lblDuration.Text = "00:00"
+		'
+		'picAlbumArt
+		'
+		Me.picAlbumArt.Location = New System.Drawing.Point(49, 45)
+		Me.picAlbumArt.Name = "picAlbumArt"
+		Me.picAlbumArt.Size = New System.Drawing.Size(250, 250)
+		Me.picAlbumArt.TabIndex = 6
+		Me.picAlbumArt.TabStop = False
+		'
+		'ProgressBar1
+		'
+		Me.ProgressBar1.ForeColor = System.Drawing.Color.Chartreuse
+		Me.ProgressBar1.Location = New System.Drawing.Point(86, 352)
+		Me.ProgressBar1.Name = "ProgressBar1"
+		Me.ProgressBar1.Size = New System.Drawing.Size(190, 10)
+		Me.ProgressBar1.TabIndex = 9
+		'
+		'lblElapsedTime
+		'
+		Me.lblElapsedTime.AutoSize = True
+		Me.lblElapsedTime.BackColor = System.Drawing.Color.Transparent
+		Me.lblElapsedTime.Location = New System.Drawing.Point(53, 349)
+		Me.lblElapsedTime.Name = "lblElapsedTime"
+		Me.lblElapsedTime.Size = New System.Drawing.Size(34, 13)
+		Me.lblElapsedTime.TabIndex = 8
+		Me.lblElapsedTime.Text = "00:00"
 		'
 		'pnlMusicPlayer
 		'
 		Me.pnlMusicPlayer.Dock = System.Windows.Forms.DockStyle.Bottom
-		Me.pnlMusicPlayer.Location = New System.Drawing.Point(0, 302)
+		Me.pnlMusicPlayer.Location = New System.Drawing.Point(0, 389)
 		Me.pnlMusicPlayer.Name = "pnlMusicPlayer"
-		Me.pnlMusicPlayer.Size = New System.Drawing.Size(294, 100)
+		Me.pnlMusicPlayer.Size = New System.Drawing.Size(431, 100)
 		Me.pnlMusicPlayer.TabIndex = 3
 		Me.pnlMusicPlayer.Visible = False
-		'
-		'lblHeader_1
-		'
-		Me.lblHeader_1.BackColor = System.Drawing.SystemColors.ButtonFace
-		Me.lblHeader_1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-		Me.lblHeader_1.Location = New System.Drawing.Point(144, 0)
-		Me.lblHeader_1.Name = "lblHeader_1"
-		Me.lblHeader_1.Size = New System.Drawing.Size(147, 23)
-		Me.lblHeader_1.TabIndex = 2
-		Me.lblHeader_1.Text = "Album Name"
-		Me.lblHeader_1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
-		'
-		'lblHeader_0
-		'
-		Me.lblHeader_0.BackColor = System.Drawing.SystemColors.ButtonFace
-		Me.lblHeader_0.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-		Me.lblHeader_0.Location = New System.Drawing.Point(0, 0)
-		Me.lblHeader_0.Name = "lblHeader_0"
-		Me.lblHeader_0.Size = New System.Drawing.Size(145, 23)
-		Me.lblHeader_0.TabIndex = 1
-		Me.lblHeader_0.Text = "Song Name"
-		Me.lblHeader_0.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
 		'
 		'lstPlayList
 		'
@@ -334,10 +391,10 @@ Partial Class frmMain
 		Me.lstPlayList.ContextMenuStrip = Me.ContextMenuStrip1
 		Me.lstPlayList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed
 		Me.lstPlayList.FormattingEnabled = True
-		Me.lstPlayList.Location = New System.Drawing.Point(0, 23)
+		Me.lstPlayList.Location = New System.Drawing.Point(0, 24)
 		Me.lstPlayList.Name = "lstPlayList"
 		Me.lstPlayList.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-		Me.lstPlayList.Size = New System.Drawing.Size(294, 299)
+		Me.lstPlayList.Size = New System.Drawing.Size(294, 481)
 		Me.lstPlayList.TabIndex = 0
 		'
 		'ContextMenuStrip1
@@ -389,6 +446,28 @@ Partial Class frmMain
 		Me.mnuCMPlay.Name = "mnuCMPlay"
 		Me.mnuCMPlay.Size = New System.Drawing.Size(107, 22)
 		Me.mnuCMPlay.Text = "Pla&y"
+		'
+		'lblHeader_1
+		'
+		Me.lblHeader_1.BackColor = System.Drawing.SystemColors.ButtonFace
+		Me.lblHeader_1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+		Me.lblHeader_1.Location = New System.Drawing.Point(144, 0)
+		Me.lblHeader_1.Name = "lblHeader_1"
+		Me.lblHeader_1.Size = New System.Drawing.Size(147, 23)
+		Me.lblHeader_1.TabIndex = 2
+		Me.lblHeader_1.Text = "Album Name"
+		Me.lblHeader_1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+		'
+		'lblHeader_0
+		'
+		Me.lblHeader_0.BackColor = System.Drawing.SystemColors.ButtonFace
+		Me.lblHeader_0.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+		Me.lblHeader_0.Location = New System.Drawing.Point(0, 0)
+		Me.lblHeader_0.Name = "lblHeader_0"
+		Me.lblHeader_0.Size = New System.Drawing.Size(145, 23)
+		Me.lblHeader_0.TabIndex = 1
+		Me.lblHeader_0.Text = "Song Name"
+		Me.lblHeader_0.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
 		'
 		'OpenFileDialog1
 		'
@@ -445,11 +524,15 @@ Partial Class frmMain
 		Me.mnuCMPlayItem.Size = New System.Drawing.Size(150, 22)
 		Me.mnuCMPlayItem.Text = "&Play"
 		'
+		'timElapsedTime
+		'
+		Me.timElapsedTime.Interval = 1000
+		'
 		'frmMain
 		'
 		Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
 		Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-		Me.ClientSize = New System.Drawing.Size(703, 450)
+		Me.ClientSize = New System.Drawing.Size(859, 537)
 		Me.Controls.Add(Me.SplitContainer1)
 		Me.Controls.Add(Me.StatusStrip1)
 		Me.Controls.Add(Me.MenuStrip1)
@@ -467,6 +550,9 @@ Partial Class frmMain
 		Me.SplitContainer1.ResumeLayout(False)
 		Me.Panel1.ResumeLayout(False)
 		CType(Me.picLibraryDisplay, System.ComponentModel.ISupportInitialize).EndInit()
+		Me.pnlDisplay.ResumeLayout(False)
+		Me.pnlDisplay.PerformLayout()
+		CType(Me.picAlbumArt, System.ComponentModel.ISupportInitialize).EndInit()
 		Me.ContextMenuStrip1.ResumeLayout(False)
 		Me.ContextMenuStrip2.ResumeLayout(False)
 		Me.ContextMenuStrip3.ResumeLayout(False)
@@ -526,4 +612,12 @@ Partial Class frmMain
 	Friend WithEvents ContextMenuStrip3 As ContextMenuStrip
 	Friend WithEvents mnuCMAddToPlaylist As ToolStripMenuItem
 	Friend WithEvents mnuCMPlayItem As ToolStripMenuItem
+	Friend WithEvents pnlDisplay As Panel
+	Friend WithEvents lblDuration As Label
+	Friend WithEvents picAlbumArt As PictureBox
+	Friend WithEvents ProgressBar1 As ProgressBar
+	Friend WithEvents lblElapsedTime As Label
+	Friend WithEvents timElapsedTime As Timer
+	Friend WithEvents lblAlbum As Label
+	Friend WithEvents lblArtist As Label
 End Class

@@ -84,6 +84,7 @@ Public Class frmMusicPlayer
 		Me.Controls.Add(MP)
 		MP.Location = New Point((Me.Width - MP.Width - lstPlaylist.Width) \ 2, Me.Height - MP.Height - MenuStrip1.Height - 20)
 		MP.Player.Volume = 100
+		MP.Player.Repeat = True
 		MP.ListBox = lstPlaylist
 
 		' Add the handler for the media player events
@@ -238,6 +239,12 @@ Public Class frmMusicPlayer
 		ProgressBar1.Value = ii
 		Application.DoEvents()
 
+		' Reset the selected song it it's been changed in the listbox.
+
+		If Not lstPlaylist Is Nothing Then
+			If MP.Player.CurrentSong.index <> lstPlaylist.SelectedIndex Then lstPlaylist.SelectedIndex = MP.Player.CurrentSong.index
+		End If
+
 	End Sub
 	'***********************************************************************
 
@@ -274,13 +281,12 @@ Public Class frmMusicPlayer
 		' the elapsed time when the music is changing.
 
 		Select Case NewState
-			Case SiriusAudio.SEP_Playstate.SEP_Stopped
-				Timer1.Enabled = False
-			Case SiriusAudio.SEP_Playstate.SEP_Paused
+			Case SiriusAudio.SEP_Playstate.SEP_Stopped, SiriusAudio.SEP_Playstate.SEP_Paused
 				Timer1.Enabled = False
 			Case SiriusAudio.SEP_Playstate.SEP_Playing, SiriusAudio.SEP_Playstate.SEP_PlayingExternal
 				Timer1.Enabled = True
-			Case SiriusAudio.SEP_Playstate.SEP_ScanForward, SiriusAudio.SEP_Playstate.SEP_ScanReverse, SiriusAudio.SEP_Playstate.SEP_MediaEnded
+			Case SiriusAudio.SEP_Playstate.SEP_PlaylistEnded
+				MP.Player.StopAll()
 				Timer1.Enabled = False
 		End Select
 
@@ -301,7 +307,8 @@ Public Class frmMusicPlayer
 		' Reset the elapsed time and start the timer.
 
 		ElapsedTime = 0
-		If MP.Player.PlayState = SiriusAudio.SEP_Playstate.SEP_Playing Or MP.Player.PlayState = SiriusAudio.SEP_Playstate.SEP_PlayingExternal Then Timer1.Enabled = True
+		ProgressBar1.Value = ElapsedTime
+		Timer1.Enabled = True
 
 		' Get the new album art and force it to be displayed.
 

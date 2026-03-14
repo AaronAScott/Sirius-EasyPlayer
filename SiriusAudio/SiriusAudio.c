@@ -475,6 +475,7 @@ extern "C" {
 			}
 
 			LoadAndPlaySong(currentfilename);
+			playstate = SEP_Playing;
 			break;
 
 			// If the playstate is playing, pause the music.
@@ -584,12 +585,17 @@ extern "C" {
 			free(currentfilename);
 			currentfilename = NULL;
 		}
+		// Set the playstate
+
+		playstate = SEP_Playing;
+		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
+
+		// Send SongChanged event.
+		QueueEvent(SEP_SongChanged, &info);
 
 		// Check if the file is a .wma file, which cannot be played here.
 		if (IsWMA(utf8path)) {
 			QueueEvent(SEP_UnreadableByMA, &info);
-			playstate = SEP_PlayingExternal;
-
 			return 0;
 		}
 
@@ -606,8 +612,6 @@ extern "C" {
 		// switch to the WMPLIB engine and try to play it.
 		if (result != MA_SUCCESS) {
 			QueueEvent(SEP_UnreadableByMA, &info);
-			playstate = SEP_PlayingExternal;
-			QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
 			return result;
 		}
 
@@ -619,13 +623,6 @@ extern "C" {
 		// Start the sound playing.
 		ma_sound_start(&g_sound);
 
-		// Send SongChanged event.
-		QueueEvent(SEP_SongChanged, &info);
-
-		// Set the playstate
-
-		playstate = SEP_Playing;
-		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
 		return MA_SUCCESS;
 	}
 	// ************************************************************
@@ -682,7 +679,7 @@ extern "C" {
 		// If repeat is turned on, and we've just played the last song,
 		// and repeat is on, then restart, by resetting the index.
 		
-		if (plidx == count - 1 && repeat == 1)
+		if (plidx == count - 1 && repeat != 0 )
 			plidx = -1;
 
 		else if (plidx == count - 1)
@@ -876,6 +873,7 @@ extern "C" {
 			playstate = SEP_PlaylistEnded;
 			QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
 			plidx = -1; // reset to start of playlist.
+			playstate = SEP_Ready;
 		}
 		else {
 			playstate = SEP_MediaEnded;

@@ -229,17 +229,13 @@ Public Class SiriusAudio
 		media = wmPlayer.newMedia(filename)
 		wmPlayer.currentMedia = media
 		wmPlayer.controls.play()
+		RaiseEvent PlayStateChanged(SEP_Playstate.SEP_PlayingExternal)
 
 		' Remember the index of the current song.  In case
 		' WMP cannot play it, we'll return that index with
 		' the "Unplayable" event.
 
 		currentindex = idx
-
-		' Raise the songchanged event.
-
-		RaiseEvent SongChanged(idx, filename)
-
 	End Sub
 	'**********************************************************
 
@@ -285,7 +281,7 @@ Public Class SiriusAudio
 		If newState = WMPPlayState.wmppsMediaEnded Then
 			Dim c As Integer = PlaylistItemCount()
 			Dim info As SongInfo = Marshal.PtrToStructure(Of SongInfo)(GetCurrentSong)
-			If info.index < c - 1 Then
+			If info.index < c - 1 Or Repeat Then
 				PlayNext()
 			Else
 				RaiseEvent PlayStateChanged(SEP_Playstate.SEP_PlaylistEnded)
@@ -402,16 +398,12 @@ Public Class SiriusAudio
 	' determines if the audio engine replays a playlist after
 	' reaching the end of the last song.
 	'****************************************************************
-	Public Property Repeat() As Integer
+	Public Property Repeat() As Boolean
 		Get
-			Return GetRepeat()
+			Return CBool(GetRepeat())
 		End Get
-		Set(value As Integer)
-			If value = 0 Or value = 1 Then
-				SetRepeat(value)
-			Else
-				RaiseEvent MediaError("Repeat must be '0' or '1'.")
-			End If
+		Set(value As Boolean)
+			SetRepeat(Math.Abs(CInt(value)))
 		End Set
 	End Property
 	'****************************************************************
@@ -419,16 +411,12 @@ Public Class SiriusAudio
 	' determines if the audio engine begins playing automatically
 	' after a playlist is loaded.
 	'****************************************************************
-	Public Property Autostart() As Integer
+	Public Property Autostart() As Boolean
 		Get
-			Return GetAutostart()
+			Return CBool(GetAutostart())
 		End Get
-		Set(value As Integer)
-			If value = 0 Or value = 1 Then
-				SetAutostart(value)
-			Else
-				RaiseEvent MediaError("Autostart must be '0' or '1'.")
-			End If
+		Set(value As Boolean)
+			SetAutostart(CInt(value))
 		End Set
 	End Property
 	'****************************************************************
