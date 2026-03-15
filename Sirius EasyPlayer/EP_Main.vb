@@ -32,7 +32,6 @@ Public Class frmMain
 	Private ArtistLineHeight As Integer
 	Private AlbumLineHeight As Integer
 	Private SongLineHeight As Integer
-	Private DisplayLines As New DisplayLines
 	Private dropIndex As Integer = -1
 	Private dragToolTip As New ToolTip()
 	Private MP As MediaPlayer
@@ -286,7 +285,7 @@ Public Class frmMain
 
 		' Declare variables
 
-		Dim ii As Integer
+
 		Dim zx As String
 
 		' Make sure the user wants to do this.

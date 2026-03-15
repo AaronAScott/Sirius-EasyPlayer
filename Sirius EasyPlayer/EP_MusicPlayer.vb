@@ -63,12 +63,6 @@ Public Class frmMusicPlayer
 		' Restore the window state.
 
 		zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "MusicPlayer", "Size", "0,100,100,685, 550")
-		zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "MusicPlayer", "Size", "0,100,100,685, 550")
-		zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "MusicPlayer", "Size", "0,100,100,685, 550")
-		zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "MusicPlayer", "Size", "0,100,100,685, 550")
-		zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "MusicPlayer", "Size", "0,100,100,685, 550")
-		zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "MusicPlayer", "Size", "0,100,100,685, 550")
-		zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "MusicPlayer", "Size", "0,100,100,685, 550")
 		Me.WindowState = Val(ParseString(zx))
 		If Me.WindowState = System.Windows.Forms.FormWindowState.Normal Then
 
