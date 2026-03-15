@@ -61,6 +61,7 @@ extern "C" {
 	static int autostart = 1; // 0 = false; 1 = true
 	static int repeat = 1; // 0 = false; 1 = true
 	static int playstate = SEP_Undefined;
+	static float volume = 0.9f;
 
 	// ************************************************************
 	//  Global audio device 
@@ -352,7 +353,8 @@ extern "C" {
 	// ************************************************************
 	DLL_EXPORT void SetVolume(float vol)
 	{
-		ma_engine_set_volume(&g_engine, vol);
+		volume = vol;
+		ma_engine_set_volume(&g_engine, volume);
 
 	}
 	// ************************************************************
@@ -360,7 +362,7 @@ extern "C" {
 	// ************************************************************
 	DLL_EXPORT float GetVolume(void)
 	{
-		return  ma_engine_get_volume(&g_engine);
+		return  volume;
 	}
 	// ************************************************************
 	// Function to return the index and filename of the current song.
@@ -606,6 +608,7 @@ extern "C" {
 		g_soundInitialized = 1;
 
 		// Initialize a sound from the music file, using the utf8 path.
+		ma_engine_set_volume(&g_engine, volume);   // reset engine master volume
 		result = ma_sound_init_from_file(&g_engine, utf8path, 0, NULL, NULL, &g_sound);
 
 		// If we can't play the file, raise an event.  The wrapper will

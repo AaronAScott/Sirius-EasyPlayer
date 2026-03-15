@@ -44,6 +44,7 @@ Partial Class frmMain
 		Me.mnuControlTableEditor = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuRecreate = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuRepairMetadata = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuChangeLocation = New System.Windows.Forms.ToolStripMenuItem()
 		Me.HelpToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuAbout = New System.Windows.Forms.ToolStripMenuItem()
 		Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
@@ -91,7 +92,8 @@ Partial Class frmMain
 		Me.mnuCMAddToPlaylist = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuCMPlayItem = New System.Windows.Forms.ToolStripMenuItem()
 		Me.timElapsedTime = New System.Windows.Forms.Timer(Me.components)
-		Me.mnuChangeLocation = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuRegistryEditor = New System.Windows.Forms.ToolStripMenuItem()
+		Me.ToolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
 		Me.MenuStrip1.SuspendLayout()
 		Me.StatusStrip1.SuspendLayout()
 		CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -219,6 +221,15 @@ Partial Class frmMain
 		Me.ToolStripMenuItem1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuControlTableEditor, Me.mnuRecreate, Me.mnuRepairMetadata, Me.mnuChangeLocation})
 		Me.ToolStripMenuItem1.Size = New System.Drawing.Size(47, 20)
 		Me.ToolStripMenuItem1.Text = "&Tools"
+		Me.ToolStripMenuItem1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuControlTableEditor, Me.mnuRecreate, Me.mnuRepairMetadata, Me.mnuChangeLocation})
+		Me.ToolStripMenuItem1.Size = New System.Drawing.Size(47, 20)
+		Me.ToolStripMenuItem1.Text = "&Tools"
+		Me.ToolStripMenuItem1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuControlTableEditor, Me.mnuRecreate, Me.mnuRepairMetadata, Me.mnuChangeLocation})
+		Me.ToolStripMenuItem1.Size = New System.Drawing.Size(47, 20)
+		Me.ToolStripMenuItem1.Text = "&Tools"
+		Me.ToolStripMenuItem1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuControlTableEditor, Me.mnuRecreate, Me.mnuRepairMetadata, Me.mnuChangeLocation})
+		Me.ToolStripMenuItem1.Size = New System.Drawing.Size(47, 20)
+		Me.ToolStripMenuItem1.Text = "&Tools"
 		Me.ToolStripMenuItem1.Name = "ToolStripMenuItem1"
 		Me.ToolStripMenuItem1.Size = New System.Drawing.Size(47, 20)
 		Me.ToolStripMenuItem1.Text = "&Tools"
@@ -242,7 +253,13 @@ Partial Class frmMain
 		'
 		Me.mnuRepairMetadata.Name = "mnuRepairMetadata"
 		Me.mnuRepairMetadata.Size = New System.Drawing.Size(203, 22)
-		Me.mnuRepairMetadata.Text = "&Repair Song Metadata"
+		Me.mnuRepairMetadata.Text = "Repair Song &Metadata"
+		'
+		'mnuChangeLocation
+		'
+		Me.mnuChangeLocation.Name = "mnuChangeLocation"
+		Me.mnuChangeLocation.Size = New System.Drawing.Size(203, 22)
+		Me.mnuChangeLocation.Text = "&Change Library Location"
 		'
 		'HelpToolStripMenuItem
 		'
@@ -606,11 +623,16 @@ Partial Class frmMain
 		'
 		Me.timElapsedTime.Interval = 1000
 		'
-		'mnuChangeLocation
+		'mnuRegistryEditor
 		'
-		Me.mnuChangeLocation.Name = "mnuChangeLocation"
-		Me.mnuChangeLocation.Size = New System.Drawing.Size(203, 22)
-		Me.mnuChangeLocation.Text = "&Change Library Location"
+		Me.mnuRegistryEditor.Name = "mnuRegistryEditor"
+		Me.mnuRegistryEditor.Size = New System.Drawing.Size(203, 22)
+		Me.mnuRegistryEditor.Text = "&Registry Editor"
+		'
+		'ToolStripSeparator5
+		'
+		Me.ToolStripSeparator5.Name = "ToolStripSeparator5"
+		Me.ToolStripSeparator5.Size = New System.Drawing.Size(200, 6)
 		'
 		'frmMain
 		'
@@ -706,4 +728,6 @@ Partial Class frmMain
 	Friend WithEvents lblAlbum As Label
 	Friend WithEvents lblArtist As Label
 	Friend WithEvents mnuChangeLocation As ToolStripMenuItem
+	Friend WithEvents mnuRegistryEditor As ToolStripMenuItem
+	Friend WithEvents ToolStripSeparator5 As ToolStripSeparator
 End Class

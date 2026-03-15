@@ -132,6 +132,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "d:\sirius easyplayer\x64\release\siriusaudio.dll" "d:\sirius easyplayer\sirius easyplayer\bin\release\SiriusAudio.dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />

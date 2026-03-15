@@ -11,18 +11,6 @@ Public Class frmLocateMusicFolder
 	' Copyright 2026 Sirius Software All Rights Reserved
 	'***********************************************************************
 
-	' Set a flag which will let the program know if the user
-	' cancelled this operation.
-
-
-	Public Property SelectedPath As String = ""
-
-	Public Function LocateMusicFolder() As String
-		Me.ShowDialog()   ' modal; execution pauses here
-		Return SelectedPath
-	End Function
-
-	Private UserCancel As Boolean = True
 	'***********************************************************************
 
 	' The form is loaded.
@@ -34,6 +22,12 @@ Public Class frmLocateMusicFolder
 
 		Dim DriveList As List(Of DriveInfo) = GetDrives()
 		Dim dr As DriveInfo
+
+		' Clear out the treeview.
+
+		TreeView1.Nodes.Clear()
+
+		' Populate the treeview control with a list of available drives.
 
 		For Each dr In DriveList
 			If dr.IsReady Then
@@ -95,25 +89,55 @@ Public Class frmLocateMusicFolder
 
 		Dim tv = DirectCast(sender, TreeView)
 		Dim node = tv.SelectedNode
+		Dim MusicFolder As String
 		If node Is Nothing Then Exit Sub
 
 		' Mark step 1 as completed.
 
-		PictureBox1.Visible = True
+		picStep1Success.Visible = True
+		picStep1Failure.Visible = False
+		picStep2Failure.Visible = False
 
 		' Validate the folder as a music folder.
 
 		If ValidateSelectedMusicFolder(node.Tag) Then
-			PictureBox2.Visible = True
-			If ValidateMusicLibrary(node.Tag) Then
-				PictureBox3.Visible = True
-				ImportMusicList(node.Tag, frmMain.lblStatus)
-				PictureBox4.Visible = True
-				Me.Close()
-			Else
-				MsgBox("The selected folder does not contain a music library of the required format.", MsgBoxStyle.Information, "Locate Music Library")
-				Stop
-			End If
+			picStep2Success.Visible = True
+
+			' Validate the selected folder against the current library.
+
+			Select Case ValidateMusicLibrary(node.Tag)
+				Case -1
+					If MsgBox("Your new music folder does not match your existing library. Do you want to proceed with it anyway, or select a different music folder?" & vbCrLf & "Click ""Yes"" to proceed with the selected folder, or ""No"" to select a new folder.", MsgBoxStyle.Question + MsgBoxStyle.YesNo, "Library Mismatch Found") = MsgBoxResult.Yes Then
+						SaveSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", node.Tag)
+						MusicFolder = node.Tag
+						picStep3Success.Visible = True
+						RecreateMusicLibrary(MusicFolder)
+						picStep4Success.Visible = True
+					Else
+						picStep1Success.Visible = False
+						picStep2Success.Visible = False
+						Exit Sub
+					End If
+				Case 0
+					SaveSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", node.Tag)
+					picStep3Success.Visible = True
+					ImportMusicList(node.Tag, frmMain.lblStatus)
+					picStep4Success.Visible = True
+					btnDone.Enabled = True
+				Case 1
+					SaveSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", node.Tag)
+					MsgBox("Your new music folder matches your existing library.  No import is nedded.", MsgBoxStyle.Information, "New Music Folder Set")
+					btnDone.Enabled = True
+					picStep4Success.Visible = True
+			End Select
+
+			' If the selected folder was not a valid music folder, mark this step as failed.
+
+		Else
+			picStep1Success.Visible = False
+			picStep2Success.Visible = False
+			picStep2Failure.Visible = True
+			MsgBox("The selected folder does not contain a music library of the required format.", MsgBoxStyle.Information, "Locate Music Library")
 		End If
 
 	End Sub
@@ -132,7 +156,15 @@ Public Class frmLocateMusicFolder
 
 		Return drives
 	End Function
-	Private Function ValidateMusicLibrary(MusicFolder) As Boolean
+	'***********************************************************************
+
+	' Function to check the existing library against the new music folder.
+	' Return:   0 = Library is empty (no music imported yet)
+	'          -1 = Library exists but doesn't match folder.
+	'           1 = Library exists and matches new folder.
+	'***********************************************************************
+	Private Function ValidateMusicLibrary(MusicFolder) As Integer
+
 
 		' Declare variables.
 
@@ -146,31 +178,25 @@ Public Class frmLocateMusicFolder
 			LibraryDA.Fill(ds, "Table")
 			dt = ds.Tables("Table")
 
-			If dt.Rows.Count > 0 Then
+			' If the library is empty, return 0 to indicate it's empty.
+
+			If dt.Rows.Count = 0 Then
+				Return 0
+
+				' Otherwise, compare the library with the music folder.
+
 				For ii = 0 To dt.Rows.Count - 1
 					zx = $"{MusicFolder}\{dt.Rows(ii)("ArtistName")}\{dt.Rows(ii)("AlbumName")}\{dt.Rows(ii)("SongName")}"
 					If Not My.Computer.FileSystem.FileExists(zx) Then Errors += 1
 				Next ii
 			End If
-			If Errors = 0 Then
-				PictureBox3.Visible = True
-				SaveSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", MusicFolder)
-				MsgBox("Your new music folder has been set.", MsgBoxStyle.Information, "New Music Folder Selected")
-				Return True
-			End If
-
-			Dim r As MsgBoxResult = MsgBox("The current music library shows " & Errors & " between it and the new music folder. If you choose to proceed, your library must be recreated from the new music folder." & vbCrLf & "Do you want to proceed?", MsgBoxStyle.Question + MsgBoxStyle.YesNoCancel, "Music Library Errors Found")
-
-			If r <> MsgBoxResult.Yes Then Return False
-
-			ImportMusicList(MusicFolder, frmMain.lblStatus)
-			PictureBox4.Visible = True
-
-		Catch ex As Exception
+		Catch ex As exception
 
 		End Try
 
-		Return False
+		' Return the status of the check.
+
+		If Errors = 0 Then Return 1 Else Return -1
 
 	End Function
 	Private Function ValidateSelectedMusicFolder(rootPath As String) As Boolean
@@ -261,6 +287,20 @@ Public Class frmLocateMusicFolder
 		' Force the newly-recreated library to display.
 
 		frmMain.picLibraryDisplay.Invalidate()
+
+	End Sub
+
+	Private Sub btnDone_Click(sender As Object, e As EventArgs) Handles btnDone.Click
+
+		Me.DialogResult = DialogResult.OK
+		Me.Close()
+
+	End Sub
+
+	Private Sub btnCancel_Click(sender As Object, e As EventArgs) Handles btnCancel.Click
+
+		Me.DialogResult = DialogResult.Cancel
+		Me.Close()
 
 	End Sub
 End Class

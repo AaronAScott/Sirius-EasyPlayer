@@ -122,19 +122,28 @@ Public Class frmMain
 
 			' Check the availablility of the music library.
 
-			If WaitForMusicFolder(MusicFolder, 30) Then
+			Do
+				If WaitForMusicFolder(MusicFolder, 30) Then
+					Exit Do
+				Else
+					If MsgBox("Your music folder, located at """ & MusicFolder & """ is unavailble." & vbCrLf & "If it's a removable drive, re-connect it, and click ""Okay"" to try again.  If you click ""Cancel"", you'll be prompted to select the new location of your music.", MsgBoxStyle.Information + MsgBoxStyle.OkCancel, "Music Folder Not Online") = MsgBoxResult.Ok Then
+						Continue Do
+					Else
+						frmLocateMusicFolder.ShowDialog()
+					End If
+				End If
 
-				' Open the database.
+			Loop
 
-				DbOpen = OpenADatabase(MusicLibraryDatabase)
-			Else
-				frmLocateMusicFolder.ShowDialog()
-			End If
+			' Open the database.
+
+			DbOpen = OpenADatabase(MusicLibraryDatabase)
+
+			' If no library exists, create one.
 
 		Else
 			If MsgBox("No music library has been created.  Click ""Okay"" to create a music library now.", MsgBoxStyle.OkCancel + MsgBoxStyle.Information, "First Time Setup") = MsgBoxResult.Cancel Then End
 			CreateNewDatabase()
-			MsgBox("New library has been created.", MsgBoxStyle.Information, "Create Music Library")
 		End If
 
 		' Restore the window state.
@@ -155,40 +164,44 @@ Public Class frmMain
 			End If
 		End If
 
+		' Check if the library opened successfully.
 
-		' Populate the music library
+		If DbOpen Then
 
-		LibraryDS.Clear()
-		LibraryDA.Fill(LibraryDS, "Table")
-		LibraryTable = LibraryDS.Tables("Table")
+			' Populate the music library
 
-		' if the the library is empty, import songs now.
+			LibraryDS.Clear()
+			LibraryDA.Fill(LibraryDS, "Table")
+			LibraryTable = LibraryDS.Tables("Table")
 
-		If LibraryTable.Rows.Count = 0 Then
-			If frmLocateMusicFolder.ShowDialog = DialogResult.OK Then
-				zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
-				ii = ImportMusicList(zx, lblStatus)
-				LibraryDS.Clear()
-				LibraryDA.Fill(LibraryDS, "Table")
-				LibraryTable = LibraryDS.Tables("Table")
+			' if the the library is empty, import songs now.
+
+			If LibraryTable.Rows.Count = 0 Then
+				If frmLocateMusicFolder.ShowDialog = DialogResult.OK Then
+					zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
+					ii = ImportMusicList(zx, lblStatus)
+					LibraryDS.Clear()
+					LibraryDA.Fill(LibraryDS, "Table")
+					LibraryTable = LibraryDS.Tables("Table")
+				End If
 			End If
+
+			' Set the amount of change for the scroll bars
+
+			TopRowIndex = 0
+			VScrollBar1.SmallChange = 1
+			VScrollBar1.LargeChange = 25
+			VScrollBar1.Maximum = LibraryTable.Rows.Count - 1
+
+			' Cause the list to display.
+
+			Show()
+			picLibraryDisplay.Invalidate()
+
+			' If we were passed the name of a playlist, open it now.
+
+			If My.Application.CommandLineArgs.Count > 0 Then OpenPlaylist(My.Application.CommandLineArgs(0))
 		End If
-
-		' Set the amount of change for the scroll bars
-
-		TopRowIndex = 0
-		VScrollBar1.SmallChange = 1
-		VScrollBar1.LargeChange = 25
-		VScrollBar1.Maximum = LibraryTable.Rows.Count - 1
-
-		' Cause the list to display.
-
-		Show()
-		picLibraryDisplay.Invalidate()
-
-		' If we were passed the name of a playlist, open it now.
-
-		If My.Application.CommandLineArgs.Count > 0 Then OpenPlaylist(My.Application.CommandLineArgs(0))
 	End Sub
 
 	'***********************************************************************
@@ -298,10 +311,6 @@ Public Class frmMain
 
 			If frmLocateMusicFolder.ShowDialog = DialogResult.OK Then
 				zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
-
-				' Import the songs into the library table.
-
-				ii = ImportMusicList(zx, lblStatus)
 
 				' Rebuld the libary dataset.i
 				LibraryDS.Clear()
@@ -612,6 +621,14 @@ Public Class frmMain
 	'**********************************************************
 	Private Sub mnuControlTableEdit_Click(sender As Object, e As EventArgs) Handles mnuControlTableEditor.Click
 		frmControlTableEditor.ShowDialog()
+	End Sub
+	'**********************************************************
+
+	' The Registry Editor menu option is clicked.
+
+	'**********************************************************
+	Private Sub mnuRegistryEditor_Click(sender As Object, e As EventArgs) Handles mnuRegistryEditor.Click
+		frmRegistryEditor.ShowDialog()
 	End Sub
 	'**********************************************************
 
@@ -1872,11 +1889,19 @@ Public Class frmMain
 	' Function to verify the playlist folder is online and available.
 
 	'***********************************************************************
-	Public Function WaitForMusicFolder(path As String, timeoutSeconds As Integer) As Boolean
+	Public Function WaitForMusicFolder(MusicFolder As String, timeoutSeconds As Integer) As Boolean
 
 		' Declare variables.
 
 		Dim sw As New System.Diagnostics.Stopwatch()
+
+		' Get the drive type.
+
+		Dim di As New DriveInfo(Path.GetPathRoot(MusicFolder))
+
+		' If the drive is ready, just exit.
+
+		If di.IsReady Then Return True
 
 		' Start the stopwatch.  We'll wait just a bit in case it needs "waking up".
 
@@ -1886,9 +1911,9 @@ Public Class frmMain
 
 		Do While sw.Elapsed.TotalSeconds < timeoutSeconds
 			Try
-				If Directory.Exists(path) Then
+				If Directory.Exists(MusicFolder) Then
 					' Try a harmless operation that forces the drive to wake
-					Dim test = Directory.EnumerateFiles(path).FirstOrDefault()
+					Dim test = Directory.EnumerateFiles(MusicFolder).FirstOrDefault()
 					Return True
 				End If
 			Catch

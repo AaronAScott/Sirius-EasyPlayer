@@ -905,8 +905,9 @@ Public Class MediaPlayer
 			If value >= 0.0 And value <= 1.0 Then
 				mPlayer.Volume = value
 
+				' Draw the volume control
 				Using g As Graphics = Me.CreateGraphics
-					'DrawVolumeControl(g)
+					DrawVolumeControl(g, 150, 270)
 				End Using
 			End If
 		End Set

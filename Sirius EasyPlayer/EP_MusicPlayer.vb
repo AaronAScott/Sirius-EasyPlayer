@@ -89,7 +89,7 @@ Public Class frmMusicPlayer
 		MP.Parent = Me
 		Me.Controls.Add(MP)
 		MP.Location = New Point((Me.Width - MP.Width - lstPlaylist.Width) \ 2, Me.Height - MP.Height - MenuStrip1.Height - 20)
-		MP.Player.Volume = 100
+		MP.Player.Volume = 67
 		MP.Player.Repeat = True
 		MP.ListBox = lstPlaylist
 
@@ -348,12 +348,15 @@ Public Class frmMusicPlayer
 
 		' Refill the list box with the new playlist.
 
+		lstPlaylist.BeginUpdate()
 		For i = 0 To MP.Player.PlayListItems.Count - 1
 			lstPlaylist.Items.Add(MP.Player.PlayListItems(i))
 		Next i
+		lstPlaylist.EndUpdate()
 
 		Me.Cursor = Cursors.Default
 		lstPlaylist.Enabled = True
+		lstPlaylist.Refresh()
 
 	End Sub
 	'***********************************************************************
