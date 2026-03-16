@@ -71,7 +71,7 @@ Module EP_DataAdapterQueries
 
 		' Declare variables
 
-		Dim Command = New SqlCommand("INSERT INTO [dbo].[Library] ([HashCode],[ArtistName],[AlbumName],[SongName],[AlbumImage]) VALUES (@HashCode,@ArtistName,@AlbumName,@SongName,@AlbumImage);" & vbCrLf & " SELECT ID,HashCode,ArtistName,AlbumName,SongName,AlbumImage FROM Library WHERE (Id = SCOEP_IDENTITY())", DB)
+		Dim Command = New SqlCommand("INSERT INTO [dbo].[Library] ([HashCode],[ArtistName],[AlbumName],[SongName],[AlbumImage]) VALUES (@HashCode,@ArtistName,@AlbumName,@SongName,@AlbumImage);" & vbCrLf & " SELECT ID,HashCode,ArtistName,AlbumName,SongName,AlbumImage FROM Library WHERE (Id = SCOPE_IDENTITY())", DB)
 
 		' Set command type
 
@@ -174,7 +174,7 @@ Module EP_DataAdapterQueries
 
 		' Declare variables
 
-		Dim Command = New SqlCommand("INSERT INTO [dbo].[Control] ([ItemName],[Value]) VALUES (@ItemName,@Value);" & vbCrLf & " SELECT ID,ItemName,Value FROM Control WHERE (Id = SCOEP_IDENTITY())", DB)
+		Dim Command = New SqlCommand("INSERT INTO [dbo].[Control] ([ItemName],[Value]) VALUES (@ItemName,@Value);" & vbCrLf & " SELECT ID,ItemName,Value FROM Control WHERE (Id = SCOPE_IDENTITY())", DB)
 
 		' Set command type
 

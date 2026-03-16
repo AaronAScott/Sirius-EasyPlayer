@@ -5,6 +5,7 @@ Imports System.Globalization
 Imports System.IO
 Imports System.Text
 Imports System.Text.RegularExpressions
+Imports System.Windows.Forms.VisualStyles.VisualStyleElement
 Imports System.Windows.Forms.VisualStyles.VisualStyleElement.Status
 Imports System.Xml
 
@@ -33,7 +34,7 @@ Public Class frmMain
 	Private AlbumLineHeight As Integer
 	Private SongLineHeight As Integer
 	Private dropIndex As Integer = -1
-	Private dragToolTip As New ToolTip()
+	Private dragToolTip As ToolTip()
 	Private MP As MediaPlayer
 	Private ElapsedTime As Integer
 	Private kbdhook As New KeyboardHook
@@ -507,18 +508,30 @@ Public Class frmMain
 
 		If e.Button = MouseButtons.Right AndAlso dl2 IsNot Nothing AndAlso Not dl2.ImageBounds.Contains(e.Location) Then
 			If frmMusicPlayer.IsOpen Then mnuCMPlayItem.Enabled = False Else mnuCMPlayItem.Enabled = True
-
+																					   _
 			' Determine whether we're playing an album
 			Select Case dl2.ItemType
 				Case MusicItemType.Artist
 					mnuCMPlayItem.Text = "&Play Artist"
 					mnuCMPlayItem.Tag = MusicItemType.Artist & ":Artist:" & dl2.ArtistName
+					mnuCMCompatibility.Tag = dl2.ArtistName
+					RemoveHandler mnuCMCompatibility.CheckedChanged, AddressOf mnuCMCompatibility_CheckedChanged
+					mnuCMCompatibility.Checked = IsCompatibilitySet(mnuCMCompatibility.Tag)
+					AddHandler mnuCMCompatibility.CheckedChanged, AddressOf mnuCMCompatibility_CheckedChanged
 				Case MusicItemType.Album
 					mnuCMPlayItem.Text = "&Play Album"
 					mnuCMPlayItem.Tag = MusicItemType.Album & ":Artist:" & dl2.ArtistName & ":Album:" & dl2.AlbumName
+					mnuCMCompatibility.Tag = dl2.ArtistName & ":" & dl2.AlbumName
+					RemoveHandler mnuCMCompatibility.CheckedChanged, AddressOf mnuCMCompatibility_CheckedChanged
+					mnuCMCompatibility.Checked = IsCompatibilitySet(mnuCMCompatibility.Tag)
+					AddHandler mnuCMCompatibility.CheckedChanged, AddressOf mnuCMCompatibility_CheckedChanged
 				Case MusicItemType.Song
 					mnuCMPlayItem.Text = "&Play Song"
 					mnuCMPlayItem.Tag = MusicItemType.Song & ":Artist:" & dl2.ArtistName & ":Album:" & dl2.AlbumName & ":Song:" & dl2.SongName
+					mnuCMCompatibility.Tag = dl2.ArtistName & ":" & dl2.AlbumName & ":" & dl2.SongName
+					RemoveHandler mnuCMCompatibility.CheckedChanged, AddressOf mnuCMCompatibility_CheckedChanged
+					mnuCMCompatibility.Checked = IsCompatibilitySet(mnuCMCompatibility.Tag)
+					AddHandler mnuCMCompatibility.CheckedChanged, AddressOf mnuCMCompatibility_CheckedChanged
 			End Select
 			ContextMenuStrip3.Show(picLibraryDisplay, e.Location)
 		End If
@@ -566,10 +579,10 @@ Public Class frmMain
 				xx = lstPlayList.SelectedIndex
 				For Each AlbumDir In Directory.GetDirectories(MusicFolder & dl.ArtistName)
 					' Process songs within album
-					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, "*.mp3").Concat(Directory.GetFiles(AlbumDir, "*.wma")).Concat(Directory.GetFiles(AlbumDir, "*.flac")).ToArray()
+					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, "*.mp3").Concat(Directory.GetFiles(AlbumDir, "*.wma")).Concat(Directory.GetFiles(AlbumDir, "*.flac")).Concat(Directory.GetFiles(AlbumDir, "*.wav")).ToArray()
 					For Each SongFile In SongFiles
 						SongName = Path.GetFileName(SongFile).Replace("'", "''")
-						If lstPlayList.SelectedIndex >= 0 Then
+					If lstPlayList.SelectedIndex >= 0 Then
 							lstPlayList.Items.Insert(xx, SongFile)
 							xx += 1
 						Else
@@ -584,7 +597,7 @@ Public Class frmMain
 
 				xx = lstPlayList.SelectedIndex
 				zx = MusicFolder & AddDirSeparator(dl.ArtistName) & dl.AlbumName
-				Dim SongFiles As String() = Directory.GetFiles(zx, "*.mp3").Concat(Directory.GetFiles(zx, "*.wma")).Concat(Directory.GetFiles(zx, "*.flac")).ToArray()
+				Dim SongFiles As String() = Directory.GetFiles(zx, "*.mp3").Concat(Directory.GetFiles(zx, "*.wma")).Concat(Directory.GetFiles(zx, "*.flac")).Concat(Directory.GetFiles(zx, "*.wav")).ToArray()
 				For Each SongFile In SongFiles
 					SongName = Path.GetFileName(SongFile).Replace("'", "''")
 					If lstPlayList.SelectedIndex >= 0 Then
@@ -1175,7 +1188,8 @@ Public Class frmMain
 
 		' Declare variables
 
-		Dim zx As String = DirectCast(sender, ToolStripMenuItem).Tag
+		Dim mnu As ToolStripMenuItem = DirectCast(sender, ToolStripMenuItem)
+		Dim zx As String = mnu.Tag
 		Dim parts = zx.Split(":")
 		Dim Songs As IReadOnlyCollection(Of String) = Nothing
 		Dim Filtered As List(Of String)
@@ -1187,9 +1201,9 @@ Public Class frmMain
 
 		Select Case parts(0)
 			Case 0 ' "Artist"
-				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3")
+				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3", "*.wav")
 			Case 1 ' "Album"
-				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2) & "\" & parts(4), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3")
+				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2) & "\" & parts(4), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3", "*.wav")
 			Case 2 ' "Song"
 				Songs = Directory.GetFiles(MusicFolder & parts(2) & "\" & parts(4), parts(6))
 		End Select
@@ -1198,14 +1212,12 @@ Public Class frmMain
 
 		mnuCMPlayItem.Enabled = False
 
-		' Create a sorted list of the songs, filtered to remove duplicates in multiple
+		' Create a list of the songs, filtered to remove duplicates in multiple
 		' musical formats.
 
 		Filtered = FilterPreferredCopies(Songs)
 
-		'Dim Sorted = Songs.OrderBy(Function(s) s).ToArray()
-
-		' Assemble a song list of the selected song.
+		' Assemble a song list of the selected songs.
 
 		If Not Songs Is Nothing Then
 			For Each song In Filtered
@@ -1258,6 +1270,72 @@ Public Class frmMain
 			timElapsedTime.Enabled = True
 
 		End If
+	End Sub
+	'**********************************************************
+
+	' Event handler for the context menu Use Compatibility
+	' artist, album, song menu click event.
+
+	'**********************************************************
+	Private Sub mnuCMCompatibility_CheckedChanged(sender As Object, e As EventArgs) Handles mnuCMCompatibility.CheckedChanged
+
+		Dim mnu As ToolStripMenuItem = DirectCast(sender, ToolStripMenuItem)
+		Dim zx As String = mnu.Tag
+		Dim parts = zx.Split(":")
+		Dim Songs As IReadOnlyCollection(Of String) = Nothing
+		Dim MusicFolder As String = AddDirSeparator(GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", ""))
+		Dim song As String
+		Dim sb As New StringBuilder
+		Dim Command As SqlCommand
+
+		' Determine whether we are going to set compatibility for an artist, an album or a song.
+
+		Select Case parts.Count
+			Case 1 ' "Artist"
+				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(0), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3", "*.wav")
+				Try
+					Command = New SqlCommand("UPDATE [Library] SET Fallback =" & Math.Abs(CInt(mnu.Checked)) & " WHERE ArtistName='" & parts(0) & "'", DB)
+					Command.ExecuteNonQuery()
+				Catch ex As Exception
+					MsgBox("Failed to set/unset compatibility mode.", MsgBoxStyle.Information, "Change Compatibility Mode")
+				End Try
+			Case 2 ' "Album"
+				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(0) & "\" & parts(1), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3", "*.wav")
+				Try
+					Command = New SqlCommand("UPDATE [Library] SET Fallback =" & Math.Abs(CInt(mnu.Checked)) & " WHERE ArtistName='" & parts(0) & "' AND AlbumName='" & parts(1) & "'", DB)
+					Command.ExecuteNonQuery()
+				Catch ex As Exception
+					MsgBox("Failed to set/unset compatibility mode.", MsgBoxStyle.Information, "Change Compatibility Mode")
+				End Try
+			Case 3 ' "Song"
+				Songs = Directory.GetFiles(MusicFolder & parts(0) & "\" & parts(1), parts(2))
+				Try
+					Command = New SqlCommand("UPDATE [Library] SET Fallback =" & Math.Abs(CInt(mnu.Checked)) & " WHERE ArtistName='" & parts(0) & "' AND AlbumName='" & parts(1) & "' AND SongName='" & parts(2) & "'", DB)
+					Command.ExecuteNonQuery()
+				Catch ex As Exception
+					MsgBox("Failed to set/unset compatibility mode.", MsgBoxStyle.Information, "Change Compatibility Mode")
+				End Try
+		End Select
+
+
+		' Get the current FallbackList
+
+		zx = GetControlItem("FallbackList", "")
+
+		' Add the selected songs to the list.
+
+		If Not Songs Is Nothing Then
+			If zx <> "" Then sb.Append(zx)
+			For Each song In Songs
+				sb.Append(song & vbCrLf)
+			Next song
+
+			' Save back the new list
+
+			PutControlItem("FallbackList", sb.ToString)
+		End If
+
+
 	End Sub
 	'**********************************************************
 
@@ -1335,6 +1413,10 @@ Public Class frmMain
 		' Call the resize event to reshape everything.
 
 		frmMain_Resize(Me, EventArgs.Empty)
+
+		' Execute a full stop.
+
+		MP.Player.StopAll()
 
 		' Remove the handler.
 
@@ -1682,6 +1764,59 @@ Public Class frmMain
 
 	'***********************************************************************
 
+	' Function to tell if an artist, album or individual song has compatibility
+	' mode set.
+
+	'***********************************************************************
+	Private Function IsCompatibilitySet(info As String) As Boolean
+
+		' Declare variables
+
+		Dim parts() As String = info.Split(":")
+		Dim Cmd As SqlCommand
+		Dim ds As New DataSet
+		Dim result As Boolean
+		' Determine if we're looking for an artist, an album or an individual song.
+
+		Select Case parts.Count
+			Case 1
+				Try
+					Cmd = New SqlCommand("SELECT * From [Library] WHERE ArtistName='" & parts(0) & "' AND (AlbumName='' OR AlbumName IS NULL) AND Fallback=1", DB)
+					LibraryDA.SelectCommand = Cmd
+					LibraryDA.Fill(ds, "Table")
+					If ds.Tables("Table").Rows.Count > 0 Then result = True Else result = False
+				Catch ex As Exception
+				End Try
+
+			Case 2
+				Try
+					Cmd = New SqlCommand("SELECT * From [Library] WHERE ArtistName='" & parts(0) & "' AND AlbumName='" & parts(1) & "' AND (SongName='' OR SongName IS NULL) AND Fallback=1", DB)
+					LibraryDA.SelectCommand = Cmd
+					LibraryDA.Fill(ds, "Table")
+					If ds.Tables("Table").Rows.Count > 0 Then result = True Else result = False
+				Catch ex As Exception
+				End Try
+			Case 3
+				Try
+					Cmd = New SqlCommand("SELECT * From [Library] WHERE ArtistName='" & parts(0) & "' AND AlbumName='" & parts(1) & "' AND SongName='" & parts(2) & "' AND Fallback=1", DB)
+					LibraryDA.SelectCommand = Cmd
+					LibraryDA.Fill(ds, "Table")
+					If ds.Tables("Table").Rows.Count > 0 Then result = True Else result = False
+				Catch ex As Exception
+				End Try
+
+		End Select
+
+
+		' Restore the proper select statement to the data adapter
+
+		LibraryDA.SelectCommand = LibrarySelectCommand()
+
+		Return result
+
+	End Function
+	'***********************************************************************
+
 	' Sub to perform a "cut" of a selected song or songs from the playlist
 	' listbox.  This routine was created by Microfsoft Copilot.
 
@@ -1947,4 +2082,5 @@ Public Class frmMain
 
 		frmLocateMusicFolder.ShowDialog()
 	End Sub
+
 End Class

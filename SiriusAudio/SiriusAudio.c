@@ -63,6 +63,15 @@ extern "C" {
 	static int playstate = SEP_Undefined;
 	static float volume = 0.9f;
 
+
+	// Global buffer pointer and indices to
+	// the fallback list, which allows troublesome
+	// song files to be passed to WMP for compatibility
+	
+	static wchar_t* fbptr = NULL;
+	static const wchar_t** fbindex = NULL;
+	static size_t fbcount = 0;
+
 	// ************************************************************
 	//  Global audio device 
 	// ************************************************************
@@ -82,7 +91,6 @@ extern "C" {
 	// Function prototypes for imported and exported functions.
 	// ************************************************************
 
-
 	DLL_EXPORT void PlayPause(void);
 	DLL_EXPORT int GetAutostart(void);
 	DLL_EXPORT void SetAutostart(int i);
@@ -90,6 +98,9 @@ extern "C" {
 	DLL_EXPORT void SetRepeat(int i);
 	DLL_EXPORT int GetPlaystate(void);
 	DLL_EXPORT int DequeueEvent(int* code, void** payload);
+	DLL_EXPORT void LoadPlaylist(const wchar_t* text);
+	DLL_EXPORT BSTR GetPlaylist(void);
+	DLL_EXPORT void LoadFallbackList(const wchar_t* text);
 
 
 	// ************************************************************
@@ -103,6 +114,7 @@ extern "C" {
 	wchar_t* GetPreviousSongName(void);
 	wchar_t* GetNextSongName(void);
 	int IsWMA(const char* path);
+	int FallbackContains(const wchar_t* filename);
 
 	// Declarations for the event queue.
 
@@ -311,6 +323,61 @@ extern "C" {
 		b[chars] = L'\0';
 
 		return b;
+	}
+	// ************************************************************
+	// Function to set the fallback list.  This is a list of song
+	// that don't play properly through miniaudio, and which will
+	// be passed to the fallback (WMP) engine.  It takes the same
+	// form as a songlist, but MUST be in sorted order.
+	// ************************************************************
+	DLL_EXPORT void LoadFallbackList(const wchar_t* text)
+	{
+		// Free old buffers
+		if (fbptr) free(fbptr);
+		if (fbindex) free(fbindex);
+
+		fbptr = NULL;
+		fbindex = NULL;
+		fbcount = 0;
+
+		if (!text || *text == L'\0')
+			return;
+
+		// Copy text into fbptr
+		size_t bytes = (wcslen(text) + 1) * sizeof(wchar_t);
+		fbptr = (wchar_t*)malloc(bytes);
+		if (!fbptr) return;
+		memcpy(fbptr, text, bytes);
+
+		// First pass: count lines
+		size_t count = 0;
+		wchar_t* p = fbptr;
+
+		while (*p != L'\0')
+		{
+			count++;
+			while (*p != L'\r' && *p != L'\n' && *p != L'\0')
+				p++;
+			if (*p == L'\r') p++;
+			if (*p == L'\n') p++;
+		}
+
+		fbindex = (const wchar_t**)malloc(count * sizeof(wchar_t*));
+		if (!fbindex) return;
+
+		// Second pass: fill index
+		fbcount = 0;
+		p = fbptr;
+
+		while (*p != L'\0')
+		{
+			fbindex[fbcount++] = p;
+
+			while (*p != L'\r' && *p != L'\n' && *p != L'\0')
+				p++;
+			if (*p == L'\r') { *p = L'\0'; p++; }
+			if (*p == L'\n') { *p = L'\0'; p++; }
+		}
 	}
 	// ************************************************************
 	// Function to return the count of songs in the playlist.
@@ -577,23 +644,39 @@ extern "C" {
 	{
 		ma_result result;
 
-		// Convert UTF-16 filename to UTF-8 for miniaudio.
-		char utf8path[1024];
-		size_t converted = 0;
-		wcstombs_s(&converted, utf8path, sizeof(utf8path), songpath, _TRUNCATE);
+		// 1. Local storage that survives early returns
+		wchar_t localcopy[1024];   // or dynamically sized if needed
 
-		// NOTE: LoadAndPlaySong takes ownership of currentfilename and frees it.
+		// 2. Copy the filename into local storage
+		wcsncpy_s(localcopy, 1024, songpath, _TRUNCATE);
+
+		// 3. Free the global pointer immediately
 		if (currentfilename) {
 			free(currentfilename);
 			currentfilename = NULL;
 		}
-		// Set the playstate
 
+		// 4. Now use localcopy for everything
+
+		// Set the playstate
 		playstate = SEP_Playing;
 		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
 
+
 		// Send SongChanged event.
 		QueueEvent(SEP_SongChanged, &info);
+
+		// Check if the song is included in the fallback list.
+
+		if (FallbackContains(localcopy)) {
+			QueueEvent(SEP_UnreadableByMA, &info);
+			return 0;
+		}
+
+		// Convert UTF-16 filename to UTF-8 for miniaudio.
+		char utf8path[1024];
+		size_t converted = 0;
+		wcstombs_s(&converted, utf8path, sizeof(utf8path), localcopy, _TRUNCATE);
 
 		// Check if the file is a .wma file, which cannot be played here.
 		if (IsWMA(utf8path)) {
@@ -627,6 +710,35 @@ extern "C" {
 		ma_sound_start(&g_sound);
 
 		return MA_SUCCESS;
+	}
+	int FallbackContains(const wchar_t* filename)
+	{
+		if (!filename || !fbindex || fbcount == 0)
+			return 0;
+
+		size_t left = 0;
+		size_t right = fbcount - 1;
+
+		while (left <= right)
+		{
+			size_t mid = left + (right - left) / 2;
+			int cmp = _wcsicmp(filename, fbindex[mid]);
+
+			if (cmp == 0)
+				return 1;
+
+			if (cmp < 0)
+			{
+				if (mid == 0) break;   // avoid underflow
+				right = mid - 1;
+			}
+			else
+			{
+				left = mid + 1;
+			}
+		}
+
+		return 0;
 	}
 	// ************************************************************
 	// Function to initialize the event queue.

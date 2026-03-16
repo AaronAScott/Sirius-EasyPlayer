@@ -42,6 +42,8 @@ Partial Class frmMain
 		Me.mnuDelete = New System.Windows.Forms.ToolStripMenuItem()
 		Me.ToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuControlTableEditor = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuRegistryEditor = New System.Windows.Forms.ToolStripMenuItem()
+		Me.ToolStripSeparator6 = New System.Windows.Forms.ToolStripSeparator()
 		Me.mnuRecreate = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuRepairMetadata = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuChangeLocation = New System.Windows.Forms.ToolStripMenuItem()
@@ -78,15 +80,16 @@ Partial Class frmMain
 		Me.mnuCMFindArt = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuCMPasteAlbumArt = New System.Windows.Forms.ToolStripMenuItem()
 		Me.ToolStripSeparator4 = New System.Windows.Forms.ToolStripSeparator()
-		Me.mnuCMCancel = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuCMCancel2 = New System.Windows.Forms.ToolStripMenuItem()
 		Me.timClearMessage = New System.Windows.Forms.Timer(Me.components)
 		Me.ContextMenuStrip3 = New System.Windows.Forms.ContextMenuStrip(Me.components)
 		Me.mnuCMAddToPlaylist = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuCMPlayItem = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuCMCompatibility = New System.Windows.Forms.ToolStripMenuItem()
+		Me.ToolStripMenuItem2 = New System.Windows.Forms.ToolStripSeparator()
+		Me.mnuCMCancel3 = New System.Windows.Forms.ToolStripMenuItem()
 		Me.timElapsedTime = New System.Windows.Forms.Timer(Me.components)
 		Me.ToolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
-		Me.mnuRegistryEditor = New System.Windows.Forms.ToolStripMenuItem()
-		Me.ToolStripSeparator6 = New System.Windows.Forms.ToolStripSeparator()
 		Me.MenuStrip1.SuspendLayout()
 		Me.StatusStrip1.SuspendLayout()
 		CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -219,6 +222,17 @@ Partial Class frmMain
 		Me.mnuControlTableEditor.Name = "mnuControlTableEditor"
 		Me.mnuControlTableEditor.Size = New System.Drawing.Size(203, 22)
 		Me.mnuControlTableEditor.Text = "Control Table &Editor"
+		'
+		'mnuRegistryEditor
+		'
+		Me.mnuRegistryEditor.Name = "mnuRegistryEditor"
+		Me.mnuRegistryEditor.Size = New System.Drawing.Size(203, 22)
+		Me.mnuRegistryEditor.Text = "&Registry Editor"
+		'
+		'ToolStripSeparator6
+		'
+		Me.ToolStripSeparator6.Name = "ToolStripSeparator6"
+		Me.ToolStripSeparator6.Size = New System.Drawing.Size(200, 6)
 		'
 		'mnuRecreate
 		'
@@ -485,7 +499,7 @@ Partial Class frmMain
 		'
 		'ContextMenuStrip2
 		'
-		Me.ContextMenuStrip2.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMFindArt, Me.mnuCMPasteAlbumArt, Me.ToolStripSeparator4, Me.mnuCMCancel})
+		Me.ContextMenuStrip2.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMFindArt, Me.mnuCMPasteAlbumArt, Me.ToolStripSeparator4, Me.mnuCMCancel2})
 		Me.ContextMenuStrip2.Name = "ContextMenuStrip2"
 		Me.ContextMenuStrip2.Size = New System.Drawing.Size(161, 76)
 		'
@@ -506,11 +520,11 @@ Partial Class frmMain
 		Me.ToolStripSeparator4.Name = "ToolStripSeparator4"
 		Me.ToolStripSeparator4.Size = New System.Drawing.Size(157, 6)
 		'
-		'mnuCMCancel
+		'mnuCMCancel2
 		'
-		Me.mnuCMCancel.Name = "mnuCMCancel"
-		Me.mnuCMCancel.Size = New System.Drawing.Size(160, 22)
-		Me.mnuCMCancel.Text = "&Cancel"
+		Me.mnuCMCancel2.Name = "mnuCMCancel2"
+		Me.mnuCMCancel2.Size = New System.Drawing.Size(160, 22)
+		Me.mnuCMCancel2.Text = "&Cancel"
 		'
 		'timClearMessage
 		'
@@ -518,21 +532,39 @@ Partial Class frmMain
 		'
 		'ContextMenuStrip3
 		'
-		Me.ContextMenuStrip3.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMAddToPlaylist, Me.mnuCMPlayItem})
+		Me.ContextMenuStrip3.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMAddToPlaylist, Me.mnuCMPlayItem, Me.mnuCMCompatibility, Me.ToolStripMenuItem2, Me.mnuCMCancel3})
 		Me.ContextMenuStrip3.Name = "ContextMenuStrip3"
-		Me.ContextMenuStrip3.Size = New System.Drawing.Size(151, 48)
+		Me.ContextMenuStrip3.Size = New System.Drawing.Size(206, 98)
 		'
 		'mnuCMAddToPlaylist
 		'
 		Me.mnuCMAddToPlaylist.Name = "mnuCMAddToPlaylist"
-		Me.mnuCMAddToPlaylist.Size = New System.Drawing.Size(150, 22)
+		Me.mnuCMAddToPlaylist.Size = New System.Drawing.Size(205, 22)
 		Me.mnuCMAddToPlaylist.Text = "&Add to Playlist"
 		'
 		'mnuCMPlayItem
 		'
 		Me.mnuCMPlayItem.Name = "mnuCMPlayItem"
-		Me.mnuCMPlayItem.Size = New System.Drawing.Size(150, 22)
+		Me.mnuCMPlayItem.Size = New System.Drawing.Size(205, 22)
 		Me.mnuCMPlayItem.Text = "&Play"
+		'
+		'mnuCMCompatibility
+		'
+		Me.mnuCMCompatibility.CheckOnClick = True
+		Me.mnuCMCompatibility.Name = "mnuCMCompatibility"
+		Me.mnuCMCompatibility.Size = New System.Drawing.Size(205, 22)
+		Me.mnuCMCompatibility.Text = "Use &Compaitibility Mode"
+		'
+		'ToolStripMenuItem2
+		'
+		Me.ToolStripMenuItem2.Name = "ToolStripMenuItem2"
+		Me.ToolStripMenuItem2.Size = New System.Drawing.Size(202, 6)
+		'
+		'mnuCMCancel3
+		'
+		Me.mnuCMCancel3.Name = "mnuCMCancel3"
+		Me.mnuCMCancel3.Size = New System.Drawing.Size(205, 22)
+		Me.mnuCMCancel3.Text = "Cancel"
 		'
 		'timElapsedTime
 		'
@@ -542,17 +574,6 @@ Partial Class frmMain
 		'
 		Me.ToolStripSeparator5.Name = "ToolStripSeparator5"
 		Me.ToolStripSeparator5.Size = New System.Drawing.Size(200, 6)
-		'
-		'mnuRegistryEditor
-		'
-		Me.mnuRegistryEditor.Name = "mnuRegistryEditor"
-		Me.mnuRegistryEditor.Size = New System.Drawing.Size(203, 22)
-		Me.mnuRegistryEditor.Text = "&Registry Editor"
-		'
-		'ToolStripSeparator6
-		'
-		Me.ToolStripSeparator6.Name = "ToolStripSeparator6"
-		Me.ToolStripSeparator6.Size = New System.Drawing.Size(200, 6)
 		'
 		'frmMain
 		'
@@ -627,7 +648,7 @@ Partial Class frmMain
 	Friend WithEvents ContextMenuStrip2 As ContextMenuStrip
 	Friend WithEvents mnuCMFindArt As ToolStripMenuItem
 	Friend WithEvents ToolStripSeparator4 As ToolStripSeparator
-	Friend WithEvents mnuCMCancel As ToolStripMenuItem
+	Friend WithEvents mnuCMCancel2 As ToolStripMenuItem
 	Friend WithEvents ToolStripMenuItem1 As ToolStripMenuItem
 	Friend WithEvents mnuControlTableEditor As ToolStripMenuItem
 	Friend WithEvents mnuRecreate As ToolStripMenuItem
@@ -650,4 +671,7 @@ Partial Class frmMain
 	Friend WithEvents ToolStripSeparator5 As ToolStripSeparator
 	Friend WithEvents mnuRegistryEditor As ToolStripMenuItem
 	Friend WithEvents ToolStripSeparator6 As ToolStripSeparator
+	Friend WithEvents mnuCMCompatibility As ToolStripMenuItem
+	Friend WithEvents ToolStripMenuItem2 As ToolStripSeparator
+	Friend WithEvents mnuCMCancel3 As ToolStripMenuItem
 End Class

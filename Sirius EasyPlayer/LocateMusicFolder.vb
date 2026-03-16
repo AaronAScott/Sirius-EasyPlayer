@@ -244,6 +244,7 @@ Public Class frmLocateMusicFolder
 					songs = Directory.GetFiles(album, "*.mp3").
 						   Concat(Directory.GetFiles(album, "*.flac")).
 						   Concat(Directory.GetFiles(album, "*.wma")).
+						   Concat(Directory.GetFiles(album, "*.wav")).
 						   ToArray()
 				Catch
 					Return False

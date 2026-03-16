@@ -118,7 +118,7 @@ Public Module EP_Module1
 					Command.ExecuteNonQuery()
 
 					' Process songs within album
-					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, "*.mp3").Concat(Directory.GetFiles(AlbumDir, "*.wma")).Concat(Directory.GetFiles(AlbumDir, "*.flac")).ToArray()
+					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, "*.mp3").Concat(Directory.GetFiles(AlbumDir, "*.wma")).Concat(Directory.GetFiles(AlbumDir, "*.flac")).Concat(Directory.GetFiles(AlbumDir, "*.wav")).ToArray()
 					For Each SongFile In SongFiles
 
 						SongName = Path.GetFileName(SongFile).Replace("'", "''")
@@ -265,7 +265,7 @@ Public Module EP_Module1
 					End If
 
 					' Process songs within album
-					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, "*.mp3").Concat(Directory.GetFiles(AlbumDir, "*.wma")).ToArray()
+					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, "*.mp3").Concat(Directory.GetFiles(AlbumDir, "*.wma")).Concat(Directory.GetFiles(AlbumDir, "*.flac")).Concat(Directory.GetFiles(AlbumDir, "*.wav")).ToArray()
 					For Each SongFile In SongFiles
 
 						SongName = Path.GetFileName(SongFile).Replace("'", "''")
@@ -369,10 +369,10 @@ Public Module EP_Module1
 			Command = New SqlCommand("CREATE DATABASE [MusicLibrary] ON (NAME='MusicLibrary', FILENAME='" & MusicLibraryDatabase & "')", TempConnection)
 			Command.ExecuteNonQuery()
 
-			Command = New SqlCommand("USE [MusicLibrary];CREATE TABLE [Library]([ID] Int Not NULL IDENTITY (1, 1),[HashCode] CHAR(64) Not NULL UNIQUE,[ArtistName] NVARCHAR(255) Not NULL,[AlbumName] NVARCHAR(255) Not NULL,[SongName] NVARCHAR(255) Not NULL,[AlbumImage] NVARCHAR(255) NULL,PRIMARY KEY CLUSTERED ([ID] ASC)); CREATE NONCLUSTERED INDEX ArtistName ON [Library] (ArtistName ASC);", TempConnection)
+			Command = New SqlCommand("USE [MusicLibrary];CREATE TABLE [Library]([ID] Int Not NULL IDENTITY (1, 1),[HashCode] CHAR(64) Not NULL UNIQUE, [ArtistName] NVARCHAR(255) Not NULL,[AlbumName] NVARCHAR(255) Not NULL,[SongName] NVARCHAR(255) Not NULL,[AlbumImage] NVARCHAR(255) NULL,[Fallback] BIT NOT NULL DEFAULT ((0)),PRIMARY KEY CLUSTERED ([ID] ASC)); CREATE NONCLUSTERED INDEX ArtistName ON [Library] (ArtistName ASC);", TempConnection)
 			Command.ExecuteNonQuery()
 
-			Command = New SqlCommand("USE [MusicLibrary];CREATE TABLE [Control]([ID]  INT  NOT NULL IDENTITY (1,1), [ItemName]  NCHAR (50) NOT NULL UNIQUE, [Value]  TEXT  NULL, PRIMARY KEY CLUSTERED ([ID] ASC))", TempConnection)
+			Command = New SqlCommand("USE [MusicLibrary];CREATE TABLE [Control]([ID]  INT  NOT NULL IDENTITY (1,1), [ItemName]  NCHAR (50) NOT NULL UNIQUE, [Value]  NVARCHAR(MAX)  NULL, PRIMARY KEY CLUSTERED ([ID] ASC))", TempConnection)
 			Command.ExecuteNonQuery()
 
 			Command = New SqlCommand("USE [MusicLibrary];INSERT INTO [Control] (	[ItemName], [Value]) VALUES('DBVersion', '" & ProgramName & " Ver. " & DBVersion & "')", TempConnection)
@@ -560,7 +560,7 @@ Public Module EP_Module1
 
 			If xx = NOMATCH Then
 				dr = ControlTable.NewRow
-				dr("ItemName") = Left(Key, 20)
+				dr("ItemName") = Left(Key, 50)
 				dr("Value") = Value
 				ControlTable.Rows.Add(dr)
 
@@ -1185,7 +1185,7 @@ Public Module EP_Module1
 
 		' Get all songs
 
-		musiclist = My.Computer.FileSystem.GetFiles(MusicFolder, FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.mp3")
+		musiclist = My.Computer.FileSystem.GetFiles(MusicFolder, FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.mp3", "*.flac", "*.wav")
 
 		' Iterate through the songs
 

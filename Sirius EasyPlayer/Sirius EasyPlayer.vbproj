@@ -101,7 +101,9 @@
     <Compile Include="ColorPicker.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ControlTableEditor.designer.vb" />
+    <Compile Include="ControlTableEditor.designer.vb">
+      <DependentUpon>ControlTableEditor.vb</DependentUpon>
+    </Compile>
     <Compile Include="ControlTableEditor.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -192,7 +194,9 @@
     <EmbeddedResource Include="ColorPicker.resx">
       <DependentUpon>ColorPicker.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ControlTableEditor.resX" />
+    <EmbeddedResource Include="ControlTableEditor.resX">
+      <DependentUpon>ControlTableEditor.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="LocateMusicFolder.resx">
       <DependentUpon>LocateMusicFolder.vb</DependentUpon>
     </EmbeddedResource>

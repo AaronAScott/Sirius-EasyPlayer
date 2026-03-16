@@ -3,6 +3,8 @@ Imports System.Runtime.InteropServices
 Imports System.Xml
 Imports Microsoft.VisualBasic.Devices
 Imports WMPLib
+Imports System.Data.SqlClient
+Imports System.Text
 
 Public Class SiriusAudio
 	Implements IDisposable
@@ -26,6 +28,9 @@ Public Class SiriusAudio
 	End Function
 	<DllImport("SiriusAudio.dll", CharSet:=CharSet.Unicode)>
 	Private Shared Sub LoadPlaylist(p As String)
+	End Sub
+	<DllImport("SiriusAudio.dll", CharSet:=CharSet.Unicode)>
+	Private Shared Sub LoadFallbackList(p As String)
 	End Sub
 	Public Delegate Sub SiriusCallback(ev As SiriusEvent, payload As IntPtr)
 	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
@@ -308,12 +313,59 @@ Public Class SiriusAudio
 				Exit Property
 			End If
 
+			' Load the fallback list.  This must be done first,
+			' in case the AutoStart property will cause the player
+			' to start playing immediately.
+
+			SetFallbackList()
+
 			' Pass it on to the engine.
 
 			LoadPlaylist(value)
 
 		End Set
 	End Property
+	'****************************************************************
+	' Sub to set the FallbackList property.  This property accepts a prepared list
+	' of song names separated by CrLfs, which must be in SORTED order.
+	'****************************************************************
+	Private Sub SetFallbackList()
+
+		' Declare variables
+
+		Dim ii As Integer
+		Dim MusicFolder As String = GetSetting("SiriusSiriusEasyPlayer", "Settings", "MusicFolder", "") & "\"
+		Dim sb As New StringBuilder
+		Dim Cmd As SqlCommand
+		Dim ds As New DataSet
+		Dim dr As DataRow
+
+		' Get the list of "compatibility mode" songs, which will use
+		' the fallback (WMP) engine to play.
+
+		Try
+			Cmd = New SqlCommand("SELECT * FROM [Library] WHERE SongName<>'' AND NOT SongName IS NULL AND Fallback=1 ORDER BY ArtistName,AlbumName,SongName", DB)
+			LibraryDA.SelectCommand = Cmd
+			LibraryDA.Fill(ds, "Table")
+			If ds.Tables("Table").Rows.Count > 0 Then
+				For ii = 0 To ds.Tables("Table").Rows.Count - 1
+					dr = ds.Tables("Table").Rows(ii)
+					sb.Append(MusicFolder & dr("ArtistName") & "\" & dr("AlbumName") & "\" & dr("SongName") & vbCrLf)
+					Debug.Print(MusicFolder & dr("ArtistName") & "\" & dr("AlbumName") & "\" & dr("SongName"))
+				Next ii
+			End If
+		Catch ex As Exception
+		End Try
+
+		' Restore the select command as it should be
+
+		LibraryDA.SelectCommand = LibrarySelectCommand()
+
+		' Set the fallback list to the player DLL.
+
+		If sb.ToString <> "" Then LoadFallbackList(sb.ToString)
+
+	End Sub
 
 	'****************************************************************
 	' The Playlist property.  This property accepts the name of
