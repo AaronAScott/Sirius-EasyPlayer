@@ -206,7 +206,7 @@ Public Module EP_Module1
 				zx = GenerateMusicHash(ArtistName, "", "")
 				Matches = LibraryTable.Select("HashCode='" & zx & "'")
 				If Matches.Count = 0 Then
-					Command = New SqlCommand("INSERT INTO [Library] (HashCode, ArtistName, AlbumName, SongName, AlbumImage) VALUES ('" & zx & "','" & ArtistName & "','','','')", DB)
+					Command = New SqlCommand("INSERT INTO [Library] (HashCode, ArtistName, AlbumName, SongName, AlbumImage) VALUES ('" & zx & "','" & ArtistName.Replace("'", "''") & "','','','')", DB)
 					Command.ExecuteNonQuery()
 				End If
 
@@ -214,7 +214,7 @@ Public Module EP_Module1
 				For Each AlbumDir In Directory.GetDirectories(ArtistDir)
 
 					' Create a new music item for the album and set the album name and image key.
-					AlbumName = Path.GetFileName(AlbumDir).Replace("'", "''")
+					AlbumName = Path.GetFileName(AlbumDir)
 					' Look for the first (there are usually several) of the large album images
 					filelist = Directory.GetFiles(AlbumDir, "*large.jpg", SearchOption.TopDirectoryOnly)
 
@@ -252,7 +252,7 @@ Public Module EP_Module1
 					zx = GenerateMusicHash(ArtistName, AlbumName, "")
 					Matches = LibraryTable.Select("HashCode='" & zx & "'")
 					If Matches.Count = 0 Then
-						Command = New SqlCommand("INSERT INTO [Library] (HashCode, ArtistName, AlbumName, SongName, AlbumImage) VALUES ('" & zx & "','" & ArtistName & "','" & AlbumName & "','','" & ImageFile & "')", DB)
+						Command = New SqlCommand("INSERT INTO [Library] (HashCode, ArtistName, AlbumName, SongName, AlbumImage) VALUES ('" & zx & "','" & ArtistName.Replace("'", "''") & "','" & AlbumName.Replace("'", "''") & "','','" & ImageFile.Replace("'", "''") & "')", DB)
 						Command.ExecuteNonQuery()
 					End If
 
@@ -260,7 +260,7 @@ Public Module EP_Module1
 					' album art added after an album gets associated with the album.
 
 					If ImageFile <> "" AndAlso Matches.Count > 0 AndAlso GetR(Matches(0), "AlbumImage") = "" Then
-						Command = New SqlCommand("UPDATE [Library] SET AlbumImage='" & ImageFile & "' WHERE HashCode='" & zx & "'", DB)
+						Command = New SqlCommand("UPDATE [Library] SET AlbumImage='" & ImageFile.Replace("'", "''") & "' WHERE HashCode='" & zx & "'", DB)
 						Command.ExecuteNonQuery()
 					End If
 
@@ -268,7 +268,7 @@ Public Module EP_Module1
 					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, "*.mp3").Concat(Directory.GetFiles(AlbumDir, "*.wma")).Concat(Directory.GetFiles(AlbumDir, "*.flac")).Concat(Directory.GetFiles(AlbumDir, "*.wav")).ToArray()
 					For Each SongFile In SongFiles
 
-						SongName = Path.GetFileName(SongFile).Replace("'", "''")
+						SongName = Path.GetFileName(SongFile)
 						lblStatus.Text = $"Checking {AlbumName} {SongName}"
 						Application.DoEvents()
 
@@ -277,7 +277,7 @@ Public Module EP_Module1
 						zx = GenerateMusicHash(ArtistName, AlbumName, SongName)
 						Matches = LibraryTable.Select("HashCode='" & zx & "'")
 						If Matches.Count = 0 Then
-							Command = New SqlCommand("INSERT INTO [Library] (HashCode, ArtistName, AlbumName, SongName, AlbumImage) VALUES ('" & zx & "','" & ArtistName & "','" & AlbumName & "','" & SongName & "','')", DB)
+							Command = New SqlCommand("INSERT INTO [Library] (HashCode, ArtistName, AlbumName, SongName, AlbumImage) VALUES ('" & zx & "','" & ArtistName.Replace("'", "''") & "','" & AlbumName.Replace("'", "''") & "','" & SongName.Replace("'", "''") & "','')", DB)
 							Command.ExecuteNonQuery()
 							AddedCount += 1
 						End If
