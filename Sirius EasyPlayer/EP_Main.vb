@@ -507,8 +507,8 @@ Public Class frmMain
 		' bring up the context menu.
 
 		If e.Button = MouseButtons.Right AndAlso dl2 IsNot Nothing AndAlso Not dl2.ImageBounds.Contains(e.Location) Then
-			If frmMusicPlayer.IsOpen Then mnuCMPlayItem.Enabled = False Else mnuCMPlayItem.Enabled = True
-																					   _
+			If frmMusicPlayer.IsOpen Or Not IsNothing(MP) Then mnuCMPlayItem.Enabled = False Else mnuCMPlayItem.Enabled = True
+																									    _
 			' Determine whether we're playing an album
 			Select Case dl2.ItemType
 				Case MusicItemType.Artist
@@ -1004,6 +1004,11 @@ Public Class frmMain
 			If index <> ListBox.NoMatches Then
 				lstPlayList.SelectedIndex = index ' Select item before context menu appears
 			End If
+
+			' If the list box is empty, disable the context menu
+
+			If lstPlayList.Items.Count = 0 Then mnuCMPlay.Enabled = False Else mnuCMPlay.Enabled = True
+
 		End If
 	End Sub
 	'***********************************************************************
@@ -1047,24 +1052,30 @@ Public Class frmMain
 		' Declare variables
 
 		Dim ii As Integer
+		Dim zx As String
 		Dim sb As New StringBuilder
+		Dim MusicFolder As String = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "") & "\"
 
 		' Create a songlist for the music player.
 
 		For ii = 0 To lstPlayList.Items.Count - 1
-			sb.Append(lstPlayList.Items(ii) & vbCrLf)
+			zx = lstPlayList.Items(ii).replace("..\", MusicFolder)
+			sb.Append(zx & vbCrLf)
 		Next ii
-
-		' Assemble a song list of the selected song.
 
 		'   Create a music player in the panel below the playlist list box.'
 
 		MP = New MediaPlayer
 		pnlMusicPlayer.Controls.Add(MP)
+		MP.ListBox = lstPlayList
 
 		' Wire up the handler.
 
 		AddHandler MP.PlayerStop, AddressOf MP_PlayerStop
+
+		' Add the keyboard handler
+
+		kbdhook.Install()
 
 		' Position the music player over the playlist list box.
 
@@ -1080,6 +1091,8 @@ Public Class frmMain
 
 		lstPlayList.Enabled = False
 		mnuOpenPlayer.Enabled = False
+		lstPlayList.ContextMenu = Nothing
+		mnuCMPlayItem.Enabled = False
 
 	End Sub
 	'***********************************************************************
@@ -1346,6 +1359,45 @@ Public Class frmMain
 	Private Sub mnuCMPasteAlbumArt_Click(sender As Object, e As EventArgs) Handles mnuCMPasteAlbumArt.Click
 
 
+		' Declare variables.
+
+		Dim MusicFolder As String = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
+		Dim ArtistName As String = DisplayLines.SelectedLine.ArtistName
+		Dim AlbumName As String = DisplayLines.SelectedLine.AlbumName
+		Dim AlbumArt As Image
+
+		' If the clipboard does not contain an image, do nothing
+
+		If Not Clipboard.ContainsImage Then Exit Sub
+
+		' Get the artist and album from the selected line.
+
+		Dim files = Directory.GetFiles($"{MusicFolder}\{ArtistName}\{AlbumName}\", "*large.jpg")
+
+		' Warn the user before overwriting existing art.
+
+		If files.Length > 0 Then
+			If MsgBox("This album already contains album art.  Do you want to override it with the pasted image?  This operation CANNOT be undone.", MsgBoxStyle.YesNo, "Replace Existing Album Art") = MsgBoxResult.No Then Exit Sub
+		End If
+
+		' Get the album art from the clipboard and save it.
+
+		AlbumArt = Clipboard.GetImage
+		AlbumArt.Save($"{MusicFolder}\{ArtistName}\{AlbumName}\AlbumArt_Large.jpg")
+		Using smallArt As New Bitmap(AlbumArt, New Size(48, 48))
+			smallArt.Save($"{MusicFolder}\{ArtistName}\{AlbumName}\AlbumArt_Small.jpg", ImageFormat.Jpeg)
+
+			' Update the current display line with the location of the small album art.
+
+			DisplayLines.SelectedLine.ImageFile = $"{MusicFolder}\{ArtistName}\{AlbumName}\AlbumArt_Small.jpg"
+
+			' Redraw the album image to show the new art.
+
+			Using g As Graphics = picLibraryDisplay.CreateGraphics
+				g.DrawImage(smallArt, DisplayLines.SelectedLine.ImageBounds)
+			End Using
+		End Using
+
 	End Sub
 
 	'**********************************************************
@@ -1379,7 +1431,7 @@ Public Class frmMain
 		ElapsedTime += 1
 		Dim minutes As Integer = ElapsedTime \ 60
 		Dim seconds As Integer = ElapsedTime Mod 60
-		lblElapsedTime.Text = minutes.ToString("00") & ":" & seconds.ToString("00")
+		lblElapsedTime.Text = minutes.ToString("00") & ": " & seconds.ToString("00")
 
 		If MP.Duration > 0 Then ii = ElapsedTime / MP.Duration / 60 * 100 Else ii = 0
 		If ii > 100 Then ii = 100
@@ -1408,7 +1460,6 @@ Public Class frmMain
 		lstPlayList.Enabled = True
 		lblHeader_0.Visible = True
 		lblHeader_1.Visible = True
-		MP.Dispose()
 
 		' Call the resize event to reshape everything.
 
@@ -1434,11 +1485,18 @@ Public Class frmMain
 
 		' Enable the "Play" option in the context menu.
 
+		mnuCMPlay.Enabled = False
 		mnuCMPlayItem.Enabled = True
+		lstPlayList.ContextMenuStrip = ContextMenuStrip2
 
 		' Disable the elapsed time timer
 
 		timElapsedTime.Enabled = False
+
+		' Dispose of the music player.
+
+		MP.Dispose()
+		MP = Nothing
 
 	End Sub
 	'***********************************************************************
