@@ -32,7 +32,7 @@ It is especially well‑suited for large, carefully curated libraries (including
   - Ensures that sorting and selection remain consistent across sessions.
 
 - **Format and extension awareness:**
-  - Recognizes multiple encodings of the same track (e.g., FLAC, ALAC, MP3).
+  - Recognizes multiple encodings of the same track (e.g., FLAC, WMA, MP3).
   - Uses a configurable extension/format ranking to prefer higher‑quality versions.
 
 ### Playback and fallback behavior
