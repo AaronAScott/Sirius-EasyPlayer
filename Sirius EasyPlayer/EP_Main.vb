@@ -552,6 +552,7 @@ Public Class frmMain
 			Select Case dl2.ItemType
 				Case MusicItemType.Artist
 					mnuCMPlayItem.Text = "&Play Artist"
+					mnuCMAddToPlaylist.Text = "Add &Artist to Playlist"
 					mnuCMPlayItem.Tag = MusicItemType.Artist & ":Artist:" & dl2.ArtistName
 					mnuCMCompatibility.Tag = dl2.ArtistName
 					RemoveHandler mnuCMCompatibility.CheckedChanged, AddressOf mnuCMCompatibility_CheckedChanged
@@ -559,6 +560,7 @@ Public Class frmMain
 					AddHandler mnuCMCompatibility.CheckedChanged, AddressOf mnuCMCompatibility_CheckedChanged
 				Case MusicItemType.Album
 					mnuCMPlayItem.Text = "&Play Album"
+					mnuCMAddToPlaylist.Text = "Add &Album to Playlist"
 					mnuCMPlayItem.Tag = MusicItemType.Album & ":Artist:" & dl2.ArtistName & ":Album:" & dl2.AlbumName
 					mnuCMCompatibility.Tag = dl2.ArtistName & ":" & dl2.AlbumName
 					RemoveHandler mnuCMCompatibility.CheckedChanged, AddressOf mnuCMCompatibility_CheckedChanged
@@ -566,6 +568,7 @@ Public Class frmMain
 					AddHandler mnuCMCompatibility.CheckedChanged, AddressOf mnuCMCompatibility_CheckedChanged
 				Case MusicItemType.Song
 					mnuCMPlayItem.Text = "&Play Song"
+					mnuCMAddToPlaylist.Text = "Add &Song to Playlist"
 					mnuCMPlayItem.Tag = MusicItemType.Song & ":Artist:" & dl2.ArtistName & ":Album:" & dl2.AlbumName & ":Song:" & dl2.SongName
 					mnuCMCompatibility.Tag = dl2.ArtistName & ":" & dl2.AlbumName & ":" & dl2.SongName
 					RemoveHandler mnuCMCompatibility.CheckedChanged, AddressOf mnuCMCompatibility_CheckedChanged
@@ -1097,6 +1100,17 @@ Public Class frmMain
 	Private Sub mnuUndo_Click(sender As Object, e As EventArgs) Handles mnuUndo.Click
 		UndoLastOperation(lstPlayList)
 	End Sub
+	'**************************************************
+
+	' The Add menu option is selected.
+
+	'**************************************************
+	Private Sub mnuCMAdd_Click(sender As Object, e As EventArgs) Handles mnuCMAddToPlaylist.Click
+
+		picLibraryDisplay_DoubleClick(picLibraryDisplay, New EventArgs)
+
+	End Sub
+
 	'**************************************************
 
 	' The Play context menu option is selected.
