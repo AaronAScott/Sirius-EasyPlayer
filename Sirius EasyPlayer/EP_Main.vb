@@ -1164,9 +1164,29 @@ Public Class frmMain
 
 	End Sub
 	'***********************************************************************
+
+	' Sub to filter the contents of a playlist under construction to
+	' remove all but the best available quality files.
+
 	'***********************************************************************
 	Private Sub mnuCMChooseBest_Click(sender As Object, e As EventArgs) Handles mnuCMChooseBest.Click
-		Stop
+
+		' Declare variables.
+
+		Dim zx As String
+		Dim songs(lstPlayList.Items.Count - 1) As String
+		Dim filtered As List(Of String)
+		lstPlayList.Items.CopyTo(songs, 0)
+
+		filtered = FilterPreferredCopies(songs)
+
+		lstPlayList.Items.Clear()
+		lstPlayList.BeginUpdate()
+		For Each zx In filtered
+			lstPlayList.Items.Add(zx)
+		Next zx
+		lstPlayList.EndUpdate()
+
 	End Sub
 	'***********************************************************************
 
@@ -2291,6 +2311,15 @@ Public Class frmMain
 		result.Sort(StringComparer.OrdinalIgnoreCase)
 
 		Return result
+	End Function
+	'***********************************************************************
+
+	' Overload to the FilterPreferredCopies function, which will accept
+	' a simple string array.
+
+	'***********************************************************************
+	Public Function FilterPreferredCopies(files As String()) As List(Of String)
+		Return FilterPreferredCopies(CType(files, IReadOnlyCollection(Of String)))
 	End Function
 	'***********************************************************************
 

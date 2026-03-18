@@ -118,7 +118,7 @@ Public Module EP_Module1
 					Command.ExecuteNonQuery()
 
 					' Process songs within album
-					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, ExtensionPrecedenceWildcardsString, FileIO.SearchOption.SearchAllSubDirectories).ToArray
+					Dim SongFiles As IReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(AlbumDir, FileIO.SearchOption.SearchTopLevelOnly, ExtensionPrecedenceWildcards)
 					For Each SongFile In SongFiles
 
 						SongName = Path.GetFileName(SongFile).Replace("'", "''")
