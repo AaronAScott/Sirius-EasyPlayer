@@ -84,8 +84,7 @@ It is especially well‑suited for large, carefully curated libraries (including
 ### Album art and metadata
 
 - **Album art display:**
-  - Shows embedded artwork when available.
-  - Can fall back to folder‑based images (e.g., `folder.jpg`) when configured.
+  - Compatible with WMP, using a *_large.jpg and *_small.jpg image stored in the music folder.
 
 - **Metadata respect:**
   - Reads tags for display and organization.
