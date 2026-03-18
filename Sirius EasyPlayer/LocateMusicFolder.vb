@@ -49,6 +49,11 @@ Public Class frmLocateMusicFolder
 		'If UserCancel Then Me.DialogResult = DialogResult.Cancel Else Me.DialogResult = DialogResult.OK
 
 	End Sub
+	'***********************************************************************
+
+	' A Node is clicked.  Determine what to do.
+
+	'***********************************************************************
 	Private Sub TreeView1_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles TreeView1.BeforeExpand
 
 		Dim node As TreeNode = e.Node
@@ -85,6 +90,11 @@ Public Class frmLocateMusicFolder
 			End Try
 		End If
 	End Sub
+	'***********************************************************************
+
+	' A node is selected.  Fill its tree.
+
+	'***********************************************************************
 	Private Sub TreeView1_DoubleClick(sender As Object, e As EventArgs) Handles TreeView1.DoubleClick
 
 		Dim tv = DirectCast(sender, TreeView)
@@ -141,6 +151,11 @@ Public Class frmLocateMusicFolder
 		End If
 
 	End Sub
+	'***********************************************************************
+
+	' Function to fill the treeview with a list of available drives, to start with.
+
+	'***********************************************************************
 	Public Function GetDrives() As List(Of DriveInfo)
 		Dim drives As New List(Of DriveInfo)
 
@@ -199,6 +214,11 @@ Public Class frmLocateMusicFolder
 		If Errors = 0 Then Return 1 Else Return -1
 
 	End Function
+	'***********************************************************************
+
+	' Function to make sure the selected folder contains music files, at least
+	' one.
+	'***********************************************************************
 	Private Function ValidateSelectedMusicFolder(rootPath As String) As Boolean
 		' Root must exist
 		If Not Directory.Exists(rootPath) Then Return False
@@ -239,23 +259,24 @@ Public Class frmLocateMusicFolder
 				End If
 
 				' --- LEVEL 3: Songs ---
-				Dim songs As String()
+				Dim songs As IReadOnlyCollection(Of String)
 				Try
-					songs = Directory.GetFiles(album, "*.mp3").
-						   Concat(Directory.GetFiles(album, "*.flac")).
-						   Concat(Directory.GetFiles(album, "*.wma")).
-						   Concat(Directory.GetFiles(album, "*.wav")).
-						   ToArray()
+					songs = My.Computer.FileSystem.GetFiles(album, FileIO.SearchOption.SearchTopLevelOnly, ExtensionPrecedenceWildcards)
 				Catch
 					Return False
 				End Try
 
-				If songs.Length > 0 Then Return True
+				If songs.Count > 0 Then Return True
 			Next album
 		Next artist
 
 		Return False
 	End Function
+	'***********************************************************************
+
+	' Sub to re-create the music library, if necessary.
+
+	'***********************************************************************
 	Private Sub RecreateMusicLibrary(MusicFolder As String)
 
 		' Declare variables
@@ -290,7 +311,11 @@ Public Class frmLocateMusicFolder
 		frmMain.picLibraryDisplay.Invalidate()
 
 	End Sub
+	'***********************************************************************
 
+	' The select music library process is completed.  Exit and set the ok result
+
+	'***********************************************************************
 	Private Sub btnDone_Click(sender As Object, e As EventArgs) Handles btnDone.Click
 
 		Me.DialogResult = DialogResult.OK
@@ -298,6 +323,11 @@ Public Class frmLocateMusicFolder
 
 	End Sub
 
+	'***********************************************************************
+
+	' The select music library process is cancelled.  Exit and set the cancel result.
+
+	'***********************************************************************
 	Private Sub btnCancel_Click(sender As Object, e As EventArgs) Handles btnCancel.Click
 
 		Me.DialogResult = DialogResult.Cancel

@@ -83,7 +83,7 @@ Public Class frmMusicPlayer
 		MP.Parent = Me
 		Me.Controls.Add(MP)
 		MP.Location = New Point((Me.Width - MP.Width - lstPlaylist.Width) \ 2, Me.Height - MP.Height - MenuStrip1.Height - 20)
-		MP.Player.Volume = 67
+		MP.Player.Volume = 0.67
 		MP.Player.Repeat = True
 		MP.ListBox = lstPlaylist
 

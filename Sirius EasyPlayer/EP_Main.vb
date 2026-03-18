@@ -5,8 +5,6 @@ Imports System.Globalization
 Imports System.IO
 Imports System.Text
 Imports System.Text.RegularExpressions
-Imports System.Windows.Forms.VisualStyles.VisualStyleElement
-Imports System.Windows.Forms.VisualStyles.VisualStyleElement.Status
 Imports System.Xml
 
 Public Class frmMain
@@ -171,7 +169,7 @@ Public Class frmMain
 
 			LibraryDS.Clear()
 			LibraryDA.Fill(LibraryDS, "Table")
-			LibraryTable = LibraryDS.Tables("Table")
+			LibraryTable = SelectByView(LibraryDS.Tables("Table"))
 
 			' if the the library is empty, import songs now.
 
@@ -180,7 +178,7 @@ Public Class frmMain
 					ii = ImportMusicList(MusicFolder, lblStatus)
 					LibraryDS.Clear()
 					LibraryDA.Fill(LibraryDS, "Table")
-					LibraryTable = LibraryDS.Tables("Table")
+					LibraryTable = SelectByView(LibraryDS.Tables("Table"))
 				End If
 			End If
 
@@ -190,6 +188,10 @@ Public Class frmMain
 			VScrollBar1.SmallChange = 1
 			VScrollBar1.LargeChange = 25
 			VScrollBar1.Maximum = LibraryTable.Rows.Count - 1
+
+			' Set the library view mode: only the best-quality versions, or all versions.
+
+			mnuViewBest.Checked = CBool(GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "ViewBestOnly", "True"))
 
 			' Cause the list to display.
 
@@ -282,11 +284,6 @@ Public Class frmMain
 	'***********************************************************************
 	Private Sub mnuRecreate_Click(sender As Object, e As EventArgs) Handles mnuRecreate.Click
 
-		' Declare variables
-
-
-		Dim zx As String
-
 		' Make sure the user wants to do this.
 
 		If MsgBox("This function will destroy any previous library.  Use it only if the existing library has become corrupted, lost or unreadable.", MsgBoxStyle.Exclamation + MsgBoxStyle.OkCancel, "Recreate Music Library") = MsgBoxResult.Ok Then
@@ -312,7 +309,7 @@ Public Class frmMain
 				' Rebuld the libary dataset.i
 				LibraryDS.Clear()
 				LibraryDA.Fill(LibraryDS, "Table")
-				LibraryTable = LibraryDS.Tables("Table")
+				LibraryTable = SelectByView(LibraryDS.Tables("Table"))
 				VScrollBar1.Maximum = LibraryTable.Rows.Count - 1
 
 				' Force the newly-recreated library to display.
@@ -328,6 +325,14 @@ Public Class frmMain
 	'***********************************************************************
 	Private Sub mnuRepairMetadata_Click(sender As Object, e As EventArgs) Handles mnuRepairMetadata.Click
 		RepairMetadata()
+	End Sub
+	'***********************************************************************
+
+	' The Change Music File Version Precendence menu option is selected.
+
+	'***********************************************************************
+	Private Sub mnuChangePrecedence_Click(sender As Object, e As EventArgs) Handles mnuChangePrecedence.Click
+		frmChangeFilePrecedence.ShowDialog()
 	End Sub
 	'***********************************************************************
 
@@ -350,6 +355,43 @@ Public Class frmMain
 			zx = "Update completed.  No new music found."
 		End If
 		MsgBox(zx, MsgBoxStyle.Information, "Check for New Music")
+
+	End Sub
+	'*********************************************************
+
+	' The View Best/View all menu options have changed.
+
+	'*********************************************************
+	Private Sub mnuViewMode_CheckedChanged(sender As Object, e As EventArgs) Handles mnuViewBest.Click, mnuViewAll.Click
+
+		' Declare variables
+
+		Dim ViewBest As Boolean = CBool(GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "ViewBestOnly", CStr(mnuViewBest.Checked)))
+
+		' Toggle the View Best state.
+
+		ViewBest = Not ViewBest
+		If ViewBest Then
+			mnuViewBest.Checked = True
+			mnuViewAll.Checked = False
+		Else
+			mnuViewBest.Checked = False
+			mnuViewAll.Checked = True
+		End If
+
+		' Save the option.
+
+		SaveSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "ViewBestOnly", CStr(ViewBest))
+
+		' Rebuild the dataset
+
+		LibraryDS.Clear()
+		LibraryDA.Fill(LibraryDS, "Table")
+		LibraryTable = SelectByView(LibraryDS.Tables("Table"))
+
+		' Repaint the display.
+
+		picLibraryDisplay.Invalidate()
 
 	End Sub
 	'*********************************************************
@@ -559,9 +601,10 @@ Public Class frmMain
 
 		Dim xx As Integer = 0
 		Dim zx As String
-		Dim SongName As String = ""
 		Dim dl As DisplayLine = DisplayLines.SelectedLine
-		Dim song As AlbumSong
+		Dim AlbumDir As String
+		Dim song As String
+		Dim SongFiles As List(Of String)
 
 		' If we haven't created a song list, do so now.
 
@@ -575,35 +618,42 @@ Public Class frmMain
 				xx = lstPlayList.SelectedIndex
 				For Each AlbumDir In Directory.GetDirectories(MusicFolder & dl.ArtistName)
 					' Process songs within album
-					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, "*.mp3").Concat(Directory.GetFiles(AlbumDir, "*.wma")).Concat(Directory.GetFiles(AlbumDir, "*.flac")).Concat(Directory.GetFiles(AlbumDir, "*.wav")).ToArray()
-					For Each SongFile In SongFiles
-						SongName = Path.GetFileName(SongFile).Replace("'", "''")
-					If lstPlayList.SelectedIndex >= 0 Then
-							lstPlayList.Items.Insert(xx, SongFile)
+					Dim songs As IReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(AlbumDir, FileIO.SearchOption.SearchTopLevelOnly, ExtensionPrecedenceWildcards())
+					If mnuViewBest.Checked Then
+						SongFiles = FilterPreferredCopies(songs)
+					Else
+						SongFiles = songs.ToList
+					End If
+					For Each song In SongFiles
+						If lstPlayList.SelectedIndex >= 0 Then
+							lstPlayList.Items.Insert(xx, song)
 							xx += 1
 						Else
-							xx = lstPlayList.Items.Add(SongFile)
+							xx = lstPlayList.Items.Add(song)
 						End If
-						song = New AlbumSong(dl.ArtistName, AlbumDir, SongName, SongFile)
-					Next SongFile
+					Next Song
 				Next AlbumDir
 
 			Case MusicItemType.Album
 				' Process songs within album
 
+				AlbumDir = $"{MusicFolder}{dl.ArtistName}\{dl.AlbumName}\"
 				xx = lstPlayList.SelectedIndex
-				zx = MusicFolder & AddDirSeparator(dl.ArtistName) & dl.AlbumName
-				Dim SongFiles As String() = Directory.GetFiles(zx, "*.mp3").Concat(Directory.GetFiles(zx, "*.wma")).Concat(Directory.GetFiles(zx, "*.flac")).Concat(Directory.GetFiles(zx, "*.wav")).ToArray()
-				For Each SongFile In SongFiles
-					SongName = Path.GetFileName(SongFile).Replace("'", "''")
+				Dim songs As IReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(AlbumDir, FileIO.SearchOption.SearchTopLevelOnly, ExtensionPrecedenceWildcards())
+				If mnuViewBest.Checked Then
+					SongFiles = FilterPreferredCopies(songs)
+				Else
+					SongFiles = songs.ToList
+				End If
+				For Each song In SongFiles
 					If lstPlayList.SelectedIndex >= 0 Then
-						lstPlayList.Items.Insert(xx, SongFile)
+						lstPlayList.Items.Insert(xx, song)
 						xx += 1
 					Else
-						xx = lstPlayList.Items.Add(SongFile)
+						xx = lstPlayList.Items.Add(song)
 					End If
-					song = New AlbumSong(dl.ArtistName, dl.AlbumName, SongName, SongFile)
-				Next SongFile
+				Next song
+
 
 			Case MusicItemType.Song
 
@@ -616,7 +666,6 @@ Public Class frmMain
 					xx = lstPlayList.Items.Add(zx & dl.SongName)
 				End If
 
-				song = New AlbumSong(dl.ArtistName, dl.AlbumName, dl.SongName, zx)
 		End Select
 		lstPlayList.EndUpdate()
 
@@ -711,6 +760,19 @@ Public Class frmMain
 		Dim f As Font = e.Font
 		Dim l As Label
 
+		Dim sf As New StringFormat()
+		sf.FormatFlags = StringFormatFlags.NoWrap
+		sf.Trimming = StringTrimming.EllipsisCharacter
+
+		' If the music player control has taken control of drawing this listbox, it will set the listbox
+		' tag property to "true" during this event.  If this is seen, exit and do nothing: the draw event
+		' has been handled higher up the chain of event handlers.
+
+		If sender.tag = "Handled" Then
+			sender.tag = ""
+			Exit Sub
+		End If
+
 		' Get the song name and album name from the listbox item.
 
 		If e.Index >= 0 Then
@@ -760,17 +822,17 @@ Public Class frmMain
 					If jj = 1 Then
 						Song = TextTrim(g, SanitizeSongName(Path.GetFileNameWithoutExtension(zx)), l.Width, f)
 						If ContainsError Then
-							g.DrawString(Song, f, Brushes.Red, Rect)
+							g.DrawString(Song, f, Brushes.Red, Rect, sf)
 						Else
-							g.DrawString(Song, f, Brushes.Black, Rect)
+							g.DrawString(Song, f, Brushes.Black, Rect, sf)
 						End If
 					Else
 						zx = Artist & "-" & Album
 						If ContainsError Then
 							zx = TextTrim(g, zx, Rect.Width, f)
-							g.DrawString(zx, f, Brushes.Red, Rect)
+							g.DrawString(zx, f, Brushes.Red, Rect, sf)
 						Else
-							g.DrawString(zx, f, Brushes.Blue, Rect)
+							g.DrawString(zx, f, Brushes.Blue, Rect, sf)
 						End If
 					End If
 				Next jj
@@ -1156,7 +1218,7 @@ Public Class frmMain
 
 			LibraryDS.Clear()
 			LibraryDA.Fill(LibraryDS, "Table")
-			LibraryTable = LibraryDS.Tables("Table")
+			LibraryTable = SelectByView(LibraryDS.Tables("Table"))
 
 			' Update the current display line with the location of the small album art.
 
@@ -1215,7 +1277,7 @@ Public Class frmMain
 
 					LibraryDS.Clear()
 					LibraryDA.Fill(LibraryDS, "Table")
-					LibraryTable = LibraryDS.Tables("Table")
+					LibraryTable = SelectByView(LibraryDS.Tables("Table"))
 				End If
 			Catch ex As Exception
 			End Try
@@ -1243,9 +1305,9 @@ Public Class frmMain
 
 		Select Case parts(0)
 			Case 0 ' "Artist"
-				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3", "*.wav")
+				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2), FileIO.SearchOption.SearchAllSubDirectories, ExtensionPrecedenceWildcards)
 			Case 1 ' "Album"
-				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2) & "\" & parts(4), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3", "*.wav")
+				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(2) & "\" & parts(4), FileIO.SearchOption.SearchAllSubDirectories, ExtensionPrecedenceWildcards)
 			Case 2 ' "Song"
 				Songs = Directory.GetFiles(MusicFolder & parts(2) & "\" & parts(4), parts(6))
 		End Select
@@ -1333,7 +1395,7 @@ Public Class frmMain
 
 		Select Case parts.Count
 			Case 1 ' "Artist"
-				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(0), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3", "*.wav")
+				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(0), FileIO.SearchOption.SearchAllSubDirectories, ExtensionPrecedenceWildcards)
 				Try
 					Command = New SqlCommand("UPDATE [Library] SET Fallback =" & Math.Abs(CInt(mnu.Checked)) & " WHERE ArtistName='" & parts(0) & "'", DB)
 					Command.ExecuteNonQuery()
@@ -1341,7 +1403,7 @@ Public Class frmMain
 					MsgBox("Failed to set/unset compatibility mode.", MsgBoxStyle.Information, "Change Compatibility Mode")
 				End Try
 			Case 2 ' "Album"
-				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(0) & "\" & parts(1), FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.flac", "*.mp3", "*.wav")
+				Songs = My.Computer.FileSystem.GetFiles(MusicFolder & parts(0) & "\" & parts(1), FileIO.SearchOption.SearchAllSubDirectories, ExtensionPrecedenceWildcards)
 				Try
 					Command = New SqlCommand("UPDATE [Library] SET Fallback =" & Math.Abs(CInt(mnu.Checked)) & " WHERE ArtistName='" & parts(0) & "' AND AlbumName='" & parts(1) & "'", DB)
 					Command.ExecuteNonQuery()
@@ -1902,6 +1964,79 @@ Public Class frmMain
 	End Function
 	'***********************************************************************
 
+	' Function to optionally filter the library table to show only the
+	' best versions of songs of which multiple versions exist.
+
+	'***********************************************************************
+	Private Function SelectByView(fullTable As DataTable) As DataTable
+
+		' If the current view is "View All", just return the full table.
+
+		If mnuViewAll.Checked Then Return fullTable
+
+		Dim LastArtist As String = ""
+		Dim LastAlbum As String = ""
+		Dim SongName As String
+		Dim ext As String
+		Dim dr As DataRow
+
+		Dim bestTable As DataTable = fullTable.Clone()
+
+		For Each row As DataRow In fullTable.Rows
+			SongName = row("SongName")
+			ext = Path.GetExtension(SongName)
+
+			' clone the current row.
+			dr = bestTable.NewRow()
+			dr.ItemArray = row.ItemArray.Clone()
+
+			' Be sure to include artist and album entries.  These have
+			' no song name.
+
+
+			If row("SongName").ToString = "" Then
+				bestTable.Rows.Add(dr)
+
+				' See if the last row added contains the name without extension of the 
+				' current row's song name.
+
+			ElseIf Not (bestTable.Rows(bestTable.Rows.Count - 1)("SongName")).ToString.ToLower.Contains(Path.GetFileNameWithoutExtension(SongName.tolower)) Then
+				' First time seeing this song.
+				bestTable.Rows.Add(dr)
+
+				' If we find another song with the same name but different extenstion, see if it's 
+				' a better version.
+			Else
+				' Compare extensions and keep the better one.
+				If ExtensionRank(ext) < ExtensionRank(Path.GetExtension(bestTable.Rows(bestTable.Rows.Count - 1)("SongName").ToString)) Then
+					bestTable.Rows(bestTable.Rows.Count - 1).Delete()
+					bestTable.Rows.Add(dr)
+				End If
+			End If
+		Next row
+
+
+		Return bestTable
+	End Function
+	'***********************************************************************
+
+	' Function to return the precendence order for a file extension.
+
+	'***********************************************************************
+	Private Function ExtensionRank(ext As String) As Integer
+
+		Dim ii As Integer
+		Dim ExtList() As String = ExtensionPrecedence
+		For ii = 0 To ExtList.Count - 1
+			If ext.ToLower = ExtList(ii) Then Return ii + 1
+		Next ii
+
+		Return 99
+	End Function
+
+
+	'***********************************************************************
+
 	' Sub to perform a "cut" of a selected song or songs from the playlist
 	' listbox.  This routine was created by Microfsoft Copilot.
 
@@ -2068,7 +2203,6 @@ Public Class frmMain
 				' Ignore copy—it doesn't alter the list
 		End Select
 	End Sub
-	Private Shared ReadOnly ExtensionPrecedence As String() = {".flac", ".mp3", ".wma", ".wav"}
 	'***********************************************************************
 	' Function to take a fully-qualified song name and check to see if that
 	' song exists in a better version (.flac over .mp3, for example).  If one
@@ -2101,7 +2235,7 @@ Public Class frmMain
 		Dim best = candidates.
 	   OrderBy(Function(f)
 				 Dim ext = Path.GetExtension(f).ToLowerInvariant()
-				 Dim idx = Array.IndexOf(ExtensionPrecedence, ext)
+				 Dim idx = Array.IndexOf(ExtensionPrecedence(), ext)
 				 If idx = -1 Then idx = Integer.MaxValue
 				 Return idx
 			 End Function).

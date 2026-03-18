@@ -477,6 +477,7 @@ Public Class MediaPlayer
 
 	'**********************************************************
 	Private Sub lstPlaylist_DrawItem(sender As Object, e As DrawItemEventArgs)
+
 		' Declare variables
 
 		Dim ContainsError As Boolean = False
@@ -486,6 +487,11 @@ Public Class MediaPlayer
 		Dim f As Font = e.Font
 		Dim rect As Rectangle
 		Dim isSelected As Boolean = (e.State And DrawItemState.Selected) = DrawItemState.Selected
+
+		' Set the value of e.State to -1, which will, when passed down the chain of event
+		' handlers, tell them this handler has done the drawing, and for themto do nothing.
+
+		sender.tag = "Handled"
 
 		' Get the song name and album name from the listbox item.
 

@@ -116,6 +116,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>EP_Theme.resx</DependentUpon>
     </Compile>
+    <Compile Include="EP_ChangeFilePrecedence.Designer.vb">
+      <DependentUpon>EP_ChangeFilePrecedence.vb</DependentUpon>
+    </Compile>
+    <Compile Include="EP_ChangeFilePrecedence.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Global.vb" />
     <Compile Include="KeyboardHook.vb" />
     <Compile Include="Lib.vb" />
@@ -190,6 +196,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ControlTableEditor.resX">
       <DependentUpon>ControlTableEditor.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EP_ChangeFilePrecedence.resx">
+      <DependentUpon>EP_ChangeFilePrecedence.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="LocateMusicFolder.resx">
       <DependentUpon>LocateMusicFolder.vb</DependentUpon>

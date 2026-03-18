@@ -12,6 +12,7 @@ Public Class DisplayLine
 	Public ImageFile As String = ""
 	Public ImageBounds As Rectangle
 	Public Bounds As Rectangle
+	Public Index As Integer
 End Class
 Public Class DisplayLines
 
@@ -19,7 +20,8 @@ Public Class DisplayLines
 
 	' Adds a DisplayLine object to the collection
 	Public Sub Add(displayLine As DisplayLine)
-		displayLines.Add(displayLine)
+		displayLine.Index = DisplayLines.Count
+		DisplayLines.Add(displayLine)
 	End Sub
 
 	' Finds the DisplayLine that contains the given point

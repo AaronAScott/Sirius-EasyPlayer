@@ -118,7 +118,7 @@ Public Module EP_Module1
 					Command.ExecuteNonQuery()
 
 					' Process songs within album
-					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, "*.mp3").Concat(Directory.GetFiles(AlbumDir, "*.wma")).Concat(Directory.GetFiles(AlbumDir, "*.flac")).Concat(Directory.GetFiles(AlbumDir, "*.wav")).ToArray()
+					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, ExtensionPrecedenceWildcardsString, FileIO.SearchOption.SearchAllSubDirectories).ToArray
 					For Each SongFile In SongFiles
 
 						SongName = Path.GetFileName(SongFile).Replace("'", "''")
@@ -265,7 +265,7 @@ Public Module EP_Module1
 					End If
 
 					' Process songs within album
-					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, "*.mp3").Concat(Directory.GetFiles(AlbumDir, "*.wma")).Concat(Directory.GetFiles(AlbumDir, "*.flac")).Concat(Directory.GetFiles(AlbumDir, "*.wav")).ToArray()
+					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, ExtensionPrecedenceWildcardsString, FileIO.SearchOption.SearchTopLevelOnly)
 					For Each SongFile In SongFiles
 
 						SongName = Path.GetFileName(SongFile)
@@ -1152,7 +1152,7 @@ Public Module EP_Module1
 
 		' Get all songs
 
-		musiclist = My.Computer.FileSystem.GetFiles(MusicFolder, FileIO.SearchOption.SearchAllSubDirectories, "*.wma", "*.mp3", "*.flac", "*.wav")
+		musiclist = My.Computer.FileSystem.GetFiles(MusicFolder, FileIO.SearchOption.SearchAllSubDirectories, ExtensionPrecedenceWildcards)
 
 		' Iterate through the songs
 
@@ -1318,4 +1318,30 @@ Public Module EP_Module1
 			End If
 		End Set
 	End Property
+	'**************************************************
+
+	' Property to set or retrieve the file extension
+	' precedence string set.
+
+	'**************************************************
+	Public ReadOnly Property ExtensionPrecedence As String()
+		Get
+			Dim zx As String = GetSetting("Sirius" & SRep(ProgramName, 1, " ", ""), "Settings", "FilePrecedence", ".flac,.ogg,.mp3,.wma,.wav")
+			Dim Ext() As String = zx.Split(",")
+			Return Ext
+		End Get
+	End Property
+	'**************************************************
+
+	' Functions to return wildcards of the extension
+	' precedence array as a string array or a single string.
+
+	'**************************************************
+	Public Function ExtensionPrecedenceWildcards() As String()
+		Return ExtensionPrecedence.Select(Function(ext) "*" & ext).ToArray()
+	End Function
+
+	Public Function ExtensionPrecedenceWildcardsString() As String
+		Return String.Join(",", ExtensionPrecedence.Select(Function(ext) "*." & ext))
+	End Function
 End Module

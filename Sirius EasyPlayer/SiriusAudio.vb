@@ -230,7 +230,7 @@ Public Class SiriusAudio
 
 		Dim media As WMPLib.IWMPMedia
 		wmPlayer.controls.stop()
-		wmPlayer.settings.volume = 80
+		wmPlayer.settings.volume = GetVolume() * 100
 		PlayStop()
 		media = wmPlayer.newMedia(filename)
 		wmPlayer.currentMedia = media
