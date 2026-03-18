@@ -302,33 +302,6 @@ Public Module EP_Module1
 		Return AddedCount
 
 	End Function
-
-	'***********************************************************************
-
-	' Sub to get a list of all locatable music folder.
-
-	' Adapted from code created by Microsoft Copilot
-	'***********************************************************************
-	Public Sub PopulateDriveList(ByVal listBox As ComboBox)
-
-		Try
-			Dim Drives As DriveInfo() = DriveInfo.GetDrives()
-
-			For Each Drive In Drives
-				If Drive.IsReady Then
-					Dim rootPath As String = Drive.Name
-					' Check for a specific "Backups" folder and add it separately
-					Dim MusicFolder As String = Path.Combine(rootPath, "Music")
-					If Directory.Exists(MusicFolder) Then
-						listBox.Items.Add($"   {MusicFolder}")
-					End If
-				End If
-			Next Drive
-		Catch ex As Exception
-			MsgBox("Error retrieving drives: " & ex.Message, MsgBoxStyle.Information, "Find Music Folder")
-		End Try
-
-	End Sub
 	'*******************************************************************
 
 	' Sub to create a new music Library.
@@ -1033,9 +1006,8 @@ Public Module EP_Module1
 
 		Dim ii As Integer
 
-		Dim MusicFolder As String = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
 		Dim ImageFiles As IReadOnlyCollection(Of String)
-		ImageFiles = Directory.GetFiles(MusicFolder & "\" & artist & "\" & album, "*.jpg")
+		ImageFiles = Directory.GetFiles(MusicFolder & artist & "\" & album, "*.jpg")
 		If ImageFiles.Count > 0 Then
 			For ii = 0 To ImageFiles.Count - 1
 				If ImageFiles(ii).ToLower.Contains("}_small") Then Return ImageFiles(ii)
@@ -1172,16 +1144,11 @@ Public Module EP_Module1
 
 		' Declare variables
 
-		Dim MusicFolder As String
 		Dim filename As String
 		Dim xx As String
 		Dim zx As String
 		Dim musiclist As IReadOnlyCollection(Of String)
 		Dim parts() As String
-
-		' Get the name of the music folder.
-
-		MusicFolder = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
 
 		' Get all songs
 
@@ -1280,7 +1247,13 @@ Public Module EP_Module1
 		s = s.Replace("&amp;", "&")
 
 		Return s
-	End Function   '**************************************************
+	End Function
+	Public ReadOnly Property MusicFolder
+		Get
+			Return GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "") & "\"
+		End Get
+	End Property
+	'**************************************************
 	'
 	' Property to get or set the message box theme
 	'

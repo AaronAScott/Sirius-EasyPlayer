@@ -29,7 +29,6 @@ Public Class MediaPlayer
 	Private MediaPlaying As Boolean = False
 	Private IgnoreMediaChangeEvent As Boolean
 	Private Shared cbInstanceCount As Integer = 0
-	Private MusicFolder As String
 	Private mPlaylist As String = ""
 	Private SongTitle As String
 	Private AlbumName As String
@@ -114,8 +113,6 @@ Public Class MediaPlayer
 			AddHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
 			AddHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
 		End If
-
-		MusicFolder = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
 
 		Me.SetStyle(ControlStyles.UserMouse, True) ' This makes sure mouse events work.
 	End Sub
@@ -755,7 +752,7 @@ Public Class MediaPlayer
 
 			' Get the small album art.
 
-			AlbumImage = GetCoverArt($"{MusicFolder}\{ArtistName}\{AlbumName}", CoverArtSize.Small)
+			AlbumImage = GetCoverArt($"{MusicFolder}{ArtistName}\{AlbumName}", CoverArtSize.Small)
 
 			' Redraw the new album image.
 
@@ -769,7 +766,7 @@ Public Class MediaPlayer
 
 		' Get the large album image and save it for the properties.
 
-		mAlbumArt = GetCoverArt($"{MusicFolder}\{ArtistName}\{AlbumName}", CoverArtSize.Large)
+		mAlbumArt = GetCoverArt($"{MusicFolder}{ArtistName}\{AlbumName}", CoverArtSize.Large)
 
 		' Set the current song as the selected item in the list box.
 

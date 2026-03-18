@@ -118,7 +118,6 @@ Public Class frmMain
 		' See if the library database exists.  If it does, open it.  If not, create it.
 
 		If My.Computer.FileSystem.FileExists(MusicLibraryDatabase) Then
-			Dim MusicFolder As String = AddDirSeparator(GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", ""))
 
 			' Check the availablility of the music library.
 
@@ -178,8 +177,7 @@ Public Class frmMain
 
 			If LibraryTable.Rows.Count = 0 Then
 				If frmLocateMusicFolder.ShowDialog = DialogResult.OK Then
-					zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
-					ii = ImportMusicList(zx, lblStatus)
+					ii = ImportMusicList(MusicFolder, lblStatus)
 					LibraryDS.Clear()
 					LibraryDA.Fill(LibraryDS, "Table")
 					LibraryTable = LibraryDS.Tables("Table")
@@ -310,7 +308,6 @@ Public Class frmMain
 			' Ask the user to select a music folder from which to populate the library.
 
 			If frmLocateMusicFolder.ShowDialog = DialogResult.OK Then
-				zx = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
 
 				' Rebuld the libary dataset.i
 				LibraryDS.Clear()
@@ -342,11 +339,11 @@ Public Class frmMain
 		' Declare variables.
 
 		Dim ii As Integer
-		Dim zx As String = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
+		Dim zx As String
 
 		' Call the import routine.
 
-		ii = UpdateMusicList(zx, lblStatus)
+		ii = UpdateMusicList(MusicFolder, lblStatus)
 		If ii > 0 Then
 			zx = "Update completed. " & ii & " new music file(s) were added."
 		Else
@@ -562,7 +559,6 @@ Public Class frmMain
 
 		Dim xx As Integer = 0
 		Dim zx As String
-		Dim MusicFolder As String = AddDirSeparator(GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", ""))
 		Dim SongName As String = ""
 		Dim dl As DisplayLine = DisplayLines.SelectedLine
 		Dim song As AlbumSong
@@ -802,14 +798,13 @@ Public Class frmMain
 
 		' Declare variables
 
-		Dim zx As String = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "") & "\"
 		Dim res As DialogResult
 
 		' Have the user select a playlist from the playlists folder, in the music folder.
 
 		OpenFileDialog1.Title = "Open Windows Playlist"
 		OpenFileDialog1.Filter = "Windows Playlists (*.wpl)|*.wpl"
-		OpenFileDialog1.InitialDirectory = zx & "Playlists"
+		OpenFileDialog1.InitialDirectory = MusicFolder & "Playlists"
 		OpenFileDialog1.FileName = ""
 
 		' If the user selected a playlist to open, proceed.
@@ -842,13 +837,12 @@ Public Class frmMain
 		' Declare variables
 
 		Dim wx As String
-		Dim zx As String = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
 
 		' Get the name and location to which the playlist will be saved.
 
 		SaveFileDialog1.Title = "Save Windows Playlist"
 		SaveFileDialog1.Filter = "Windows Playlists (*.wpl)|*.wpl"
-		SaveFileDialog1.InitialDirectory = zx & "\Playlists"
+		SaveFileDialog1.InitialDirectory = MusicFolder & "Playlists"
 		SaveFileDialog1.AddExtension = True
 		SaveFileDialog1.OverwritePrompt = True
 		SaveFileDialog1.FileName = PlaylistName & ".wpl"
@@ -903,12 +897,11 @@ Public Class frmMain
 		Dim Artist As String
 		Dim Album As String
 		Dim Song As String
-		Dim MusicFolder As String = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
 
 		' Begin going through each item in the playlist, looking for ones marked as containing errors.
 
 		If lstPlayList.Items.Count > 0 Then
-			My.Computer.FileSystem.CurrentDirectory = MusicFolder & "\Playlists"
+			My.Computer.FileSystem.CurrentDirectory = MusicFolder & "Playlists"
 
 			For ii = 0 To lstPlayList.Items.Count - 1
 
@@ -958,7 +951,7 @@ Public Class frmMain
 								' If we find more than one, we'll take the first only.
 
 								Try
-									xx = Directory.GetFiles(MusicFolder & "\" & Artist & "\" & Album, "*" & Song & ".*")
+									xx = Directory.GetFiles(MusicFolder & Artist & "\" & Album, "*" & Song & ".*")
 									If xx.Count > 0 Then wx = xx(0)
 
 									' Any error means the song is unrepairable.
@@ -1054,7 +1047,6 @@ Public Class frmMain
 		Dim ii As Integer
 		Dim zx As String
 		Dim sb As New StringBuilder
-		Dim MusicFolder As String = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "") & "\"
 
 		' Create a songlist for the music player.
 
@@ -1096,6 +1088,45 @@ Public Class frmMain
 
 	End Sub
 	'***********************************************************************
+	'***********************************************************************
+	Private Sub mnuCMChooseBest_Click(sender As Object, e As EventArgs) Handles mnuCMChooseBest.Click
+		Stop
+	End Sub
+	'***********************************************************************
+
+	' Sub to sort or shuffle a playlist.
+
+	'***********************************************************************
+	Private Sub mnuOrderBy_Click(sender As Object, e As EventArgs) Handles mnuCMSort.Click, mnuCMShuffle.Click
+
+		' Declare variables
+
+		Dim ii As Integer
+		Dim zx As String
+		Dim LBItems() As String
+
+		' Get the items from the list box.
+
+		If lstPlayList.Items.Count > 0 Then
+			ReDim LBItems(lstPlayList.Items.Count - 1)
+			For ii = 0 To lstPlayList.Items.Count - 1
+				zx = lstPlayList.Items(ii).replace("*", "").replace("..\", MusicFolder)
+				LBItems(ii) = zx
+			Next ii
+
+			' Either sort or shuffle them depending on the menu selected.
+
+			If sender Is mnuCMSort Then LBItems = OrderBy(LBItems, 0) Else LBItems = OrderBy(LBItems, 1)
+
+			' Reset the playlist.
+
+			For ii = 0 To lstPlayList.Items.Count - 1
+				lstPlayList.Items(ii) = LBItems(ii)
+			Next ii
+		End If
+
+	End Sub
+	'***********************************************************************
 
 	' The find album art context menu item is clicked.
 
@@ -1104,7 +1135,6 @@ Public Class frmMain
 
 		' Declare variables.
 
-		Dim MusicFolder As String = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
 		Dim ArtistName As String = DisplayLines.SelectedLine.ArtistName
 		Dim AlbumName As String = DisplayLines.SelectedLine.AlbumName
 		Dim AlbumArt As Image
@@ -1157,17 +1187,17 @@ Public Class frmMain
 					Dim imageGuid As String = AlbumArt.FrameDimensionsList(0).ToString
 					' Save the original image as AlbumArtLarge.jpg
 					Using LargeArt As New Bitmap(AlbumArt, New Size(250, 250))
-						LargeArt.Save(MusicFolder & "\" & DisplayLines.SelectedLine.ArtistName & "\" & DisplayLines.SelectedLine.AlbumName & "\AlbumArt_{" & imageGuid & "}_Large.jpg", ImageFormat.Jpeg)
+						LargeArt.Save(MusicFolder & DisplayLines.SelectedLine.ArtistName & "\" & DisplayLines.SelectedLine.AlbumName & "\AlbumArt_{" & imageGuid & "}_Large.jpg", ImageFormat.Jpeg)
 					End Using
 
 					' Resize to 48x48 and save the small image.
 
 					Using smallArt As New Bitmap(AlbumArt, New Size(48, 48))
-						smallArt.Save(MusicFolder & "\" & DisplayLines.SelectedLine.ArtistName & "\" & DisplayLines.SelectedLine.AlbumName & "\AlbumArt_{" & imageGuid & "}_Small.jpg", ImageFormat.Jpeg)
+						smallArt.Save(MusicFolder & DisplayLines.SelectedLine.ArtistName & "\" & DisplayLines.SelectedLine.AlbumName & "\AlbumArt_{" & imageGuid & "}_Small.jpg", ImageFormat.Jpeg)
 
 						' Update the current display line with the location of the small album art.
 
-						DisplayLines.SelectedLine.ImageFile = MusicFolder & "\" & DisplayLines.SelectedLine.ArtistName & "\" & DisplayLines.SelectedLine.AlbumName & "\AlbumArt_{" & imageGuid & "}_Small.jpg"
+						DisplayLines.SelectedLine.ImageFile = MusicFolder & DisplayLines.SelectedLine.ArtistName & "\" & DisplayLines.SelectedLine.AlbumName & "\AlbumArt_{" & imageGuid & "}_Small.jpg"
 
 						' Redraw the album image to show the new art.
 
@@ -1206,7 +1236,6 @@ Public Class frmMain
 		Dim parts = zx.Split(":")
 		Dim Songs As IReadOnlyCollection(Of String) = Nothing
 		Dim Filtered As List(Of String)
-		Dim MusicFolder As String = AddDirSeparator(GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", ""))
 		Dim song As String
 		Dim sb As New StringBuilder
 
@@ -1296,7 +1325,6 @@ Public Class frmMain
 		Dim zx As String = mnu.Tag
 		Dim parts = zx.Split(":")
 		Dim Songs As IReadOnlyCollection(Of String) = Nothing
-		Dim MusicFolder As String = AddDirSeparator(GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", ""))
 		Dim song As String
 		Dim sb As New StringBuilder
 		Dim Command As SqlCommand
@@ -1361,7 +1389,6 @@ Public Class frmMain
 
 		' Declare variables.
 
-		Dim MusicFolder As String = GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", "")
 		Dim ArtistName As String = DisplayLines.SelectedLine.ArtistName
 		Dim AlbumName As String = DisplayLines.SelectedLine.AlbumName
 		Dim AlbumArt As Image
@@ -1372,7 +1399,7 @@ Public Class frmMain
 
 		' Get the artist and album from the selected line.
 
-		Dim files = Directory.GetFiles($"{MusicFolder}\{ArtistName}\{AlbumName}\", "*large.jpg")
+		Dim files = Directory.GetFiles($"{MusicFolder}{ArtistName}\{AlbumName}\", "*large.jpg")
 
 		' Warn the user before overwriting existing art.
 
@@ -1383,13 +1410,13 @@ Public Class frmMain
 		' Get the album art from the clipboard and save it.
 
 		AlbumArt = Clipboard.GetImage
-		AlbumArt.Save($"{MusicFolder}\{ArtistName}\{AlbumName}\AlbumArt_Large.jpg")
+		AlbumArt.Save($"{MusicFolder}{ArtistName}\{AlbumName}\AlbumArt_Large.jpg")
 		Using smallArt As New Bitmap(AlbumArt, New Size(48, 48))
-			smallArt.Save($"{MusicFolder}\{ArtistName}\{AlbumName}\AlbumArt_Small.jpg", ImageFormat.Jpeg)
+			smallArt.Save($"{MusicFolder}{ArtistName}\{AlbumName}\AlbumArt_Small.jpg", ImageFormat.Jpeg)
 
 			' Update the current display line with the location of the small album art.
 
-			DisplayLines.SelectedLine.ImageFile = $"{MusicFolder}\{ArtistName}\{AlbumName}\AlbumArt_Small.jpg"
+			DisplayLines.SelectedLine.ImageFile = $"{MusicFolder}{ArtistName}\{AlbumName}\AlbumArt_Small.jpg"
 
 			' Redraw the album image to show the new art.
 
@@ -1734,7 +1761,7 @@ Public Class frmMain
 
 		' Determine the local drive for the playlist, as it may have been opened on a remote machine.
 
-		If Playlist.StartsWith("\\") Then zx = Path.GetPathRoot(Playlist) & "\" Else zx = AddDirSeparator(GetSetting("Sirius" & ProgramName.Replace(" ", ""), "Settings", "MusicFolder", ""))
+		If Playlist.StartsWith("\\") Then zx = Path.GetPathRoot(Playlist) & "\" Else zx = MusicFolder
 
 		' Begin reading in the playlist and adding the items to the list box.
 
@@ -2043,6 +2070,47 @@ Public Class frmMain
 	End Sub
 	Private Shared ReadOnly ExtensionPrecedence As String() = {".flac", ".mp3", ".wma", ".wav"}
 	'***********************************************************************
+	' Function to take a fully-qualified song name and check to see if that
+	' song exists in a better version (.flac over .mp3, for example).  If one
+	' does, this function returns that name.  Otherwise it returns the original
+	' version unchanged.
+	'***********************************************************************
+	Public Function GetBestVersionOfSong(fullPath As String) As String
+
+		If String.IsNullOrWhiteSpace(fullPath) OrElse Not File.Exists(fullPath) Then
+			Return fullPath
+		End If
+
+		Dim folder = Path.GetDirectoryName(fullPath)
+		Dim baseName = Path.GetFileNameWithoutExtension(fullPath)
+
+		' Find all files in the folder with the same base name
+		Dim candidates = Directory.EnumerateFiles(folder).
+	   Where(Function(f) String.Equals(
+			   Path.GetFileNameWithoutExtension(f),
+			   baseName,
+			   StringComparison.OrdinalIgnoreCase)).
+	   ToList()
+
+		If candidates.Count = 0 Then
+			' Should never happen, but fall back safely
+			Return fullPath
+		End If
+
+		' Pick the best version based on extension precedence
+		Dim best = candidates.
+	   OrderBy(Function(f)
+				 Dim ext = Path.GetExtension(f).ToLowerInvariant()
+				 Dim idx = Array.IndexOf(ExtensionPrecedence, ext)
+				 If idx = -1 Then idx = Integer.MaxValue
+				 Return idx
+			 End Function).
+	   First()
+
+		Return best
+
+	End Function
+	'***********************************************************************
 
 	' Function to take a list of songs returned from a search of an album
 	' and filter out duplicates, in order of precedence.
@@ -2075,6 +2143,35 @@ Public Class frmMain
 		result.Sort(StringComparer.OrdinalIgnoreCase)
 
 		Return result
+	End Function
+	'***********************************************************************
+
+	' Sub to sort (by artist/album/song) or shuffle a playlist.
+
+	'***********************************************************************
+	Public Function OrderBy(items As String(), mode As Integer) As String()
+
+		If items Is Nothing OrElse items.Length <= 1 Then Return items
+
+		Select Case mode
+			Case 0
+				Array.Sort(items, StringComparer.OrdinalIgnoreCase)
+
+			Case 1
+				Dim rng As New Random()
+				For i As Integer = items.Length - 1 To 1 Step -1
+					Dim j As Integer = rng.Next(i + 1)
+					Dim temp As String = items(i)
+					items(i) = items(j)
+					items(j) = temp
+				Next
+
+			Case Else
+				' Unknown mode → do nothing
+		End Select
+
+		Return items
+
 	End Function
 	'***********************************************************************
 

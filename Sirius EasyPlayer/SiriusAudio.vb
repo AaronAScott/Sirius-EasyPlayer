@@ -335,7 +335,6 @@ Public Class SiriusAudio
 		' Declare variables
 
 		Dim ii As Integer
-		Dim MusicFolder As String = GetSetting("SiriusSiriusEasyPlayer", "Settings", "MusicFolder", "") & "\"
 		Dim sb As New StringBuilder
 		Dim Cmd As SqlCommand
 		Dim ds As New DataSet
@@ -386,7 +385,6 @@ Public Class SiriusAudio
 
 			Dim plist As New System.Text.StringBuilder
 			Dim songpath As String
-			Dim MusicPath As String = GetSetting("SiriusSiriusEasyPlayer", "Settings", "MusicFolder", "") & "\"
 
 			' Save the new playlist name.
 
@@ -407,7 +405,7 @@ Public Class SiriusAudio
 
 				Dim mediaNodes As XmlNodeList = xmlDoc.SelectNodes("//smil/body/seq/media")
 				For Each Node As XmlNode In mediaNodes
-					songpath = Node.Attributes("src")?.Value.Replace("..\", MusicPath)
+					songpath = Node.Attributes("src")?.Value.Replace("..\", MusicFolder)
 					plist.Append(UnescapeXml(songpath) & vbCrLf)
 				Next Node
 

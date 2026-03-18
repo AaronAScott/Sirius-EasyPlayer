@@ -64,6 +64,10 @@ Partial Class frmMain
 		Me.ToolStripSeparator3 = New System.Windows.Forms.ToolStripSeparator()
 		Me.mnuCMEdit = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuCMPlay = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuCMChooseBest = New System.Windows.Forms.ToolStripMenuItem()
+		Me.OrderByToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuCMSort = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuCMShuffle = New System.Windows.Forms.ToolStripMenuItem()
 		Me.pnlDisplay = New System.Windows.Forms.Panel()
 		Me.lblArtist = New System.Windows.Forms.Label()
 		Me.lblAlbum = New System.Windows.Forms.Label()
@@ -90,6 +94,9 @@ Partial Class frmMain
 		Me.mnuCMCancel3 = New System.Windows.Forms.ToolStripMenuItem()
 		Me.timElapsedTime = New System.Windows.Forms.Timer(Me.components)
 		Me.ToolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
+		Me.ToolStripMenuItem3 = New System.Windows.Forms.ToolStripMenuItem()
+		Me.BestQualityVersionsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+		Me.AllVersionsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
 		Me.MenuStrip1.SuspendLayout()
 		Me.StatusStrip1.SuspendLayout()
 		CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -107,7 +114,7 @@ Partial Class frmMain
 		'
 		'MenuStrip1
 		'
-		Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.EditToolStripMenuItem, Me.ToolStripMenuItem1, Me.HelpToolStripMenuItem})
+		Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.EditToolStripMenuItem, Me.ToolStripMenuItem3, Me.ToolStripMenuItem1, Me.HelpToolStripMenuItem})
 		Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
 		Me.MenuStrip1.Name = "MenuStrip1"
 		Me.MenuStrip1.Size = New System.Drawing.Size(859, 24)
@@ -179,35 +186,35 @@ Partial Class frmMain
 		'
 		Me.mnuCut.Name = "mnuCut"
 		Me.mnuCut.ShortcutKeys = CType((System.Windows.Forms.Keys.Shift Or System.Windows.Forms.Keys.Delete), System.Windows.Forms.Keys)
-		Me.mnuCut.Size = New System.Drawing.Size(156, 22)
+		Me.mnuCut.Size = New System.Drawing.Size(180, 22)
 		Me.mnuCut.Text = "&Cut"
 		'
 		'mnuCopy
 		'
 		Me.mnuCopy.Name = "mnuCopy"
 		Me.mnuCopy.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.Insert), System.Windows.Forms.Keys)
-		Me.mnuCopy.Size = New System.Drawing.Size(156, 22)
+		Me.mnuCopy.Size = New System.Drawing.Size(180, 22)
 		Me.mnuCopy.Text = "C&opy"
 		'
 		'mnuPaste
 		'
 		Me.mnuPaste.Name = "mnuPaste"
 		Me.mnuPaste.ShortcutKeys = CType((System.Windows.Forms.Keys.Shift Or System.Windows.Forms.Keys.Insert), System.Windows.Forms.Keys)
-		Me.mnuPaste.Size = New System.Drawing.Size(156, 22)
+		Me.mnuPaste.Size = New System.Drawing.Size(180, 22)
 		Me.mnuPaste.Text = "&Paste"
 		'
 		'mnuUndo
 		'
 		Me.mnuUndo.Name = "mnuUndo"
 		Me.mnuUndo.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.Z), System.Windows.Forms.Keys)
-		Me.mnuUndo.Size = New System.Drawing.Size(156, 22)
+		Me.mnuUndo.Size = New System.Drawing.Size(180, 22)
 		Me.mnuUndo.Text = "&Undo"
 		'
 		'mnuDelete
 		'
 		Me.mnuDelete.Name = "mnuDelete"
 		Me.mnuDelete.ShortcutKeys = System.Windows.Forms.Keys.Delete
-		Me.mnuDelete.Size = New System.Drawing.Size(156, 22)
+		Me.mnuDelete.Size = New System.Drawing.Size(180, 22)
 		Me.mnuDelete.Text = "&Delete"
 		'
 		'ToolStripMenuItem1
@@ -346,53 +353,78 @@ Partial Class frmMain
 		'
 		'ContextMenuStrip1
 		'
-		Me.ContextMenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMCut, Me.mnuCMCopy, Me.mnuCMPaste, Me.mnuCMDelete, Me.ToolStripSeparator3, Me.mnuCMEdit, Me.mnuCMPlay})
+		Me.ContextMenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMCut, Me.mnuCMCopy, Me.mnuCMPaste, Me.mnuCMDelete, Me.ToolStripSeparator3, Me.mnuCMEdit, Me.mnuCMPlay, Me.mnuCMChooseBest, Me.OrderByToolStripMenuItem})
 		Me.ContextMenuStrip1.Name = "ContextMenuStrip1"
-		Me.ContextMenuStrip1.Size = New System.Drawing.Size(108, 142)
+		Me.ContextMenuStrip1.Size = New System.Drawing.Size(186, 186)
 		'
 		'mnuCMCut
 		'
 		Me.mnuCMCut.Name = "mnuCMCut"
-		Me.mnuCMCut.Size = New System.Drawing.Size(107, 22)
+		Me.mnuCMCut.Size = New System.Drawing.Size(185, 22)
 		Me.mnuCMCut.Text = "&Cut"
 		Me.mnuCMCut.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
 		'
 		'mnuCMCopy
 		'
 		Me.mnuCMCopy.Name = "mnuCMCopy"
-		Me.mnuCMCopy.Size = New System.Drawing.Size(107, 22)
+		Me.mnuCMCopy.Size = New System.Drawing.Size(185, 22)
 		Me.mnuCMCopy.Text = "C&opy"
 		Me.mnuCMCopy.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
 		'
 		'mnuCMPaste
 		'
 		Me.mnuCMPaste.Name = "mnuCMPaste"
-		Me.mnuCMPaste.Size = New System.Drawing.Size(107, 22)
+		Me.mnuCMPaste.Size = New System.Drawing.Size(185, 22)
 		Me.mnuCMPaste.Text = "&Paste"
 		Me.mnuCMPaste.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
 		'
 		'mnuCMDelete
 		'
 		Me.mnuCMDelete.Name = "mnuCMDelete"
-		Me.mnuCMDelete.Size = New System.Drawing.Size(107, 22)
+		Me.mnuCMDelete.Size = New System.Drawing.Size(185, 22)
 		Me.mnuCMDelete.Text = "&Delete"
 		'
 		'ToolStripSeparator3
 		'
 		Me.ToolStripSeparator3.Name = "ToolStripSeparator3"
-		Me.ToolStripSeparator3.Size = New System.Drawing.Size(104, 6)
+		Me.ToolStripSeparator3.Size = New System.Drawing.Size(182, 6)
 		'
 		'mnuCMEdit
 		'
 		Me.mnuCMEdit.Name = "mnuCMEdit"
-		Me.mnuCMEdit.Size = New System.Drawing.Size(107, 22)
+		Me.mnuCMEdit.Size = New System.Drawing.Size(185, 22)
 		Me.mnuCMEdit.Text = "Edit"
 		'
 		'mnuCMPlay
 		'
 		Me.mnuCMPlay.Name = "mnuCMPlay"
-		Me.mnuCMPlay.Size = New System.Drawing.Size(107, 22)
+		Me.mnuCMPlay.Size = New System.Drawing.Size(185, 22)
 		Me.mnuCMPlay.Text = "Pla&y"
+		'
+		'mnuCMChooseBest
+		'
+		Me.mnuCMChooseBest.Name = "mnuCMChooseBest"
+		Me.mnuCMChooseBest.Size = New System.Drawing.Size(185, 22)
+		Me.mnuCMChooseBest.Text = "C&hoose Best Versions"
+		'
+		'OrderByToolStripMenuItem
+		'
+		Me.OrderByToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMSort, Me.mnuCMShuffle})
+		Me.OrderByToolStripMenuItem.Name = "OrderByToolStripMenuItem"
+		Me.OrderByToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
+		Me.OrderByToolStripMenuItem.Text = "Order &By"
+		'
+		'mnuCMSort
+		'
+		Me.mnuCMSort.Name = "mnuCMSort"
+		Me.mnuCMSort.Size = New System.Drawing.Size(190, 22)
+		Me.mnuCMSort.Text = "&Sort by Album/Artiost"
+		'
+		'mnuCMShuffle
+		'
+		Me.mnuCMShuffle.Name = "mnuCMShuffle"
+		Me.mnuCMShuffle.Size = New System.Drawing.Size(190, 22)
+		Me.mnuCMShuffle.Text = "S&huffle"
 		'
 		'pnlDisplay
 		'
@@ -575,6 +607,27 @@ Partial Class frmMain
 		Me.ToolStripSeparator5.Name = "ToolStripSeparator5"
 		Me.ToolStripSeparator5.Size = New System.Drawing.Size(200, 6)
 		'
+		'ToolStripMenuItem3
+		'
+		Me.ToolStripMenuItem3.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.BestQualityVersionsToolStripMenuItem, Me.AllVersionsToolStripMenuItem})
+		Me.ToolStripMenuItem3.Name = "ToolStripMenuItem3"
+		Me.ToolStripMenuItem3.Size = New System.Drawing.Size(44, 20)
+		Me.ToolStripMenuItem3.Text = "&View"
+		'
+		'BestQualityVersionsToolStripMenuItem
+		'
+		Me.BestQualityVersionsToolStripMenuItem.Checked = True
+		Me.BestQualityVersionsToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked
+		Me.BestQualityVersionsToolStripMenuItem.Name = "BestQualityVersionsToolStripMenuItem"
+		Me.BestQualityVersionsToolStripMenuItem.Size = New System.Drawing.Size(183, 22)
+		Me.BestQualityVersionsToolStripMenuItem.Text = "&Best Quality Versions"
+		'
+		'AllVersionsToolStripMenuItem
+		'
+		Me.AllVersionsToolStripMenuItem.Name = "AllVersionsToolStripMenuItem"
+		Me.AllVersionsToolStripMenuItem.Size = New System.Drawing.Size(183, 22)
+		Me.AllVersionsToolStripMenuItem.Text = "&All Versions"
+		'
 		'frmMain
 		'
 		Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -674,4 +727,11 @@ Partial Class frmMain
 	Friend WithEvents mnuCMCompatibility As ToolStripMenuItem
 	Friend WithEvents ToolStripMenuItem2 As ToolStripSeparator
 	Friend WithEvents mnuCMCancel3 As ToolStripMenuItem
+	Friend WithEvents mnuCMChooseBest As ToolStripMenuItem
+	Friend WithEvents OrderByToolStripMenuItem As ToolStripMenuItem
+	Friend WithEvents mnuCMSort As ToolStripMenuItem
+	Friend WithEvents mnuCMShuffle As ToolStripMenuItem
+	Friend WithEvents ToolStripMenuItem3 As ToolStripMenuItem
+	Friend WithEvents BestQualityVersionsToolStripMenuItem As ToolStripMenuItem
+	Friend WithEvents AllVersionsToolStripMenuItem As ToolStripMenuItem
 End Class

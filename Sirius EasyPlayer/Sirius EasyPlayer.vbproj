@@ -166,12 +166,6 @@
     <Compile Include="EP_MusicPlayer.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EP_SelectMusicFolder.Designer.vb">
-      <DependentUpon>EP_SelectMusicFolder.vb</DependentUpon>
-    </Compile>
-    <Compile Include="EP_SelectMusicFolder.vb">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="PE_SleepTimer.Designer.vb">
       <DependentUpon>PE_SleepTimer.vb</DependentUpon>
     </Compile>
@@ -218,9 +212,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EP_MusicPlayer.resx">
       <DependentUpon>EP_MusicPlayer.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="EP_SelectMusicFolder.resx">
-      <DependentUpon>EP_SelectMusicFolder.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PE_SleepTimer.resx">
       <DependentUpon>PE_SleepTimer.vb</DependentUpon>
