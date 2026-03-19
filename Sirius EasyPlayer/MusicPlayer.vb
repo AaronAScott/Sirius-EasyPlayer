@@ -1,14 +1,15 @@
-﻿Imports System.ComponentModel
-Imports System.Drawing.Drawing2D
-Imports System
+﻿Imports System
 Imports System.Collections
+Imports System.ComponentModel
 Imports System.ComponentModel.Design
 Imports System.Drawing
+Imports System.Drawing.Drawing2D
 Imports System.IO
+Imports System.Security.Cryptography
 Imports System.Windows.Forms
 Imports System.Windows.Forms.Design
-Imports System.Security.Cryptography
 Imports System.Xml
+Imports Microsoft.Win32
 Imports TagLib
 Imports WMPLib
 '*******************************************************
@@ -113,6 +114,8 @@ Public Class MediaPlayer
 			AddHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
 			AddHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
 		End If
+		AddHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
+		AddHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
 
 		Me.SetStyle(ControlStyles.UserMouse, True) ' This makes sure mouse events work.
 	End Sub
@@ -134,6 +137,9 @@ Public Class MediaPlayer
 			RemoveHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
 			RemoveHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
 		End If
+		RemoveHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
+		RemoveHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
+
 		mPlayer.StopAll()
 		MyBase.Dispose()
 	End Sub
@@ -827,6 +833,42 @@ Public Class MediaPlayer
 	End Sub
 	'**********************************************************
 
+	' Event Handler for the powermodechange event.  Trapping
+	' this event will allow the user to just shut the lid while
+	' music is playing (or put the desktop to sleep or hibernate)
+	' without interrupting the current point in the playback.
+
+	'**********************************************************
+	Private Sub SystemEvents_PowerModeChanged(sender As Object, e As PowerModeChangedEventArgs)
+		If e.Mode = PowerModes.Suspend Then PausePlayback()
+	End Sub
+
+	'**********************************************************
+
+	' Event handler for the session ending event.
+
+	'**********************************************************
+	Private Sub SystemEvents_SessionEnding(sender As Object, e As SessionEndingEventArgs)
+		PausePlayback()
+	End Sub
+	'**********************************************************
+
+	' Sub to put the player into pause mode.
+
+	'**********************************************************
+	Private Sub PausePlayback()
+
+		If MediaPlaying Then
+			mPlayer.Play() ' If media is playing, this will pause it.
+			Using g As Graphics = Me.CreateGraphics
+				DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play")
+			End Using
+			MediaPlaying = False
+		End If
+
+	End Sub
+	'**********************************************************
+
 	' The listbox property.
 
 	'**********************************************************
@@ -843,8 +885,6 @@ Public Class MediaPlayer
 			AddHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
 		End Set
 	End Property
-
-
 	'**********************************************************
 
 	' The player property.
@@ -916,8 +956,10 @@ Public Class MediaPlayer
 		End Set
 	End Property
 	'**********************************************************
+
 	' The Songlist property.  This takes a list of songs
 	' separated by CrLf.
+
 	'**********************************************************
 	Public Property Songlist As String
 		Get
@@ -928,8 +970,10 @@ Public Class MediaPlayer
 		End Set
 	End Property
 	'**********************************************************
+
 	' The Playlist property. This takes the name of a Windows
 	' Playlist (.wmp) file.
+
 	'**********************************************************
 	Public Property Playlist As String
 		Get
