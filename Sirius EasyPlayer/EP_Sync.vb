@@ -1,4 +1,5 @@
-﻿Imports System.IO
+﻿Imports System.Drawing.Drawing2D
+Imports System.IO
 Public Class frmSync
 	Inherits System.Windows.Forms.Form
 	'***********************************************************************
@@ -83,7 +84,8 @@ Public Class frmSync
 
 		Dim g As Graphics = e.Graphics
 		Dim r As New Rectangle(0, 0, PictureBox1.Width, PictureBox1.Height)
-
+		g.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
+		g.PixelOffsetMode = PixelOffsetMode.HighQuality
 		' Create ImageAttributes for transparency and (optionally) grayscale
 		Dim ia As New System.Drawing.Imaging.ImageAttributes()
 

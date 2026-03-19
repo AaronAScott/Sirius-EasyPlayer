@@ -178,10 +178,10 @@
     <Compile Include="EP_MusicPlayer.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SE_SleepTimer.Designer.vb">
-      <DependentUpon>SE_SleepTimer.vb</DependentUpon>
+    <Compile Include="EP_SleepTimer.Designer.vb">
+      <DependentUpon>EP_SleepTimer.vb</DependentUpon>
     </Compile>
-    <Compile Include="SE_SleepTimer.vb">
+    <Compile Include="EP_SleepTimer.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="ProgramUpdater.vb" />
@@ -234,8 +234,8 @@
     <EmbeddedResource Include="EP_MusicPlayer.resx">
       <DependentUpon>EP_MusicPlayer.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SE_SleepTimer.resx">
-      <DependentUpon>SE_SleepTimer.vb</DependentUpon>
+    <EmbeddedResource Include="EP_SleepTimer.resx">
+      <DependentUpon>EP_SleepTimer.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="RegistryEditor.resx">
       <DependentUpon>RegistryEditor.vb</DependentUpon>
@@ -266,6 +266,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CD Player.ico" />
+    <Resource Include="right arrow.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>
