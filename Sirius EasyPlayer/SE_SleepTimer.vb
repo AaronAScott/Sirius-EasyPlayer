@@ -1,11 +1,11 @@
 ﻿Public Class frmSleepTimer
 
 	'***********************************************************************
-	' Sirius Playlist Editor Sleep Timer
-	' PE_SLEEPTIMER.VB
-	' Written: May 2025
+	' Sirius EasyPlaer Sleep Timer
+	' SE_SLEEPTIMER.VB
+	' Written: March 2026
 	' Programmer: Aaron Scott
-	' Copyright 2025 Sirius Software All Rights Reserved
+	' Copyright 2026 Sirius Software All Rights Reserved
 	'***********************************************************************
 
 	Private PlayForMinutes As Integer

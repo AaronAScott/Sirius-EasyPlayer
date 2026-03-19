@@ -50,6 +50,7 @@ Partial Class frmMain
 		Me.mnuRecreate = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuRepairMetadata = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuChangeLocation = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuChangePrecedence = New System.Windows.Forms.ToolStripMenuItem()
 		Me.HelpToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuAbout = New System.Windows.Forms.ToolStripMenuItem()
 		Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
@@ -97,7 +98,7 @@ Partial Class frmMain
 		Me.mnuCMCancel3 = New System.Windows.Forms.ToolStripMenuItem()
 		Me.timElapsedTime = New System.Windows.Forms.Timer(Me.components)
 		Me.ToolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
-		Me.mnuChangePrecedence = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuCMSync = New System.Windows.Forms.ToolStripMenuItem()
 		Me.MenuStrip1.SuspendLayout()
 		Me.StatusStrip1.SuspendLayout()
 		CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -280,6 +281,12 @@ Partial Class frmMain
 		Me.mnuChangeLocation.Size = New System.Drawing.Size(276, 22)
 		Me.mnuChangeLocation.Text = "&Change Library Location"
 		'
+		'mnuChangePrecedence
+		'
+		Me.mnuChangePrecedence.Name = "mnuChangePrecedence"
+		Me.mnuChangePrecedence.Size = New System.Drawing.Size(276, 22)
+		Me.mnuChangePrecedence.Text = "Change Music File Version Precedence"
+		'
 		'HelpToolStripMenuItem
 		'
 		Me.HelpToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuAbout})
@@ -374,65 +381,65 @@ Partial Class frmMain
 		'
 		'ContextMenuStrip1
 		'
-		Me.ContextMenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMCut, Me.mnuCMCopy, Me.mnuCMPaste, Me.mnuCMDelete, Me.ToolStripSeparator3, Me.mnuCMEdit, Me.mnuCMPlay, Me.mnuCMChooseBest, Me.OrderByToolStripMenuItem})
+		Me.ContextMenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMCut, Me.mnuCMCopy, Me.mnuCMPaste, Me.mnuCMDelete, Me.ToolStripSeparator3, Me.mnuCMEdit, Me.mnuCMPlay, Me.mnuCMChooseBest, Me.OrderByToolStripMenuItem, Me.mnuCMSync})
 		Me.ContextMenuStrip1.Name = "ContextMenuStrip1"
-		Me.ContextMenuStrip1.Size = New System.Drawing.Size(186, 186)
+		Me.ContextMenuStrip1.Size = New System.Drawing.Size(192, 230)
 		'
 		'mnuCMCut
 		'
 		Me.mnuCMCut.Name = "mnuCMCut"
-		Me.mnuCMCut.Size = New System.Drawing.Size(185, 22)
+		Me.mnuCMCut.Size = New System.Drawing.Size(191, 22)
 		Me.mnuCMCut.Text = "&Cut"
 		Me.mnuCMCut.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
 		'
 		'mnuCMCopy
 		'
 		Me.mnuCMCopy.Name = "mnuCMCopy"
-		Me.mnuCMCopy.Size = New System.Drawing.Size(185, 22)
+		Me.mnuCMCopy.Size = New System.Drawing.Size(191, 22)
 		Me.mnuCMCopy.Text = "C&opy"
 		Me.mnuCMCopy.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
 		'
 		'mnuCMPaste
 		'
 		Me.mnuCMPaste.Name = "mnuCMPaste"
-		Me.mnuCMPaste.Size = New System.Drawing.Size(185, 22)
+		Me.mnuCMPaste.Size = New System.Drawing.Size(191, 22)
 		Me.mnuCMPaste.Text = "&Paste"
 		Me.mnuCMPaste.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
 		'
 		'mnuCMDelete
 		'
 		Me.mnuCMDelete.Name = "mnuCMDelete"
-		Me.mnuCMDelete.Size = New System.Drawing.Size(185, 22)
+		Me.mnuCMDelete.Size = New System.Drawing.Size(191, 22)
 		Me.mnuCMDelete.Text = "&Delete"
 		'
 		'ToolStripSeparator3
 		'
 		Me.ToolStripSeparator3.Name = "ToolStripSeparator3"
-		Me.ToolStripSeparator3.Size = New System.Drawing.Size(182, 6)
+		Me.ToolStripSeparator3.Size = New System.Drawing.Size(188, 6)
 		'
 		'mnuCMEdit
 		'
 		Me.mnuCMEdit.Name = "mnuCMEdit"
-		Me.mnuCMEdit.Size = New System.Drawing.Size(185, 22)
+		Me.mnuCMEdit.Size = New System.Drawing.Size(191, 22)
 		Me.mnuCMEdit.Text = "Edit"
 		'
 		'mnuCMPlay
 		'
 		Me.mnuCMPlay.Name = "mnuCMPlay"
-		Me.mnuCMPlay.Size = New System.Drawing.Size(185, 22)
+		Me.mnuCMPlay.Size = New System.Drawing.Size(191, 22)
 		Me.mnuCMPlay.Text = "Pla&y"
 		'
 		'mnuCMChooseBest
 		'
 		Me.mnuCMChooseBest.Name = "mnuCMChooseBest"
-		Me.mnuCMChooseBest.Size = New System.Drawing.Size(185, 22)
+		Me.mnuCMChooseBest.Size = New System.Drawing.Size(191, 22)
 		Me.mnuCMChooseBest.Text = "C&hoose Best Versions"
 		'
 		'OrderByToolStripMenuItem
 		'
 		Me.OrderByToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCMSort, Me.mnuCMShuffle})
 		Me.OrderByToolStripMenuItem.Name = "OrderByToolStripMenuItem"
-		Me.OrderByToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
+		Me.OrderByToolStripMenuItem.Size = New System.Drawing.Size(191, 22)
 		Me.OrderByToolStripMenuItem.Text = "Order &By"
 		'
 		'mnuCMSort
@@ -628,11 +635,11 @@ Partial Class frmMain
 		Me.ToolStripSeparator5.Name = "ToolStripSeparator5"
 		Me.ToolStripSeparator5.Size = New System.Drawing.Size(200, 6)
 		'
-		'mnuChangePrecedence
+		'mnuCMSync
 		'
-		Me.mnuChangePrecedence.Name = "mnuChangePrecedence"
-		Me.mnuChangePrecedence.Size = New System.Drawing.Size(276, 22)
-		Me.mnuChangePrecedence.Text = "Change Music File Version Precedence"
+		Me.mnuCMSync.Name = "mnuCMSync"
+		Me.mnuCMSync.Size = New System.Drawing.Size(191, 22)
+		Me.mnuCMSync.Text = "&Sync to Mobile Device"
 		'
 		'frmMain
 		'
@@ -741,4 +748,5 @@ Partial Class frmMain
 	Friend WithEvents mnuViewBest As ToolStripMenuItem
 	Friend WithEvents mnuViewAll As ToolStripMenuItem
 	Friend WithEvents mnuChangePrecedence As ToolStripMenuItem
+	Friend WithEvents mnuCMSync As ToolStripMenuItem
 End Class

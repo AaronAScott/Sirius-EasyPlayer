@@ -1,7 +1,20 @@
 ﻿Imports System.Text
 
-Public Class frmChangeFilePrecedence
 
+Public Class frmChangeFilePrecedence
+	'***********************************************************************
+	' Sirius Sirius EasyPlayer Change File Precedence form
+	' EP_CHANGEFILEPRCEDENCE.VB
+	' Written: March 2026
+	' Programmer: Aaron Scott
+	' Copyright 2026 Sirius Software All Rights Reserved
+	'***********************************************************************
+
+	'***********************************************************************
+
+	' The form is loaded.
+
+	'***********************************************************************
 	Private Sub frmChangeFilePrecedence_Load(sender As Object, e As EventArgs) Handles Me.Load
 
 		' Declare variables
@@ -35,7 +48,11 @@ Public Class frmChangeFilePrecedence
 		ComboBox4.SelectedIndex = 3
 		ComboBox5.SelectedIndex = 4
 	End Sub
+	'***********************************************************************
 
+	' The save button is clicked.
+
+	'***********************************************************************
 	Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
 
 		' Declare variables.
@@ -64,11 +81,19 @@ Public Class frmChangeFilePrecedence
 		Me.Close()
 
 	End Sub
+	'***********************************************************************
+
+	' The Cancel button is clicked.
+
+	'***********************************************************************
 	Private Sub btnCancel_Click(sender As Object, e As EventArgs) Handles btnCancel.Click
 		Me.Close()
 	End Sub
+	'***********************************************************************
 
+	' Function to verify that no two combo boxes have the same selection.
 
+	'***********************************************************************
 	Private Function ValidateNoDuplicates() As Boolean
 		Dim indices = {
 		    ComboBox1.SelectedIndex,

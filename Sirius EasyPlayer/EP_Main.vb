@@ -1102,6 +1102,15 @@ Public Class frmMain
 	End Sub
 	'**************************************************
 
+	' The Change Music Folder Location menu is clicked.
+
+	'**************************************************
+	Private Sub mnuChangeLocation_Click(sender As Object, e As EventArgs) Handles mnuChangeLocation.Click
+		frmLocateMusicFolder.ShowDialog()
+	End Sub
+
+	'**************************************************
+
 	' The Add menu option is selected.
 
 	'**************************************************
@@ -1521,6 +1530,14 @@ Public Class frmMain
 			End Using
 		End Using
 
+	End Sub
+	'**********************************************************
+
+	' The Sync to Mobile Device menu option is clicked.
+
+	'**********************************************************
+	Private Sub mnuCMSync_Click(sender As Object, e As EventArgs) Handles mnuCMSync.Click
+		frmSync.Show()
 	End Sub
 
 	'**********************************************************
@@ -2410,9 +2427,5 @@ Public Class frmMain
 		End Select
 	End Sub
 
-	Private Sub mnuChangeLocation_Click(sender As Object, e As EventArgs) Handles mnuChangeLocation.Click
-
-		frmLocateMusicFolder.ShowDialog()
-	End Sub
 
 End Class

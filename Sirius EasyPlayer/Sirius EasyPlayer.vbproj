@@ -122,6 +122,12 @@
     <Compile Include="EP_ChangeFilePrecedence.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="EP_Sync.Designer.vb">
+      <DependentUpon>EP_Sync.vb</DependentUpon>
+    </Compile>
+    <Compile Include="EP_Sync.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Global.vb" />
     <Compile Include="KeyboardHook.vb" />
     <Compile Include="Lib.vb" />
@@ -172,10 +178,10 @@
     <Compile Include="EP_MusicPlayer.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="PE_SleepTimer.Designer.vb">
-      <DependentUpon>PE_SleepTimer.vb</DependentUpon>
+    <Compile Include="SE_SleepTimer.Designer.vb">
+      <DependentUpon>SE_SleepTimer.vb</DependentUpon>
     </Compile>
-    <Compile Include="PE_SleepTimer.vb">
+    <Compile Include="SE_SleepTimer.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="ProgramUpdater.vb" />
@@ -186,6 +192,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SiriusAudio.vb" />
+    <Compile Include="TransparentPictureBox.vb">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="About.resx">
@@ -199,6 +208,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EP_ChangeFilePrecedence.resx">
       <DependentUpon>EP_ChangeFilePrecedence.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EP_Sync.resx">
+      <DependentUpon>EP_Sync.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="LocateMusicFolder.resx">
       <DependentUpon>LocateMusicFolder.vb</DependentUpon>
@@ -222,8 +234,8 @@
     <EmbeddedResource Include="EP_MusicPlayer.resx">
       <DependentUpon>EP_MusicPlayer.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="PE_SleepTimer.resx">
-      <DependentUpon>PE_SleepTimer.vb</DependentUpon>
+    <EmbeddedResource Include="SE_SleepTimer.resx">
+      <DependentUpon>SE_SleepTimer.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="RegistryEditor.resx">
       <DependentUpon>RegistryEditor.vb</DependentUpon>

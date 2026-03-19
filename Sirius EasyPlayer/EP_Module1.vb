@@ -265,7 +265,7 @@ Public Module EP_Module1
 					End If
 
 					' Process songs within album
-					Dim SongFiles As String() = Directory.GetFiles(AlbumDir, ExtensionPrecedenceWildcardsString, FileIO.SearchOption.SearchTopLevelOnly)
+					Dim SongFiles As IReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(AlbumDir, FileIO.SearchOption.SearchTopLevelOnly, ExtensionPrecedenceWildcards)
 					For Each SongFile In SongFiles
 
 						SongName = Path.GetFileName(SongFile)
@@ -285,7 +285,7 @@ Public Module EP_Module1
 
 				Next AlbumDir
 			Catch ex As Exception
-				MsgBox("Error adding music item." & vbCrLf & ex.Message, MsgBoxStyle.Information, "Build Music Tree")
+				'MsgBox("Error adding music item." & vbCrLf & ex.Message, MsgBoxStyle.Information, "Build Music Tree")
 				MissedCount += 1
 			End Try
 		Next ArtistDir
@@ -821,20 +821,7 @@ Public Module EP_Module1
 		Dim img As Image = Nothing
 		Dim xx As IReadOnlyCollection(Of String)
 
-
-		' Some albums have all the album art hidden with the System attribute.  Remove that.
-
 		Try
-			'For Each FilePath As String In Directory.GetFiles(AlbumPath, "\*.jpg")
-			'	Dim attributes As FileAttributes = System.IO.File.GetAttributes(FilePath)
-
-			'	' Check if System attribute is set
-			'	If (attributes And FileAttributes.System) = FileAttributes.System Then
-			'		' Remove the System attribute
-			'		attributes = attributes And Not FileAttributes.System
-			'		System.IO.File.SetAttributes(FilePath, attributes)
-			'	End If
-			'Next FilePath
 
 			xx = My.Computer.FileSystem.GetFiles(AlbumPath, FileIO.SearchOption.SearchTopLevelOnly, "*.*")
 			If xx.Count > 0 Then
