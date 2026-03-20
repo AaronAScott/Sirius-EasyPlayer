@@ -1244,6 +1244,45 @@ Public Class frmMain
 	End Sub
 	'***********************************************************************
 
+	' The View Readme menu option is selected.
+
+	'***********************************************************************
+	Private Sub mnuViewReadme_Click(sender As Object, e As EventArgs) Handles mnuViewReadme.Click
+
+		' Create a viwer.  If the user sets the "EditMDFiles" value, using the Control Table Editor,
+		' to "True", they will be able to both view and edit .md files.
+
+		Dim f As New frmMDViewer
+		Dim zx As String = My.Application.Info.DirectoryPath & "\Readme.md"
+		f.LoadFile(zx)
+		Me.Text = "Viewing " & Path.GetFileName(zx)
+
+		f.EnableEditing = CBool(GetControlItem("EditMDFiles", "False"))
+		f.ShowDialog()
+
+	End Sub
+	'***********************************************************************
+
+	' The View Readme menu option is selected.
+
+	'***********************************************************************
+	Private Sub mnuViewLicense_Click(sender As Object, e As EventArgs) Handles mnuViewLicense.Click
+
+		' Create a viwer.  If the user sets the "EditMDFiles" value, using the Control Table Editor,
+		' to "True", they will be able to both view and edit .md files.
+
+		Dim f As New frmMDViewer
+		Dim zx As String = My.Application.Info.DirectoryPath & "\license.md"
+		f.LoadFile(zx)
+		Me.Text = "Viewing " & Path.GetFileName(zx)
+
+		f.EnableEditing = CBool(GetControlItem("EditMDFiles", "False"))
+		f.ShowDialog()
+
+	End Sub
+
+	'***********************************************************************
+
 	' The find album art context menu item is clicked.
 
 	'***********************************************************************
@@ -2438,9 +2477,4 @@ Public Class frmMain
 		End Select
 	End Sub
 
-	Private Sub mnuViewReadme_Click(sender As Object, e As EventArgs) Handles mnuViewReadme.Click
-
-		frmMDViewer.ShowDialog()
-
-	End Sub
 End Class

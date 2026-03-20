@@ -51,8 +51,10 @@ Partial Class frmMain
 		Me.mnuRepairMetadata = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuChangeLocation = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuChangePrecedence = New System.Windows.Forms.ToolStripMenuItem()
-		Me.mnuViewLicense = New System.Windows.Forms.ToolStripMenuItem()
+		Me.HelpMenuToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
 		Me.mnuAbout = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuViewReadme = New System.Windows.Forms.ToolStripMenuItem()
+		Me.mnuViewLicense = New System.Windows.Forms.ToolStripMenuItem()
 		Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
 		Me.lblStatus = New System.Windows.Forms.ToolStripStatusLabel()
 		Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
@@ -99,8 +101,6 @@ Partial Class frmMain
 		Me.mnuCMCancel3 = New System.Windows.Forms.ToolStripMenuItem()
 		Me.timElapsedTime = New System.Windows.Forms.Timer(Me.components)
 		Me.ToolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
-		Me.mnuViewReadme = New System.Windows.Forms.ToolStripMenuItem()
-		Me.ViewLICENSEToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
 		Me.MenuStrip1.SuspendLayout()
 		Me.StatusStrip1.SuspendLayout()
 		CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -118,7 +118,7 @@ Partial Class frmMain
 		'
 		'MenuStrip1
 		'
-		Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.EditToolStripMenuItem, Me.ToolStripMenuItem3, Me.ToolStripMenuItem1, Me.mnuViewLicense})
+		Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.EditToolStripMenuItem, Me.ToolStripMenuItem3, Me.ToolStripMenuItem1, Me.HelpMenuToolStripMenuItem})
 		Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
 		Me.MenuStrip1.Name = "MenuStrip1"
 		Me.MenuStrip1.Size = New System.Drawing.Size(859, 24)
@@ -289,18 +289,30 @@ Partial Class frmMain
 		Me.mnuChangePrecedence.Size = New System.Drawing.Size(276, 22)
 		Me.mnuChangePrecedence.Text = "Change Music File Version Precedence"
 		'
-		'mnuViewLicense
+		'HelpMenuToolStripMenuItem
 		'
-		Me.mnuViewLicense.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuAbout, Me.mnuViewReadme, Me.ViewLICENSEToolStripMenuItem})
-		Me.mnuViewLicense.Name = "mnuViewLicense"
-		Me.mnuViewLicense.Size = New System.Drawing.Size(44, 20)
-		Me.mnuViewLicense.Text = "&Help"
+		Me.HelpMenuToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuAbout, Me.mnuViewReadme, Me.mnuViewLicense})
+		Me.HelpMenuToolStripMenuItem.Name = "HelpMenuToolStripMenuItem"
+		Me.HelpMenuToolStripMenuItem.Size = New System.Drawing.Size(44, 20)
+		Me.HelpMenuToolStripMenuItem.Text = "&Help"
 		'
 		'mnuAbout
 		'
 		Me.mnuAbout.Name = "mnuAbout"
 		Me.mnuAbout.Size = New System.Drawing.Size(196, 22)
 		Me.mnuAbout.Text = "&About Sirius EasyPlayer"
+		'
+		'mnuViewReadme
+		'
+		Me.mnuViewReadme.Name = "mnuViewReadme"
+		Me.mnuViewReadme.Size = New System.Drawing.Size(196, 22)
+		Me.mnuViewReadme.Text = "View &README"
+		'
+		'mnuViewLicense
+		'
+		Me.mnuViewLicense.Name = "mnuViewLicense"
+		Me.mnuViewLicense.Size = New System.Drawing.Size(196, 22)
+		Me.mnuViewLicense.Text = "View &LICENSE"
 		'
 		'StatusStrip1
 		'
@@ -643,18 +655,6 @@ Partial Class frmMain
 		Me.ToolStripSeparator5.Name = "ToolStripSeparator5"
 		Me.ToolStripSeparator5.Size = New System.Drawing.Size(200, 6)
 		'
-		'mnuViewReadme
-		'
-		Me.mnuViewReadme.Name = "mnuViewReadme"
-		Me.mnuViewReadme.Size = New System.Drawing.Size(196, 22)
-		Me.mnuViewReadme.Text = "View &README"
-		'
-		'ViewLICENSEToolStripMenuItem
-		'
-		Me.ViewLICENSEToolStripMenuItem.Name = "ViewLICENSEToolStripMenuItem"
-		Me.ViewLICENSEToolStripMenuItem.Size = New System.Drawing.Size(196, 22)
-		Me.ViewLICENSEToolStripMenuItem.Text = "View &LICENSE"
-		'
 		'frmMain
 		'
 		Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -719,7 +719,7 @@ Partial Class frmMain
 	Friend WithEvents mnuCMPaste As ToolStripMenuItem
 	Friend WithEvents ToolStripSeparator3 As ToolStripSeparator
 	Friend WithEvents mnuCMEdit As ToolStripMenuItem
-	Friend WithEvents mnuViewLicense As ToolStripMenuItem
+	Friend WithEvents HelpMenuToolStripMenuItem As ToolStripMenuItem
 	Friend WithEvents mnuAbout As ToolStripMenuItem
 	Friend WithEvents mnuDelete As ToolStripMenuItem
 	Friend WithEvents mnuCMDelete As ToolStripMenuItem
@@ -764,5 +764,5 @@ Partial Class frmMain
 	Friend WithEvents mnuChangePrecedence As ToolStripMenuItem
 	Friend WithEvents mnuCMSync As ToolStripMenuItem
 	Friend WithEvents mnuViewReadme As ToolStripMenuItem
-	Friend WithEvents ViewLICENSEToolStripMenuItem As ToolStripMenuItem
+	Friend WithEvents mnuViewLicense As ToolStripMenuItem
 End Class
