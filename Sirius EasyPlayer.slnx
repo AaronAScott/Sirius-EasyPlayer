@@ -4,6 +4,10 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Folder Name="/Solution Items/">
+    <File Path="LICENSE.md" />
+    <File Path="README.md" />
+  </Folder>
   <Project Path="Sirius EasyPlayer/Sirius EasyPlayer.vbproj" Id="543d3d8a-f5f1-47df-a50c-3c01f2422317" />
   <Project Path="SiriusAudio/SiriusAudio.vcxproj" Id="31cec65b-deeb-466f-a227-223f5826f61c" />
 </Solution>

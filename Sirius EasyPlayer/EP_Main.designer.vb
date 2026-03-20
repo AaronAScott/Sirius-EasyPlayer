@@ -306,13 +306,13 @@ Partial Class frmMain
 		'
 		Me.mnuViewReadme.Name = "mnuViewReadme"
 		Me.mnuViewReadme.Size = New System.Drawing.Size(196, 22)
-		Me.mnuViewReadme.Text = "View &README"
+		Me.mnuViewReadme.Text = "View &ReadMe"
 		'
 		'mnuViewLicense
 		'
 		Me.mnuViewLicense.Name = "mnuViewLicense"
 		Me.mnuViewLicense.Size = New System.Drawing.Size(196, 22)
-		Me.mnuViewLicense.Text = "View &LICENSE"
+		Me.mnuViewLicense.Text = "View &Licenses"
 		'
 		'StatusStrip1
 		'
