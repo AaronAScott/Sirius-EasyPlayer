@@ -1056,6 +1056,7 @@ Public Class frmMain
 
 	'***********************************************************************
 	Private Sub lstPlayList_MouseUp(sender As Object, e As MouseEventArgs) Handles lstPlayList.MouseUp
+
 		If e.Button = MouseButtons.Right Then
 			lstPlayList.SelectedIndex = -1
 			Dim index As Integer = lstPlayList.IndexFromPoint(e.Location)
@@ -1063,9 +1064,15 @@ Public Class frmMain
 				lstPlayList.SelectedIndex = index ' Select item before context menu appears
 			End If
 
-			' If the list box is empty, disable the context menu
+			' If the list box is empty, disable the play and sync menu items.
 
-			If lstPlayList.Items.Count = 0 Then mnuCMPlay.Enabled = False Else mnuCMPlay.Enabled = True
+			If lstPlayList.Items.Count = 0 Then
+				mnuCMPlay.Enabled = False
+				mnuCMSync.Enabled = False
+			Else
+				mnuCMPlay.Enabled = True
+				mnuCMSync.Enabled = True
+			End If
 
 		End If
 	End Sub

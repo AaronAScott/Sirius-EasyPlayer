@@ -114,8 +114,8 @@ Public Class MediaPlayer
 			AddHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
 			AddHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
 		End If
-		AddHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
-		AddHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
+		'AddHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
+		'AddHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
 
 		Me.SetStyle(ControlStyles.UserMouse, True) ' This makes sure mouse events work.
 	End Sub
@@ -137,8 +137,8 @@ Public Class MediaPlayer
 			RemoveHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
 			RemoveHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
 		End If
-		RemoveHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
-		RemoveHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
+		'RemoveHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
+		'RemoveHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
 
 		mPlayer.StopAll()
 		MyBase.Dispose()
