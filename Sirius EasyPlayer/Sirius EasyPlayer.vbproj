@@ -137,6 +137,9 @@
     <Compile Include="LocateMusicFolder.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="MarkdownViewer.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="MessageBox.vb" />
     <Compile Include="MusicPlayer.designer.vb">
       <DependentUpon>MusicPlayer.vb</DependentUpon>
@@ -191,6 +194,12 @@
     <Compile Include="RegistryEditor.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="SE_MDViewer.Designer.vb">
+      <DependentUpon>SE_MDViewer.vb</DependentUpon>
+    </Compile>
+    <Compile Include="SE_MDViewer.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="SiriusAudio.vb" />
     <Compile Include="TransparentPictureBox.vb">
       <SubType>Component</SubType>
@@ -239,6 +248,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="RegistryEditor.resx">
       <DependentUpon>RegistryEditor.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SE_MDViewer.resx">
+      <DependentUpon>SE_MDViewer.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

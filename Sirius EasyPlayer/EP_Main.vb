@@ -84,10 +84,14 @@ Public Class frmMain
 		Version = CStr(My.Application.Info.Version.Major) & "." & CStr(My.Application.Info.Version.Minor) & CStr(My.Application.Info.Version.Build) & CStr(My.Application.Info.Version.MinorRevision)
 		DBVersion = "1.00"
 
-		' Add program dependencies.
+		' Add program dependencies. Declaring the DLLs as "file" will cause them
+		' to be merely copied over if they don't exist.
 
-		Dependencies.Add(New Dependency("Taglib-sharp", "dll"), "Taglib-sharp")
-		Dependencies.Add(New Dependency("Newtonsoft.Json", "dll"), "Newtonsoft.Json")
+		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "Taglib-sharp.dll"))
+		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "Newtonsoft.Json.dll"))
+		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "SiriusAudio.dll"))
+		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "README.md"))
+		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "LICENSE.txt"))
 
 		' Check for updates.
 
@@ -2434,5 +2438,9 @@ Public Class frmMain
 		End Select
 	End Sub
 
+	Private Sub mnuViewReadme_Click(sender As Object, e As EventArgs) Handles mnuViewReadme.Click
 
+		frmMDViewer.ShowDialog()
+
+	End Sub
 End Class

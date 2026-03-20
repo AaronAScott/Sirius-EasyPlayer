@@ -124,9 +124,9 @@ Module ProgramUpdater
 					If Dependencies.Contains(xx) Then
 						d = Dependencies(xx)
 						If DisplayList <> "" Then DisplayList &= ","
-						DisplayList &= d.Name & "." & d.ObjectType
+						DisplayList &= d.FolderName & "." & d.ObjectType
 						If UpdateList <> "" Then UpdateList &= ","
-						UpdateList &= d.Name & "," & d.ObjectType
+						UpdateList &= d.FolderName & "," & d.ObjectType
 					End If
 				End If
 				DisplayList &= "," & InstalledVersion & "," & CurrentVersion
@@ -221,7 +221,7 @@ Module ProgramUpdater
 
 				' Copy the .update file into the folder with the executable.
 
-				My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & ProgramName.Replace(" ","") & "\" & ProgramName & ".update", DestinationFolder & ProgramName & ".update", True)
+				My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & ProgramName.Replace(" ", "") & "\" & ProgramName & ".update", DestinationFolder & ProgramName & ".update", True)
 			End If
 
 		Catch ex As Exception ' Do nothing: there is no update available.
@@ -254,21 +254,22 @@ Module ProgramUpdater
 
 				Select Case d.ObjectType
 					Case "exe", "dll"
+
 						' Get the latest version number, to compare against the program's version.
 
-						zx = My.Computer.FileSystem.ReadAllText(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.Name & "\currentversion.txt")
+						zx = My.Computer.FileSystem.ReadAllText(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.FolderName & "\currentversion.txt")
 						If zx.IndexOf(vbCrLf) > 0 Then zx = zx.Substring(0, zx.IndexOf(vbCrLf))
 
 						' See if the dependent file exists.  If it's missing, we'll copy it over as though
 						' it were out of date.
 
-						If Not My.Computer.FileSystem.FileExists(DestinationFolder & d.Name & "." & d.ObjectType) Then
+						If Not My.Computer.FileSystem.FileExists(DestinationFolder & d.FolderName & "." & d.ObjectType) Then
 							v = 0 ' Setting the version to 0 will cause it to get copied over.
 
 							' Get the version of the currently-existing file.
 
 						Else
-							fi = FileVersionInfo.GetVersionInfo(DestinationFolder & d.Name & "." & d.ObjectType)
+							fi = FileVersionInfo.GetVersionInfo(DestinationFolder & d.FolderName & "." & d.ObjectType)
 							v = CSng(fi.FileMajorPart & "." & fi.FileMinorPart & fi.FileBuildPart & fi.FilePrivatePart)
 						End If
 
@@ -278,7 +279,7 @@ Module ProgramUpdater
 
 							' Copy the .update file into the folder with the executable.
 
-							My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.Name & "\" & d.Name & ".update", DestinationFolder & d.Name & ".update", True)
+							My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.FolderName & "\" & d.FolderName & ".update", DestinationFolder & d.FolderName & ".update", True)
 						End If
 
 					' If the object type is a file to be copied.
@@ -288,18 +289,18 @@ Module ProgramUpdater
 						' If the file doesn't exist, just copy it over.
 
 						If Not My.Computer.FileSystem.FileExists(DestinationFolder & d.FileToCopy) Then
-							My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.Name & "\" & d.FileToCopy, DestinationFolder & d.FileToCopy)
+							My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.FolderName & "\" & d.FileToCopy, DestinationFolder & d.FileToCopy)
 						Else
 
 							' If the file DOES exist, compare the date and time of the current copy and the
 							' installed copy.
 
 							cf1 = My.Computer.FileSystem.GetFileInfo(DestinationFolder & d.FileToCopy)
-							cf2 = My.Computer.FileSystem.GetFileInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.Name & "\" & d.FileToCopy)
+							cf2 = My.Computer.FileSystem.GetFileInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.FolderName & "\" & d.FileToCopy)
 
 							' If the current version has a newer date than the installed version, copy it over.
 
-							If cf2.LastWriteTime > cf1.LastWriteTime Then My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.Name & "\" & d.FileToCopy, DestinationFolder & d.FileToCopy, True)
+							If cf2.LastWriteTime > cf1.LastWriteTime Or cf2.LastWriteTime.Year < 1900 Then My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.FolderName & "\" & d.FileToCopy, DestinationFolder & d.FileToCopy, True)
 
 						End If
 				End Select

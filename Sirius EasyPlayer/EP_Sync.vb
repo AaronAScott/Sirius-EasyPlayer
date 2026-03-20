@@ -112,8 +112,6 @@ Public Class frmSync
 
 		' Declare variables
 
-		Dim ii As Integer
-		Dim zx As String
 		Dim sb As New StringBuilder
 
 		' Disable the sync button.
