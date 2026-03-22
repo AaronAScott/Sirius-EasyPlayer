@@ -83,8 +83,8 @@ Public Class frmMusicPlayer
 		MP.Parent = Me
 		Me.Controls.Add(MP)
 		MP.Location = New Point((Me.Width - MP.Width - lstPlaylist.Width) \ 2, Me.Height - MP.Height - MenuStrip1.Height - 20)
-		MP.Player.Volume = 0.67
-		MP.Player.Repeat = True
+		MP.Volume = 0.67
+		MP.Repeat = True
 		MP.ListBox = lstPlaylist
 
 		' Add the handler for the media player events
@@ -242,7 +242,7 @@ Public Class frmMusicPlayer
 		' Reset the selected song it it's been changed in the listbox.
 
 		If Not lstPlaylist Is Nothing Then
-			If MP.Player.CurrentSong.index <> lstPlaylist.SelectedIndex Then lstPlaylist.SelectedIndex = MP.Player.CurrentSong.index
+			If MP.CurrentSong.Index <> lstPlaylist.SelectedIndex Then lstPlaylist.SelectedIndex = MP.CurrentSong.Index
 		End If
 
 	End Sub
@@ -286,7 +286,7 @@ Public Class frmMusicPlayer
 			Case SiriusAudio.SEP_Playstate.SEP_Playing, SiriusAudio.SEP_Playstate.SEP_PlayingExternal
 				Timer1.Enabled = True
 			Case SiriusAudio.SEP_Playstate.SEP_PlaylistEnded
-				MP.Player.StopAll()
+				MP.PlayStop()
 				Timer1.Enabled = False
 		End Select
 
@@ -343,8 +343,8 @@ Public Class frmMusicPlayer
 		' Refill the list box with the new playlist.
 
 		lstPlaylist.BeginUpdate()
-		For i = 0 To MP.Player.PlayListItems.Count - 1
-			lstPlaylist.Items.Add(MP.Player.PlayListItems(i))
+		For i = 0 To MP.PlaylistItems.Count - 1
+			lstPlaylist.Items.Add(MP.PlaylistItems(i))
 		Next i
 		lstPlaylist.EndUpdate()
 
@@ -382,7 +382,7 @@ Public Class frmMusicPlayer
 	'***********************************************************************
 	Public Sub StopPlaying()
 
-		MP.Player.StopAll()
+		MP.PlayStop()
 
 	End Sub
 
@@ -397,11 +397,11 @@ Public Class frmMusicPlayer
 	Public Sub OnShortcutKeyPressed(KeyCode As Keys)
 		Select Case KeyCode
 			Case Keys.MediaNextTrack
-				MP.Player.NextSong()
+				MP.PlayNext()
 			Case Keys.MediaPreviousTrack
-				MP.Player.PreviousSong()
+				MP.PlayPrevious()
 			Case Keys.MediaPlayPause
-				MP.Player.Play()
+				MP.PlayPause()
 		End Select
 	End Sub
 

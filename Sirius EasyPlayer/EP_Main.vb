@@ -91,7 +91,7 @@ Public Class frmMain
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "Newtonsoft.Json.dll"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "SiriusAudio.dll"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "README.md"))
-		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "LICENSE.txt"))
+		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "LICENSE.md"))
 
 		' Check for updates.
 
@@ -1424,7 +1424,7 @@ Public Class frmMain
 			'   Create a music player in the panel below the playlist list box.'
 
 			MP = New MediaPlayer
-			MP.Player.Repeat = False
+			MP.Repeat = False
 			pnlMusicPlayer.Controls.Add(MP)
 
 			' Make the listbox invisible and the display and music control panels
@@ -1631,7 +1631,7 @@ Public Class frmMain
 		' Reset the selected song it it's been changed in the listbox.
 
 		If Not lstPlayList Is Nothing AndAlso lstPlayList.Items.Count > 0 Then
-			If MP.Player.CurrentSong.index <> lstPlayList.SelectedIndex Then lstPlayList.SelectedIndex = MP.Player.CurrentSong.index
+			If MP.CurrentSong.Index <> lstPlayList.SelectedIndex Then lstPlayList.SelectedIndex = MP.CurrentSong.Index
 		End If
 
 
@@ -1657,7 +1657,7 @@ Public Class frmMain
 
 		' Execute a full stop.
 
-		MP.Player.StopAll()
+		MP.PlayStop()
 
 		' Remove the handler.
 
@@ -1705,7 +1705,7 @@ Public Class frmMain
 		' Reset the elapsed time and start the timer.
 
 		ElapsedTime = 0
-		If MP.Player.PlayState = SiriusAudio.SEP_Playstate.SEP_Playing Or MP.Player.PlayState = SiriusAudio.SEP_Playstate.SEP_PlayingExternal Then timElapsedTime.Enabled = True
+		If MP.Playstate = SiriusAudio.SEP_Playstate.SEP_Playing Or MP.Playstate = SiriusAudio.SEP_Playstate.SEP_PlayingExternal Then timElapsedTime.Enabled = True
 
 		' Get the new album art and force it to be displayed.
 
@@ -2469,11 +2469,11 @@ Public Class frmMain
 	Public Sub OnShortcutKeyPressed(KeyCode As Keys)
 		Select Case KeyCode
 			Case Keys.MediaNextTrack
-				MP.Player.NextSong()
+				MP.PlayNext()
 			Case Keys.MediaPreviousTrack
-				MP.Player.PreviousSong()
+				MP.PlayPrevious()
 			Case Keys.MediaPlayPause
-				MP.Player.Play()
+				MP.PlayPause()
 		End Select
 	End Sub
 

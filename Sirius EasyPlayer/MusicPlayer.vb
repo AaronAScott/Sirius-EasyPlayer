@@ -27,10 +27,12 @@ Public Class MediaPlayer
 
 	' Declare variables local to this class.
 
-	Private MediaPlaying As Boolean = False
+	Private IsPlaying As Boolean = False
 	Private IgnoreMediaChangeEvent As Boolean
 	Private Shared cbInstanceCount As Integer = 0
+	Private mPlaystate As SiriusAudio.SEP_Playstate
 	Private mPlaylist As String = ""
+	Private SongIndex As Integer
 	Private SongTitle As String
 	Private AlbumName As String
 	Private ArtistName As String
@@ -71,6 +73,11 @@ Public Class MediaPlayer
 	Public Event PlayerStop()
 	Public Event MediaError(idx As Integer)
 	Private Event ButtonPressed(Action As MediaPlayerAction)
+
+	Public Structure SongInfo
+		Dim Index As Integer
+		Dim SongName As String
+	End Structure
 	'*******************************************************
 
 	' The class is created.
@@ -114,10 +121,15 @@ Public Class MediaPlayer
 			AddHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
 			AddHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
 		End If
-		'AddHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
-		'AddHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
+		AddHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
+		AddHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
 
 		Me.SetStyle(ControlStyles.UserMouse, True) ' This makes sure mouse events work.
+
+		' Be sure the control starts in a state of "Not Playing"
+
+		IsPlaying = False
+
 	End Sub
 	'*******************************************************
 
@@ -137,8 +149,8 @@ Public Class MediaPlayer
 			RemoveHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
 			RemoveHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
 		End If
-		'RemoveHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
-		'RemoveHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
+		RemoveHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
+		RemoveHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
 
 		mPlayer.StopAll()
 		MyBase.Dispose()
@@ -184,14 +196,14 @@ Public Class MediaPlayer
 				DrawButton(g, btnPrevious, Color.Gray, Color.LightGray, "Previous", "Pressed")
 				RaiseEvent ButtonPressed(CInt(MediaPlayerAction.ActionPrevious))
 			ElseIf btnPlayPause.Contains(adjustedPoint) Then
-				If MediaPlaying Then
+				If IsPlaying Then
 					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Pause", "Pressed")
 					RaiseEvent ButtonPressed(CInt(MediaPlayerAction.ActionPause))
 				Else
 					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play", "Pressed")
 					RaiseEvent ButtonPressed(CInt(MediaPlayerAction.ActionPlay))
 				End If
-				MediaPlaying = Not MediaPlaying
+				IsPlaying = Not IsPlaying
 			ElseIf btnNext.Contains(adjustedPoint) Then
 				DrawButton(g, btnNext, Color.Gray, Color.LightGray, "Next", "Pressed")
 				RaiseEvent ButtonPressed(CInt(MediaPlayerAction.ActionNext))
@@ -249,7 +261,7 @@ Public Class MediaPlayer
 			If btnPrevious.Contains(adjustedPoint) Then
 				DrawButton(g, btnPrevious, Color.Gray, Color.LightGray, "Previous")
 			ElseIf btnPlayPause.Contains(adjustedPoint) Then
-				If MediaPlaying Then
+				If IsPlaying Then
 					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Pause")
 				Else
 					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play")
@@ -315,7 +327,7 @@ Public Class MediaPlayer
 		DrawButton(g, btnPrevious, Color.Gray, Color.LightGray, "Previous")
 
 		' Draw Playing button or pause button
-		If Not MediaPlaying Then
+		If Not IsPlaying Then
 			DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play")
 		Else
 			' Draw Pause button
@@ -578,7 +590,7 @@ Public Class MediaPlayer
 
 		' Draw the play/press button as "pause"
 
-		MediaPlaying = True
+		IsPlaying = True
 		Using g As Graphics = Me.CreateGraphics
 			DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Pause")
 		End Using
@@ -596,16 +608,16 @@ Public Class MediaPlayer
 			Case MediaPlayerAction.ActionPlay
 				mPlayer.Play()
 				RaiseEvent PlayStateChanged(SiriusAudio.SEP_Playstate.SEP_Playing)
-				MediaPlaying = True
+				IsPlaying = True
 
 			Case MediaPlayerAction.ActionPause
 				mPlayer.Play()
 				RaiseEvent PlayStateChanged(SiriusAudio.SEP_Playstate.SEP_Paused)
-				MediaPlaying = False
+				IsPlaying = False
 
 			Case MediaPlayerAction.ActionStop
 				mPlayer.StopAll()
-				MediaPlaying = False
+				IsPlaying = False
 				RaiseEvent PlayerStop()
 				RaiseEvent PlayStateChanged(SiriusAudio.SEP_Playstate.SEP_Stopped)
 
@@ -676,6 +688,10 @@ Public Class MediaPlayer
 	'**********************************************************
 	Private Sub PlayStateChange(NewState As Integer)
 
+		' Save the current playstate
+
+		mPlaystate = NewState
+
 		' Redraw the play or pause button depending on the new
 		' playstate of the DLL.
 
@@ -685,10 +701,12 @@ Public Class MediaPlayer
 					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play")
 				End Using
 
+
 			Case SiriusAudio.SEP_Playstate.SEP_Playing
 				Using g = Me.CreateGraphics
 					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Pause")
 				End Using
+
 
 		End Select
 
@@ -696,14 +714,6 @@ Public Class MediaPlayer
 
 		If NewState = SiriusAudio.SEP_Playstate.SEP_PlaylistEnded Then RaiseEvent PlayerStop()
 
-	End Sub
-	'**********************************************************
-
-	' The play method.
-
-	'**********************************************************
-	Public Sub Play()
-		mPlayer.Play()
 	End Sub
 
 	'**********************************************************
@@ -726,6 +736,7 @@ Public Class MediaPlayer
 		ArtistName = parts(2)
 		AlbumName = parts(3)
 		SongTitle = SanitizeSongName(Path.GetFileNameWithoutExtension(filename))
+		SongIndex = idx
 
 		' Save the artist and album names for the properties
 
@@ -849,7 +860,7 @@ Public Class MediaPlayer
 
 	'**********************************************************
 	Private Sub SystemEvents_SessionEnding(sender As Object, e As SessionEndingEventArgs)
-		PausePlayback()
+		If IsPlaying Then PausePlayback()
 	End Sub
 	'**********************************************************
 
@@ -858,15 +869,57 @@ Public Class MediaPlayer
 	'**********************************************************
 	Private Sub PausePlayback()
 
-		If MediaPlaying Then
+		If IsPlaying Then
 			mPlayer.Play() ' If media is playing, this will pause it.
 			Using g As Graphics = Me.CreateGraphics
 				DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play")
 			End Using
-			MediaPlaying = False
+			IsPlaying = False
 		End If
 
 	End Sub
+	'**********************************************************
+
+	' The play/pause method.
+
+	'**********************************************************
+	Public Sub PlayPause()
+
+		mPlayer.Play()
+
+
+	End Sub
+	'**********************************************************
+
+	' The Previous Song method.
+
+	'**********************************************************
+	Public Sub PlayPrevious()
+
+		mPlayer.PreviousSong()
+
+	End Sub
+	'**********************************************************
+
+	' The Next Song method.
+
+	'**********************************************************
+	Public Sub PlayNext()
+
+		mPlayer.NextSong()
+
+	End Sub
+	'**********************************************************
+
+	' The Stop method
+
+	'**********************************************************
+	Public Sub PlayStop()
+
+		mPlayer.StopAll()
+
+	End Sub
+
 	'**********************************************************
 
 	' The listbox property.
@@ -887,13 +940,34 @@ Public Class MediaPlayer
 	End Property
 	'**********************************************************
 
-	' The player property.
+	' The Repeat property.
 
 	'**********************************************************
-	Public ReadOnly Property Player As SiriusAudio
+	Public Property Repeat As Boolean
 		Get
-			Player = mPlayer
+			Return mPlayer.Repeat
+
 		End Get
+		Set(value As Boolean)
+
+			mPlayer.Repeat = value
+
+		End Set
+	End Property
+	'**********************************************************
+
+	' The Autostart property.
+
+	'**********************************************************
+	Public Property AutoStart As Boolean
+		Get
+			Return mPlayer.Autostart
+
+		End Get
+		Set(value As Boolean)
+			mPlayer.Autostart = value
+
+		End Set
 	End Property
 	'**********************************************************
 
@@ -999,6 +1073,40 @@ Public Class MediaPlayer
 		End Set
 
 
+	End Property
+	'*******************************************************
+
+	' The PlaylistItems property
+
+	'*******************************************************
+	Public ReadOnly Property PlaylistItems As String()
+		Get
+			Return mPlayer.PlayListItems
+
+		End Get
+	End Property
+	'*******************************************************
+
+	' The CurrentSong property.
+
+	'*******************************************************
+	Public ReadOnly Property CurrentSong As SongInfo
+		Get
+			Dim si As New SongInfo
+			si.Index = SongIndex
+			si.SongName = SongTitle
+			Return si
+		End Get
+	End Property
+	'*******************************************************
+
+	' The Playstate property
+
+	'*******************************************************
+	Public ReadOnly Property Playstate As SiriusAudio.SEP_Playstate
+		Get
+			Return mPlaystate
+		End Get
 	End Property
 	'*******************************************************
 

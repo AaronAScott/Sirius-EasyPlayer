@@ -76,7 +76,7 @@ Public Class MarkdownViewer
 		End Get
 		Set(value As String)
 			mRawText = value
-			If value <> "" Then
+			If Not DesignMode AndAlso Not String.IsNullOrEmpty(value) Then
 				ParseMarkdown(value)
 				RecalculateLayout()
 				Me.Invalidate()

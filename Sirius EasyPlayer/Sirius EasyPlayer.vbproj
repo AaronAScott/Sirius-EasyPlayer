@@ -194,13 +194,13 @@
     <Compile Include="RegistryEditor.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SE_MDViewer.Designer.vb">
-      <DependentUpon>SE_MDViewer.vb</DependentUpon>
+    <Compile Include="EP_MDViewer.vb">
+    <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SE_MDViewer.vb">
-      <SubType>Form</SubType>
+    <Compile Include="EP_MDViewer.Designer.vb">
+    <DependentUpon>EP_MDViewer.vb</DependentUpon>
     </Compile>
-    <Compile Include="SiriusAudio.vb" />
+   <Compile Include="SiriusAudio.vb" />
     <Compile Include="TransparentPictureBox.vb">
       <SubType>Component</SubType>
     </Compile>
@@ -249,8 +249,8 @@
     <EmbeddedResource Include="RegistryEditor.resx">
       <DependentUpon>RegistryEditor.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SE_MDViewer.resx">
-      <DependentUpon>SE_MDViewer.vb</DependentUpon>
+    <EmbeddedResource Include="EP_MDViewer.resx">
+      <DependentUpon>EP_MDViewer.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
