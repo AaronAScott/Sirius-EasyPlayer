@@ -4,254 +4,314 @@ Imports System.Text.RegularExpressions
 
 <ToolboxItem(True)>
 Public Class MarkdownViewer
-	Inherits Panel
+     Inherits Panel
 
-	'===========================
-	' Render structures
-	'===========================
-	Private Class InlineRun
-		Public Property Text As String
-		Public Property Style As FontStyle
-		Public Property Font As Font
-		Public Property Width As Integer
+     '===========================
+     ' Render structures
+     '===========================
+     Private Class InlineRun
+          Public Property Text As String
+          Public Property Style As FontStyle
 
-		Public Sub New(text As String, style As FontStyle)
-			Me.Text = text
-			Me.Style = style
-		End Sub
-	End Class
+          Public Sub New(text As String, style As FontStyle)
+               Me.Text = text
+               Me.Style = style
+          End Sub
+     End Class
 
-	Private Class RenderLine
-		Public Property Text As String
-		Public Property Style As RenderStyle
-		Public Property Runs As List(Of InlineRun)
-		Public Property Font As Font
-		Public Property Height As Integer
+     Private Class RenderLine
+          Public Property Text As String
+          Public Property Style As RenderStyle
+          Public Property Runs As List(Of InlineRun)
+          Public Property Height As Integer
+          Public Property IsContinuation As Boolean   ' ← add this
 
-		Public Sub New(text As String, style As RenderStyle)
-			Me.Text = text
-			Me.Style = style
-			Me.Runs = New List(Of InlineRun) From {
-			    New InlineRun(text, FontStyle.Regular)
-			}
-		End Sub
+          Public Sub New(text As String, style As RenderStyle)
+               Me.Text = text
+               Me.Style = style
+               Me.Runs = New List(Of InlineRun) From {
+            New InlineRun(text, FontStyle.Regular)
+        }
+          End Sub
 
-		Public Sub New(runs As List(Of InlineRun), style As RenderStyle)
-			Me.Runs = runs
-			Me.Style = style
-			Me.Text = String.Join("", runs.Select(Function(r) r.Text))
-		End Sub
-	End Class
+          Public Sub New(runs As List(Of InlineRun), style As RenderStyle)
+               Me.Runs = runs
+               Me.Style = style
+               Me.Text = String.Join("", runs.Select(Function(r) r.Text))
+          End Sub
+     End Class
+     Private Enum RenderStyle
+          Header1
+          Header2
+          Header3
+          Body
+          Rule
+          Bullet
+     End Enum
 
-	Private Enum RenderStyle
-		Header1
-		Header2
-		Header3
-		Body
-		Rule
-		Bullet
-	End Enum
+     Private _parsedLines As New List(Of RenderLine)   ' source (unwrapped)
+     Private _lines As New List(Of RenderLine)         ' wrapped, rendered
+     Private mRawText As String
 
-	Private _lines As New List(Of RenderLine)
-	Private mRawText As String
+     ' static fonts based on style
+     Private _fontBody As Font
+     Private _fontHeader1 As Font
+     Private _fontHeader2 As Font
+     Private _fontHeader3 As Font
+     Private _fontBullet As Font
 
-	'===========================
-	' Control setup
-	'===========================
-	Public Sub New()
-		Me.DoubleBuffered = True
-		Me.AutoScroll = True
-	End Sub
+     '===========================
+     ' Control setup
+     '===========================
+     Public Sub New()
+          Me.DoubleBuffered = True
+          Me.AutoScroll = True
 
-	Public Sub LoadFile(path As String)
-		Dim text = IO.File.ReadAllText(path)
-		mRawText = text
-		ParseMarkdown(text)
-		RecalculateLayout()
-		Me.Invalidate()
-	End Sub
-	Public Property RawText As String
-		Get
-			Return mRawText
-		End Get
-		Set(value As String)
-			mRawText = value
-			If Not DesignMode AndAlso Not String.IsNullOrEmpty(value) Then
-				ParseMarkdown(value)
-				RecalculateLayout()
-				Me.Invalidate()
-			End If
-		End Set
-	End Property
-	'===========================
-	' Markdown parsing
-	'===========================
-	Private Sub ParseMarkdown(md As String)
-		_lines.Clear()
+          Dim baseFont = Me.Font
+          _fontBody = baseFont
+          _fontBullet = baseFont
+          _fontHeader1 = New Font(baseFont.FontFamily, baseFont.Size + 6, FontStyle.Bold)
+          _fontHeader2 = New Font(baseFont.FontFamily, baseFont.Size + 3, FontStyle.Bold)
+          _fontHeader3 = New Font(baseFont.FontFamily, baseFont.Size + 1, FontStyle.Bold)
+     End Sub
 
-		Dim rawLines = md.Replace(vbCrLf, vbLf).Split(vbLf)
+     Private Function GetLineFont(style As RenderStyle) As Font
+          Select Case style
+               Case RenderStyle.Header1 : Return _fontHeader1
+               Case RenderStyle.Header2 : Return _fontHeader2
+               Case RenderStyle.Header3 : Return _fontHeader3
+               Case RenderStyle.Bullet : Return _fontBullet
+               Case Else : Return _fontBody
+          End Select
+     End Function
 
-		For Each line In rawLines
-			If line.StartsWith("# ") Then
-				_lines.Add(New RenderLine(line.Substring(2).Trim(), RenderStyle.Header1))
+     Private Function GetRunFont(lineStyle As RenderStyle, runStyle As FontStyle) As Font
+          Dim base = GetLineFont(lineStyle)
+          Return New Font(base, runStyle)
+     End Function
 
-			ElseIf line.StartsWith("## ") Then
-				_lines.Add(New RenderLine(line.Substring(3).Trim(), RenderStyle.Header2))
+     Public Sub LoadFile(path As String)
+          Dim text = IO.File.ReadAllText(path)
+          mRawText = text
+          ParseMarkdown(text)
+          RecalculateLayout()
+          Me.Invalidate()
+     End Sub
 
-			ElseIf line.StartsWith("### ") Then
-				_lines.Add(New RenderLine(line.Substring(4).Trim(), RenderStyle.Header3))
+     Public Property RawText As String
+          Get
+               Return mRawText
+          End Get
+          Set(value As String)
+               mRawText = value
+               If Not DesignMode AndAlso Not String.IsNullOrEmpty(value) Then
+                    ParseMarkdown(value)
+                    RecalculateLayout()
+                    Me.Invalidate()
+               End If
+          End Set
+     End Property
 
-			ElseIf line.Trim() = "---" Then
-				_lines.Add(New RenderLine("", RenderStyle.Rule))
+     '===========================
+     ' Markdown parsing
+     '===========================
+     Private Sub ParseMarkdown(md As String)
+          _parsedLines.Clear()
 
-			ElseIf line.TrimStart().StartsWith("- ") OrElse
-				  line.TrimStart().StartsWith("* ") OrElse
-				  line.TrimStart().StartsWith("+ ") Then
+          Dim rawLines = md.Replace(vbCrLf, vbLf).Split(vbLf)
 
-				Dim trimmed = line.TrimStart().Substring(2).Trim()
-				_lines.Add(New RenderLine(ParseInline(trimmed), RenderStyle.Bullet))
+          For Each line In rawLines
+               If line.StartsWith("# ") Then
+                    _parsedLines.Add(New RenderLine(line.Substring(2).Trim(), RenderStyle.Header1))
 
-			Else
-				_lines.Add(New RenderLine(ParseInline(line), RenderStyle.Body))
-			End If
-		Next
+               ElseIf line.StartsWith("## ") Then
+                    _parsedLines.Add(New RenderLine(line.Substring(3).Trim(), RenderStyle.Header2))
 
-		AssignFonts()
-	End Sub
+               ElseIf line.StartsWith("### ") Then
+                    _parsedLines.Add(New RenderLine(line.Substring(4).Trim(), RenderStyle.Header3))
 
-	'===========================
-	' Inline parsing
-	'===========================
-	Private Function ParseInline(text As String) As List(Of InlineRun)
-		Dim runs As New List(Of InlineRun)
+               ElseIf line.Trim() = "---" Then
+                    _parsedLines.Add(New RenderLine("", RenderStyle.Rule))
 
-		Dim pattern = "(\*\*.*?\*\*|\*.*?\*)"
-		Dim parts = Regex.Split(text, pattern)
+               ElseIf line.TrimStart().StartsWith("- ") OrElse
+                      line.TrimStart().StartsWith("* ") OrElse
+                      line.TrimStart().StartsWith("+ ") Then
 
-		For Each part In parts
-			If part.StartsWith("**") AndAlso part.EndsWith("**") Then
-				runs.Add(New InlineRun(part.Substring(2, part.Length - 4), FontStyle.Bold))
+                    Dim trimmed = line.TrimStart().Substring(2).Trim()
+                    _parsedLines.Add(New RenderLine(ParseInline(trimmed), RenderStyle.Bullet))
 
-			ElseIf part.StartsWith("*") AndAlso part.EndsWith("*") Then
-				runs.Add(New InlineRun(part.Substring(1, part.Length - 2), FontStyle.Italic))
+               Else
+                    _parsedLines.Add(New RenderLine(ParseInline(line), RenderStyle.Body))
+               End If
+          Next
+     End Sub
 
-			Else
-				runs.Add(New InlineRun(part, FontStyle.Regular))
-			End If
-		Next
+     '===========================
+     ' Inline parsing
+     '===========================
+     Private Function ParseInline(text As String) As List(Of InlineRun)
+          Dim runs As New List(Of InlineRun)
 
-		Return runs
-	End Function
+          Dim pattern = "(\*\*.*?\*\*|\*.*?\*)"
+          Dim parts = Regex.Split(text, pattern)
 
-	'===========================
-	' Font assignment (ideal)
-	'===========================
-	Private Sub AssignFonts()
-		Dim baseFont = Me.Font
+          For Each part In parts
+               If part.StartsWith("**") AndAlso part.EndsWith("**") Then
+                    runs.Add(New InlineRun(part.Substring(2, part.Length - 4), FontStyle.Bold))
 
-		For Each line In _lines
-			Select Case line.Style
+               ElseIf part.StartsWith("*") AndAlso part.EndsWith("*") Then
+                    runs.Add(New InlineRun(part.Substring(1, part.Length - 2), FontStyle.Italic))
 
-				Case RenderStyle.Header1
-					line.Font = New Font(baseFont.FontFamily, baseFont.Size + 6, FontStyle.Bold)
+               Else
+                    runs.Add(New InlineRun(part, FontStyle.Regular))
+               End If
+          Next
 
-				Case RenderStyle.Header2
-					line.Font = New Font(baseFont.FontFamily, baseFont.Size + 3, FontStyle.Bold)
+          Return runs
+     End Function
 
-				Case RenderStyle.Header3
-					line.Font = New Font(baseFont.FontFamily, baseFont.Size + 1, FontStyle.Bold)
+     '===========================
+     ' Layout calculation
+     '===========================
+     Private Sub RecalculateLayout()
+          If _parsedLines Is Nothing OrElse _parsedLines.Count = 0 Then Exit Sub
+          If ClientSize.Width <= 0 Then Exit Sub
 
-				Case RenderStyle.Body, RenderStyle.Bullet
-					line.Font = baseFont
+          Dim newLines As New List(Of RenderLine)
 
-				Case RenderStyle.Rule
-					line.Font = baseFont
-			End Select
+          Using g As Graphics = Me.CreateGraphics()
+               For Each line In _parsedLines
+                    If line.Style = RenderStyle.Body OrElse line.Style = RenderStyle.Bullet Then
+                         newLines.AddRange(WrapLine(line, g, Me.ClientSize.Width - 10))
+                    Else
+                         newLines.Add(line)
+                    End If
+               Next
 
-			' Assign fonts to inline runs
-			For Each run In line.Runs
-				run.Font = New Font(line.Font, run.Style)
-			Next
-		Next
-	End Sub
+               _lines = newLines
 
-	'===========================
-	' Layout calculation
-	'===========================
-	Private Sub RecalculateLayout()
-		Dim total As Integer = 0
+               Dim total As Integer = 0
+               For Each line In _lines
+                    Select Case line.Style
+                         Case RenderStyle.Rule
+                              line.Height = 12
+                         Case Else
+                              line.Height = CInt(GetLineFont(line.Style).GetHeight(g)) + 2
+                    End Select
+                    total += line.Height
+               Next
 
-		Using g As Graphics = Me.CreateGraphics()
-			For Each line In _lines
+               AutoScrollMinSize = New Size(ClientSize.Width, total)
+          End Using
+     End Sub
 
-				Select Case line.Style
+     Private Function WrapLine(line As RenderLine, g As Graphics, maxWidth As Integer) As List(Of RenderLine)
+          Dim wrapped As New List(Of RenderLine)
+          Dim currentRuns As New List(Of InlineRun)
+          Dim currentWidth As Integer = 0
 
-					Case RenderStyle.Rule
-						line.Height = 12
+          ' Preserve blank lines
+          If line.Text.Trim() = "" Then
+               Return New List(Of RenderLine) From {
+            New RenderLine(New List(Of InlineRun) From {
+                New InlineRun("", FontStyle.Regular)
+            }, line.Style)
+        }
+          End If
 
-					Case RenderStyle.Bullet, RenderStyle.Body
-						line.Height = CInt(line.Font.GetHeight(g)) + 2
+          For Each run In line.Runs
+               Dim runFont = GetRunFont(line.Style, run.Style)
 
-					Case RenderStyle.Header3
-						line.Height = CInt(line.Font.GetHeight(g)) + 2
+               ' Split into words + spaces
+               Dim tokens = Regex.Matches(run.Text, "\S+|\s+").
+                      Cast(Of Match)().
+                      Select(Function(m) m.Value)
 
-					Case Else
-						line.Height = CInt(line.Font.GetHeight(g)) + 2
+               For Each token In tokens
+                    Dim tokenWidth = CInt(g.MeasureString(token, runFont).Width)
 
-				End Select
+                    ' Wrap if needed
+                    If currentWidth + tokenWidth > maxWidth AndAlso currentRuns.Count > 0 Then
+                         wrapped.Add(New RenderLine(New List(Of InlineRun)(currentRuns), line.Style))
+                         wrapped.Last().IsContinuation = (wrapped.Count > 1 AndAlso line.Style = RenderStyle.Bullet)
+                         currentRuns.Clear()
+                         currentWidth = 0
+                    End If
 
-				total += line.Height
-			Next
-		End Using
+                    currentRuns.Add(New InlineRun(token, run.Style))
+                    currentWidth += tokenWidth
+               Next
+          Next
 
-		AutoScrollMinSize = New Size(ClientSize.Width, total)
-	End Sub
+          ' Final line
+          If currentRuns.Count > 0 Then
+               wrapped.Add(New RenderLine(currentRuns, line.Style))
+               wrapped.Last().IsContinuation = (wrapped.Count > 1 AndAlso line.Style = RenderStyle.Bullet)
+          End If
 
-	'===========================
-	' Rendering
-	'===========================
-	Protected Overrides Sub OnPaint(e As PaintEventArgs)
-		MyBase.OnPaint(e)
+          Return wrapped
+     End Function
+     Protected Overrides Sub OnResize(e As EventArgs)
+          MyBase.OnResize(e)
 
-		Dim g = e.Graphics
-		Dim y As Integer = AutoScrollPosition.Y
+          If Not DesignMode AndAlso _parsedLines IsNot Nothing AndAlso _parsedLines.Count > 0 Then
+               BeginInvoke(Sub()
+                                RecalculateLayout()
+                                Invalidate()
+                           End Sub)
+          End If
+     End Sub
+     '===========================
+     ' Rendering
+     '===========================
+     Protected Overrides Sub OnPaint(e As PaintEventArgs)
+          MyBase.OnPaint(e)
 
-		For Each line In _lines
+          Dim g = e.Graphics
+          Dim y As Integer = AutoScrollPosition.Y
 
-			Select Case line.Style
+          For Each line In _lines
+               Dim lineFont = GetLineFont(line.Style)
 
-				Case RenderStyle.Rule
-					g.DrawLine(Pens.Gray, 0, y + 4, ClientSize.Width, y + 4)
+               Select Case line.Style
 
-				Case RenderStyle.Header3
-					g.DrawString(line.Text, line.Font, Brushes.Black, 0, y)
+                    Case RenderStyle.Rule
+                         g.DrawLine(Pens.Gray, 0, y + 4, ClientSize.Width, y + 4)
 
-				Case RenderStyle.Bullet
-					Dim bullet = "• "
-					Dim indent = 20
+                    Case RenderStyle.Header3, RenderStyle.Header2, RenderStyle.Header1
+                         g.DrawString(line.Text, lineFont, Brushes.Black, 0, y)
 
-					g.DrawString(bullet, line.Font, Brushes.Black, 0, y)
+                    Case RenderStyle.Bullet
+                         Dim bullet = "• "
+                         Dim indent = 20
 
-					Dim x As Integer = indent
-					For Each run In line.Runs
-						g.DrawString(run.Text, run.Font, Brushes.Black, x, y)
-						x += CInt(g.MeasureString(run.Text, run.Font).Width)
-					Next run
+                         If Not line.IsContinuation Then
+                              ' First visual line of bullet
+                              g.DrawString(bullet, lineFont, Brushes.Black, 0, y)
+                         End If
 
-				Case RenderStyle.Body
-					Dim x As Integer = 0
-					For Each run In line.Runs
-						g.DrawString(run.Text, run.Font, Brushes.Black, x, y)
-						x += CInt(g.MeasureString(run.Text, run.Font).Width)
-					Next
+                         Dim x As Integer = If(line.IsContinuation, 0, indent)
 
-				Case Else
-					g.DrawString(line.Text, line.Font, Brushes.Black, 0, y)
+                         For Each run In line.Runs
+                              Dim runFont = GetRunFont(line.Style, run.Style)
+                              g.DrawString(run.Text, runFont, Brushes.Black, x, y)
+                              x += CInt(g.MeasureString(run.Text, runFont).Width)
+                         Next
+                    Case RenderStyle.Body
+                         Dim x As Integer = 0
+                         For Each run In line.Runs
+                              Dim runFont = GetRunFont(line.Style, run.Style)
+                              g.DrawString(run.Text, runFont, Brushes.Black, x, y)
+                              x += CInt(g.MeasureString(run.Text, runFont).Width)
+                         Next
 
-			End Select
+                    Case Else
+                         g.DrawString(line.Text, lineFont, Brushes.Black, 0, y)
 
-			y += line.Height
-		Next
-	End Sub
+               End Select
+
+               y += line.Height
+          Next
+     End Sub
 
 End Class

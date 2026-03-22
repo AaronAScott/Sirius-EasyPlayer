@@ -1,7 +1,34 @@
-# Sirius EasyPlayer
+﻿# Sirius EasyPlayer
 
-> **Note:** Sirius EasyPlayer requires **Microsoft SQL Server LocalDB** to be installed and available on the system.  
-> The program will not function without LocalDB.
+## Why this program exists.
+
+If you're a Windows user, and have used Windows Media Player, you've undoubtedly experienced its nasty habits of changing album art, saving *multiple* copies of album art (I found 10 copies in one folder, while cleaning up my library), renames songs, moves songs—its list of sins is long.
+I resolved to write my own player that behaved the way I wanted, and which made no changes to my music folder without asking (and even then, the only change is if **you** tell the program to search online for album art, or paste an image from the clipboard).
+
+## How this program is designed.
+
+There are 4 basic layers to Sirius EasyPlayer:
+
+- 1)  SiriusAudio.dll, built on **Miniaudio**, which actually plays your music, except .wma files. 
+- 2) The "wrapper", SiriusAudio.vb, which takes event information from the DLL's event queue and generates Windows events.  It also parses Windows Playlists (*.wpl files) or takes a string of fully-qualified song names, separated by CrLf (which applies to even the final song name). 
+- 3)  The Music Player control, MusicPlayer.vb.  This is the only route by which a higher-level program should access the wrapper.  
+- 4) The UI, which is the actual Sirius EasyPlayer program.
+
+As an open-source program, you may use any or all of these programs, subject only to third-party license considerations.  If you plan to write your own player (always a fun project), and prefer C# or another language, you will also need to write your own wrapper for the DLL.
+
+## About .wma files.
+
+These files cannot be played by Miniaudio, which supports only .flac, .ogg, .wav and .mp3 files.
+To play .wma files, the wrapper calls upon the built-in Windows Media Player DLL (WMPLIB).
+
+Sirius EasyPlayer also has a feature which will allow you to specify that any given file may be passed on to WMPLIB for playing, if Miniaudio has trouble with it (I've downloaded a couple of .mp3 files which it cannot play, but which WMPLIB, with its looser interpretation of malformed headers, can.) This list of files can be set in the wrapper's and DLL's "FallbackList" property, which takes the exact same form as the SongList property: fully-qualified file names separated by CrLf.  In Sirius EasyPlayer, this can be set by artist, album or individual song as "Set Compatibility Mode".
+
+## About Sirius EasyPlayer's Library.
+
+SEP saves information about your music folder in an SQL Server .mdf file. 
+**Note:** Sirius EasyPlayer requires **Microsoft SQL Server LocalDB** to be installed and available on the system.  The program will not function without LocalDB.
+
+You can download this via this link: https://go.microsoft.com/fwlink/?linkid=2215160.  Use only SQLLocalDB.msi, which will extract from the download.
 
 ---
 

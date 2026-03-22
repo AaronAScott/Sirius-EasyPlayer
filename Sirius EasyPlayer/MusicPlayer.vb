@@ -113,9 +113,9 @@ Public Class MediaPlayer
 		AddHandler Me.MouseUp, AddressOf picControl_MouseUp
 		AddHandler Me.ButtonPressed, AddressOf MP_ButtonPressed
 		AddHandler mPlayer.SongChanged, AddressOf saSongChanged
-		AddHandler mPlayer.PlaylistLoading, AddressOf PlaylistLoading
-		AddHandler mPlayer.PlaylistLoaded, AddressOf PlaylistLoaded
-		AddHandler mPlayer.PlayStateChanged, AddressOf PlayStateChange
+		AddHandler mPlayer.PlaylistLoading, AddressOf saPlaylistLoading
+		AddHandler mPlayer.PlaylistLoaded, AddressOf saPlaylistLoaded
+		AddHandler mPlayer.PlayStateChanged, AddressOf saPlayStateChange
 		AddHandler mPlayer.MediaError, AddressOf saMediaError
 		If lstPlayList IsNot Nothing Then
 			AddHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
@@ -141,9 +141,9 @@ Public Class MediaPlayer
 		RemoveHandler Me.MouseUp, AddressOf picControl_MouseUp
 		RemoveHandler Me.ButtonPressed, AddressOf MP_ButtonPressed
 		RemoveHandler mPlayer.SongChanged, AddressOf saSongChanged
-		RemoveHandler mPlayer.PlaylistLoading, AddressOf PlaylistLoading
-		RemoveHandler mPlayer.PlaylistLoaded, AddressOf PlaylistLoaded
-		RemoveHandler mPlayer.PlayStateChanged, AddressOf PlayStateChange
+		RemoveHandler mPlayer.PlaylistLoading, AddressOf saPlaylistLoading
+		RemoveHandler mPlayer.PlaylistLoaded, AddressOf saPlaylistLoaded
+		RemoveHandler mPlayer.PlayStateChanged, AddressOf saPlayStateChange
 		RemoveHandler mPlayer.MediaUnplayable, AddressOf saMediaError
 		If lstPlayList IsNot Nothing Then
 			RemoveHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
@@ -664,21 +664,30 @@ Public Class MediaPlayer
 		g.DrawArc(Pens.DarkGray, AlbumImageRect, 225, 180)
 
 	End Sub
+	'**********************************************************
+
+	' The next FIVE handlers receive messages from the music engine,
+	' SiriusAudio, and pass on messages to the music control
+
 
 	'**********************************************************
 
-	' Handler for the Playlist Loading event.
+	'**********************************************************
+
+	' Handler for the Playlist Loading event.  Just pass on
+	' the event.
 
 	'**********************************************************
-	Private Sub PlaylistLoading()
+	Private Sub saPlaylistLoading()
 		RaiseEvent PlayListStartLoad()
 	End Sub
 	'**********************************************************
 
-	' Handler for the playlist endload event.
+	' Handler for the playlist endload event. Just pass on the 
+	' event.
 
 	'**********************************************************
-	Private Sub PlaylistLoaded()
+	Private Sub saPlaylistLoaded()
 		RaiseEvent PlayListEndLoad()
 	End Sub
 	'**********************************************************
@@ -686,31 +695,34 @@ Public Class MediaPlayer
 	' Handler for the PlayStateChanged event.
 
 	'**********************************************************
-	Private Sub PlayStateChange(NewState As Integer)
+	Private Sub saPlayStateChange(NewState As Integer)
 
-		' Save the current playstate
+		' Save the current playstate, for the control's own
+		' PlayState property.
 
 		mPlaystate = NewState
 
 		' Redraw the play or pause button depending on the new
-		' playstate of the DLL.
+		' playstate of the DLL.  The internal IsPlaying flag will
+		' be reset, depending upon the new play state.
 
 		Select Case NewState
 			Case SiriusAudio.SEP_Playstate.SEP_Paused
 				Using g = Me.CreateGraphics
 					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play")
 				End Using
-
+				IsPlaying = False
 
 			Case SiriusAudio.SEP_Playstate.SEP_Playing
 				Using g = Me.CreateGraphics
 					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Pause")
 				End Using
-
+				IsPlaying = True
 
 		End Select
 
-		' If we received a PlaylistEnded event,close the player.
+		' If we received a PlaylistEnded event,close the player.  This event
+		' is ONLY sent if the Repeat flag is set to False.
 
 		If NewState = SiriusAudio.SEP_Playstate.SEP_PlaylistEnded Then RaiseEvent PlayerStop()
 
@@ -747,8 +759,8 @@ Public Class MediaPlayer
 		' done as only the DLL will refuse to trigger an error condition on
 		' a non-existent file.  It hands off the non-existent file to WMP as 
 		' a fallback, which simply does nothing and generates no error.  So
-		' saMediaError never gets called for a non-existent file, only if
-		' WMP actually generates an error.  
+		' saMediaError never gets called for a non-existent file, and only here
+		' can that error be discovered and reported.
 
 		If Not My.Computer.FileSystem.FileExists(filename) Then
 			saMediaError(idx)
@@ -874,7 +886,6 @@ Public Class MediaPlayer
 			Using g As Graphics = Me.CreateGraphics
 				DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play")
 			End Using
-			IsPlaying = False
 		End If
 
 	End Sub
