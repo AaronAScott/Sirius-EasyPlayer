@@ -862,7 +862,7 @@ Public Class MediaPlayer
 	'**********************************************************
 	Private Sub SystemEvents_PowerModeChanged(sender As Object, e As PowerModeChangedEventArgs)
 		If e.Mode = PowerModes.Suspend And IsPlaying Then
-			PausePlayback()
+			mPlayer.StopAll()
 			' Set this explicitly, since the power might go off before the playstatechange event arrives.
 			IsPlaying = False
 
@@ -876,7 +876,7 @@ Public Class MediaPlayer
 	'**********************************************************
 	Private Sub SystemEvents_SessionEnding(sender As Object, e As SessionEndingEventArgs)
 		If IsPlaying Then
-			PausePlayback()
+			mPlayer.StopAll()
 			' Set this explicitly, since the power might go off before the playstatechange event arrives.
 			IsPlaying = False
 		End If

@@ -68,7 +68,7 @@ Module ProgramUpdater
 		' Declare variables.
 
 		Dim Version As Single = Val(My.Application.Info.Version.Major & "." & My.Application.Info.Version.Minor & My.Application.Info.Version.Build & My.Application.Info.Version.MinorRevision)
-		Dim UpdaterVersion As String = "1.000"
+		Dim UpdaterVersion As String = "2.000"
 		Dim UpdateFiles As IReadOnlyCollection(Of String)
 		Dim UpdateList As String
 		Dim DisplayList As String
@@ -228,7 +228,7 @@ Module ProgramUpdater
 
 				' Copy the .update file into the folder with the executable.
 
-				DownloadFile(ProgramUpdateURL & ProgramName & ".update", DestinationFolder & ProgramName.Replace(" ", "") & ".update")
+				DownloadFile(ProgramUpdateURL & ProgramName & ".update", DestinationFolder & ProgramName & ".update")
 			End If
 
 		Catch ex As Exception ' Do nothing: there is no update available.

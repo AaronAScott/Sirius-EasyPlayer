@@ -124,7 +124,7 @@ Friend Class About
 		' Retrieve the CurrentVersion.txt file contents.
 
 		Try
-			zx = Client.GetStringAsync(UpdateSiteURL & "CurrentVersion.txt").GetAwaiter().GetResult()
+			zx = Client.GetStringAsync(ProgramUpdateURL & "CurrentVersion.txt").GetAwaiter().GetResult()
 		Catch ex As Exception
 		End Try
 
