@@ -1,5 +1,7 @@
 ﻿Imports System.IO
+Imports System.Net.Http
 Imports System.Runtime.InteropServices
+Imports System.Windows.Forms.Form
 
 Module ProgramUpdater
 	'*******************************************************************
@@ -7,7 +9,7 @@ Module ProgramUpdater
 	' PROGRAMUPDATER.VB
 	' Written: May 2022
 	' Updated: December 2023
-	' Updated: July 2026
+	' Updated: March 2026 
 	' Programmer: Aaron Scott
 	' Copyright 2022-2026 Sirius Software All Rights Reserved
 	'*******************************************************************
@@ -49,6 +51,11 @@ Module ProgramUpdater
 	Private lblHeader_2 As New Label
 	Private ListBox1 As New ListBox
 	Private PictureBox1 As New PictureBox
+
+	' Create an HTTP client
+
+	Private Client As New HttpClient
+
 
 
 	'*******************************************************************
@@ -182,16 +189,16 @@ Module ProgramUpdater
 		' Get the version number of the current updater.
 
 		Try
-			zx = My.Computer.FileSystem.ReadAllText(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\SiriusUpDateUtility\currentversion.txt")
+			zx = Client.GetStringAsync(UpdateSiteURL & "SiriusUpdateUtility/CurrentVersion.txt").GetAwaiter().GetResult()
 			If zx.IndexOf(vbCrLf) > 0 Then zx = zx.Substring(0, zx.IndexOf(vbCrLf))
 
 			' If the latest version is more recent, get the update.
 
 			If CSng(zx) > v Then
 
-				' Copy the .update file into the folder with the executable.
+				' Download the .update file into the folder with the executable.
 
-				My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\SiriusUpdateUtility\SiriusUpdateUtility.update", DestinationFolder & "SiriusUpdateUtility.exe", True)
+				DownloadFile(UpdateSiteURL & "SiriusUpdateUtility/SiriusUpdateUtility.update", DestinationFolder & "SiriusUpdateUtility.exe")
 			End If
 
 		Catch ex As Exception ' Do nothing: there is no update available.
@@ -212,7 +219,7 @@ Module ProgramUpdater
 		Try
 			' Get the latest version number, to compare against the program's version.
 
-			zx = My.Computer.FileSystem.ReadAllText(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & ProgramName.Replace(" ", "") & "\currentversion.txt")
+			zx = Client.GetStringAsync(ProgramUpdateURL & "CurrentVersion.txt").GetAwaiter().GetResult()
 			If zx.IndexOf(vbCrLf) > 0 Then zx = zx.Substring(0, zx.IndexOf(vbCrLf))
 
 			' If the latest version is more recent, get the update.
@@ -221,7 +228,7 @@ Module ProgramUpdater
 
 				' Copy the .update file into the folder with the executable.
 
-				My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & ProgramName.Replace(" ", "") & "\" & ProgramName & ".update", DestinationFolder & ProgramName & ".update", True)
+				DownloadFile(ProgramUpdateURL & ProgramName & ".update", DestinationFolder & ProgramName.Replace(" ", "") & ".update")
 			End If
 
 		Catch ex As Exception ' Do nothing: there is no update available.
@@ -240,8 +247,8 @@ Module ProgramUpdater
 		Dim zx As String
 		Dim d As Dependency
 		Dim fi As FileVersionInfo
-		Dim cf1 As IO.FileInfo
-		Dim cf2 As IO.FileInfo
+		Dim cf1 As DateTime
+		Dim cf2 As DateTime?
 		Dim v As Single
 
 
@@ -258,7 +265,7 @@ Module ProgramUpdater
 						Try
 							' Get the latest version number, to compare against the program's version.
 
-							zx = My.Computer.FileSystem.ReadAllText(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.FolderName & "\currentversion.txt")
+							zx = Client.GetStringAsync(ProgramUpdateURL & "CurrentVersion.txt").GetAwaiter().GetResult()
 							If zx.IndexOf(vbCrLf) > 0 Then zx = zx.Substring(0, zx.IndexOf(vbCrLf))
 
 							' See if the dependent file exists.  If it's missing, we'll copy it over as though
@@ -280,7 +287,7 @@ Module ProgramUpdater
 
 								' Copy the .update file into the folder with the executable.
 
-								My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.FolderName & "\" & d.FolderName & ".update", DestinationFolder & d.FolderName & ".update", True)
+								DownloadFile(UpdateSiteURL & d.FolderName & "/" & d.FolderName & ".update", DestinationFolder & d.FolderName & "\" & d.FolderName & ".update")
 							End If
 						Catch ex As Exception
 						End Try
@@ -294,18 +301,20 @@ Module ProgramUpdater
 
 						Try
 							If Not My.Computer.FileSystem.FileExists(DestinationFolder & d.FileToCopy) Then
-								My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.FolderName & "\" & d.FileToCopy, DestinationFolder & d.FileToCopy)
+								DownloadFile(ProgramUpdateURL & d.FileToCopy, DestinationFolder & d.FolderName & "\" & d.FileToCopy)
 							Else
 
 								' If the file DOES exist, compare the date and time of the current copy and the
 								' installed copy.
 
-								cf1 = My.Computer.FileSystem.GetFileInfo(DestinationFolder & d.FileToCopy)
-								cf2 = My.Computer.FileSystem.GetFileInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.FolderName & "\" & d.FileToCopy)
+								cf1 = My.Computer.FileSystem.GetFileInfo(DestinationFolder & d.FileToCopy).LastWriteTime
+								cf2 = GetRemoteFileDate(ProgramUpdateURL & d.FileToCopy)
 
 								' If the current version has a newer date than the installed version, copy it over.
 
-								If cf2.LastWriteTime > cf1.LastWriteTime Or cf2.LastWriteTime.Year < 1900 Then My.Computer.FileSystem.CopyFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & d.FolderName & "\" & d.FileToCopy, DestinationFolder & d.FileToCopy, True)
+								If cf2 > cf1 Or cf2 Is Nothing Then
+									DownloadFile(ProgramUpdateURL & d.FileToCopy, DestinationFolder & d.FolderName & "\" & d.FileToCopy)
+								End If
 
 							End If
 						Catch ex As Exception
@@ -686,4 +695,61 @@ Module ProgramUpdater
 		bC.Dispose()
 
 	End Sub
+	'*******************************************************************
+
+	' Function to return the file date/time from a file on the update
+	' website.
+
+	'*******************************************************************
+	Private Function GetRemoteFileDate(url As String) As DateTime?
+		Dim request As New HttpRequestMessage(HttpMethod.Head, url)
+		Dim response = Client.SendAsync(request).GetAwaiter().GetResult()
+
+		If response.IsSuccessStatusCode Then
+			If response.Content.Headers.LastModified.HasValue Then
+				Return response.Content.Headers.LastModified.Value.UtcDateTime
+			End If
+		End If
+
+		Return Nothing
+	End Function
+	'*******************************************************************
+
+	' Sub to copy a file from the update website to the local drive.
+
+	'*******************************************************************
+	Private Sub DownloadFile(SourceURL As String, DestinationFile As String)
+
+		' Declare variables.
+
+		Dim filebytes() As Byte
+
+		Try
+			filebytes = Client.GetByteArrayAsync(SourceURL).GetAwaiter().GetResult()
+			My.Computer.FileSystem.WriteAllBytes(DestinationFile, filebytes, False)
+		Catch ex As Exception
+		End Try
+
+
+	End Sub
+	'*******************************************************************
+
+	' Property to retrieve the update website URL.
+
+	'*******************************************************************
+	Public ReadOnly Property UpdateSiteURL As String
+		Get
+			Return $"http://siriussoftware.software/ProgramUpdates/"
+		End Get
+	End Property
+	'*******************************************************************
+
+	' Property to retrieve the rogram's particular update website URL.
+
+	'*******************************************************************
+	Public ReadOnly Property ProgramUpdateURL As String
+		Get
+			Return UpdateSiteURL & $"{ProgramName.Replace(" ", "")}/"
+		End Get
+	End Property
 End Module

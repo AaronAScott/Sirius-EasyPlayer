@@ -10,7 +10,7 @@
      Partial Friend Class MyApplication
 
           Private Sub MyApplication_UnhandledException(ByVal sender As Object, ByVal e As Microsoft.VisualBasic.ApplicationServices.UnhandledExceptionEventArgs) Handles Me.UnhandledException
-               If Microsoft.VisualBasic.MsgBox("An unexpected exception has occurred. The program cannot proceed." & vbCrLf & "Do you want to see the stack?", MsgBoxStyle.Critical + MsgBoxStyle.YesNo, ProgramName) = MsgBoxResult.Yes Then Microsoft.VisualBasic.MsgBox(e.Exception.Message & vbCrLf & e.Exception.Source & vbCrLf & e.Exception.StackTrace, MsgBoxStyle.OkOnly, "Home Accounting")
+               If Microsoft.VisualBasic.MsgBox("An unexpected exception has occurred. The program cannot proceed." & vbCrLf & "Do you want to see the stack?", MsgBoxStyle.Critical + MsgBoxStyle.YesNo, ProgramName) = MsgBoxResult.Yes Then Microsoft.VisualBasic.MsgBox(e.Exception.Message & vbCrLf & e.Exception.Source & vbCrLf & e.Exception.StackTrace, MsgBoxStyle.OkOnly, "Sirius EasyPlayer")
                UnhandledExceptionTriggered = True
           End Sub
 

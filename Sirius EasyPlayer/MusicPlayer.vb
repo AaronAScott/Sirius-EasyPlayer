@@ -203,7 +203,6 @@ Public Class MediaPlayer
 					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play", "Pressed")
 					RaiseEvent ButtonPressed(CInt(MediaPlayerAction.ActionPlay))
 				End If
-				IsPlaying = Not IsPlaying
 			ElseIf btnNext.Contains(adjustedPoint) Then
 				DrawButton(g, btnNext, Color.Gray, Color.LightGray, "Next", "Pressed")
 				RaiseEvent ButtonPressed(CInt(MediaPlayerAction.ActionNext))
@@ -590,7 +589,6 @@ Public Class MediaPlayer
 
 		' Draw the play/press button as "pause"
 
-		IsPlaying = True
 		Using g As Graphics = Me.CreateGraphics
 			DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Pause")
 		End Using
@@ -608,16 +606,13 @@ Public Class MediaPlayer
 			Case MediaPlayerAction.ActionPlay
 				mPlayer.Play()
 				RaiseEvent PlayStateChanged(SiriusAudio.SEP_Playstate.SEP_Playing)
-				IsPlaying = True
 
 			Case MediaPlayerAction.ActionPause
 				mPlayer.Play()
 				RaiseEvent PlayStateChanged(SiriusAudio.SEP_Playstate.SEP_Paused)
-				IsPlaying = False
 
 			Case MediaPlayerAction.ActionStop
 				mPlayer.StopAll()
-				IsPlaying = False
 				RaiseEvent PlayerStop()
 				RaiseEvent PlayStateChanged(SiriusAudio.SEP_Playstate.SEP_Stopped)
 
@@ -704,10 +699,12 @@ Public Class MediaPlayer
 
 		' Redraw the play or pause button depending on the new
 		' playstate of the DLL.  The internal IsPlaying flag will
-		' be reset, depending upon the new play state.
+		' be reset, depending upon the new play state. Except for
+		' the constructor, this is the ONLY place this flag must
+		' be set.
 
 		Select Case NewState
-			Case SiriusAudio.SEP_Playstate.SEP_Paused
+			Case SiriusAudio.SEP_Playstate.SEP_Paused, SiriusAudio.SEP_Playstate.SEP_Stopped
 				Using g = Me.CreateGraphics
 					DrawButton(g, btnPlayPause, Color.Gray, Color.LightGray, "Play")
 				End Using
@@ -860,10 +857,16 @@ Public Class MediaPlayer
 	' this event will allow the user to just shut the lid while
 	' music is playing (or put the desktop to sleep or hibernate)
 	' without interrupting the current point in the playback.
+	' Hopefully.  There are no guarantees with this event.
 
 	'**********************************************************
 	Private Sub SystemEvents_PowerModeChanged(sender As Object, e As PowerModeChangedEventArgs)
-		If e.Mode = PowerModes.Suspend Then PausePlayback()
+		If e.Mode = PowerModes.Suspend And IsPlaying Then
+			PausePlayback()
+			' Set this explicitly, since the power might go off before the playstatechange event arrives.
+			IsPlaying = False
+
+		End If
 	End Sub
 
 	'**********************************************************
@@ -872,7 +875,11 @@ Public Class MediaPlayer
 
 	'**********************************************************
 	Private Sub SystemEvents_SessionEnding(sender As Object, e As SessionEndingEventArgs)
-		If IsPlaying Then PausePlayback()
+		If IsPlaying Then
+			PausePlayback()
+			' Set this explicitly, since the power might go off before the playstatechange event arrives.
+			IsPlaying = False
+		End If
 	End Sub
 	'**********************************************************
 

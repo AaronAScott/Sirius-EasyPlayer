@@ -195,12 +195,12 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="EP_MDViewer.vb">
-    <SubType>Form</SubType>
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="EP_MDViewer.Designer.vb">
-    <DependentUpon>EP_MDViewer.vb</DependentUpon>
+      <DependentUpon>EP_MDViewer.vb</DependentUpon>
     </Compile>
-   <Compile Include="SiriusAudio.vb" />
+    <Compile Include="SiriusAudio.vb" />
     <Compile Include="TransparentPictureBox.vb">
       <SubType>Component</SubType>
     </Compile>
@@ -217,6 +217,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EP_ChangeFilePrecedence.resx">
       <DependentUpon>EP_ChangeFilePrecedence.vb</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EP_Sync.resx">
       <DependentUpon>EP_Sync.vb</DependentUpon>

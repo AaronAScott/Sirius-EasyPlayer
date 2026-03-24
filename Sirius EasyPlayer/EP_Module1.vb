@@ -1307,7 +1307,7 @@ Public Module EP_Module1
 	End Property
 	'**************************************************
 
-	' Property to set or retrieve the file extension
+	' Property to retrieve the file extension
 	' precedence string set.
 
 	'**************************************************

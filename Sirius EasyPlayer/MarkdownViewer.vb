@@ -67,7 +67,7 @@ Public Class MarkdownViewer
           Me.DoubleBuffered = True
           Me.AutoScroll = True
 
-          Dim baseFont = Me.Font
+          Dim baseFont = New Font("Times New Roman", 11)
           _fontBody = baseFont
           _fontBullet = baseFont
           _fontHeader1 = New Font(baseFont.FontFamily, baseFont.Size + 6, FontStyle.Bold)

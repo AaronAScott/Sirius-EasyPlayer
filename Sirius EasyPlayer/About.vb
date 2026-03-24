@@ -1,13 +1,14 @@
 ﻿Option Strict Off
 Option Explicit On
 Imports System.Reflection.Emit
+Imports System.Net.Http
 Imports System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel
 
 
 Friend Class About
 	Inherits System.Windows.Forms.Form
 	'**********************************************************
-	' About Box for Visual Basic Programs for .Net 10
+	' About Box for Visual Basic Programs 
 	' ABOUT.VB
 	' Written: February 2026
 	' Copyright (C) 2026 Sirius Software All Rights Reserved
@@ -15,6 +16,8 @@ Friend Class About
 	' Required modules: none
 	'**********************************************************
 
+	Private Shared VersionNotes
+	Private Shared ReadOnly Client As New HttpClient()
 
 
 	'**********************************************************
@@ -39,9 +42,11 @@ Friend Class About
 		lblLicensee.Text = LicenseInfo
 		Me.Icon = frmMain.Icon
 
-		' Make the "View Release Notes" button invisible if there are none.
+		VersionNotes = GetCurrentVersionInfo()
 
-		If Not My.Computer.FileSystem.FileExists(Environment.SpecialFolder.UserProfile & "\OneDrive\ProgramUpdates\" & ProgramName.Replace(" ", "") & "\currentversion.txt") Then btnNotes.Enabled = False
+		' Disable the version notes button if there are none found.
+
+		If VersionNotes = "" Then btnNotes.Enabled = False
 
 		System.Windows.Forms.Application.DoEvents() ' give things a chance to display
 	End Sub
@@ -64,6 +69,8 @@ Friend Class About
 		' Declare variables
 
 		Dim fNotes As Form
+
+		' Retrieve CurrentVersion.txt from the download website.
 
 		' Create a form for viewing the release notes.
 
@@ -92,17 +99,35 @@ Friend Class About
 		t.ScrollBars = ScrollBars.Vertical
 		t.ReadOnly = True
 		t.Font = New Font("Arial", 10)
-		t.Text = My.Computer.FileSystem.ReadAllText(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\OneDrive\ProgramUpdates\" & ProgramName.Replace(" ", "") & "\currentversion.txt")
+		t.Text = VersionNotes
 		t.SelectionStart = t.Text.Length
 		fNotes.Controls.Add(t)
 
 		' Show the notes.
 
-		fNotes.Show
+		fNotes.Show()
 
 	End Sub
+	'**********************************************************
 
-	Private Sub lblTitle_Click(sender As Object, e As EventArgs) Handles lblTitle.Click
+	' Function to retrieve the contents of the CurrentVersion.txt
+	' file from the update website.
 
-	End Sub
+	'**********************************************************
+
+	Private Function GetCurrentVersionInfo() As String
+
+		' Declare variables.
+
+		Dim zx As String = ""
+
+		' Retrieve the CurrentVersion.txt file contents.
+
+		Try
+			zx = Client.GetStringAsync(UpdateSiteURL & "CurrentVersion.txt").GetAwaiter().GetResult()
+		Catch ex As Exception
+		End Try
+
+		Return zx
+	End Function
 End Class

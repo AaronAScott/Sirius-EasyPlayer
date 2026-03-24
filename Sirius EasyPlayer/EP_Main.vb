@@ -87,7 +87,7 @@ Public Class frmMain
 		' Add program dependencies. Declaring the DLLs as "file" will cause them
 		' to be merely copied over if they don't exist.
 
-		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "Taglib-sharp.dll"))
+		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "taglib-sharp.dll"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "Newtonsoft.Json.dll"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "SiriusAudio.dll"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "README.md"))
@@ -1277,7 +1277,7 @@ Public Class frmMain
 		Me.Text = "Viewing " & Path.GetFileName(zx)
 
 		f.EnableEditing = CBool(GetControlItem("EditMDFiles", "False"))
-		f.ShowDialog()
+		f.Show()
 
 	End Sub
 

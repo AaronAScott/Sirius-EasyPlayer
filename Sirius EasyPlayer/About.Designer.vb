@@ -1,9 +1,9 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class About
 	Inherits System.Windows.Forms.Form
 
 	'Form overrides dispose to clean up the component list.
-	<System.Diagnostics.DebuggerNonUserCode()> _
+	<System.Diagnostics.DebuggerNonUserCode()>
 	Protected Overrides Sub Dispose(ByVal disposing As Boolean)
 		Try
 			If disposing AndAlso components IsNot Nothing Then
@@ -20,7 +20,7 @@ Partial Class About
 	'NOTE: The following procedure is required by the Windows Form Designer
 	'It can be modified using the Windows Form Designer.  
 	'Do not modify it using the code editor.
-	<System.Diagnostics.DebuggerStepThrough()> _
+	<System.Diagnostics.DebuggerStepThrough()>
 	Private Sub InitializeComponent()
 		Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(About))
 		Me.Panel1 = New System.Windows.Forms.Panel()
@@ -34,7 +34,6 @@ Partial Class About
 		Me.btnNotes = New System.Windows.Forms.Button()
 		Me.lblDBVersion = New System.Windows.Forms.Label()
 		Me.btnClose = New System.Windows.Forms.Button()
-		Me.Button1 = New System.Windows.Forms.Button()
 		Me.SuspendLayout()
 		'
 		'Panel1
@@ -107,7 +106,7 @@ Partial Class About
 		'
 		Me.btnNotes.Location = New System.Drawing.Point(297, 265)
 		Me.btnNotes.Name = "btnNotes"
-		Me.btnNotes.Size = New System.Drawing.Size(107, 20)
+		Me.btnNotes.Size = New System.Drawing.Size(135, 20)
 		Me.btnNotes.TabIndex = 8
 		Me.btnNotes.Text = "View &Release Notes"
 		Me.btnNotes.UseVisualStyleBackColor = True
@@ -122,29 +121,18 @@ Partial Class About
 		'
 		'btnClose
 		'
-		Me.btnClose.Location = New System.Drawing.Point(501, 263)
+		Me.btnClose.Location = New System.Drawing.Point(453, 263)
 		Me.btnClose.Name = "btnClose"
-		Me.btnClose.Size = New System.Drawing.Size(52, 20)
+		Me.btnClose.Size = New System.Drawing.Size(107, 20)
 		Me.btnClose.TabIndex = 10
 		Me.btnClose.Text = "&Close"
 		Me.btnClose.UseVisualStyleBackColor = True
-		'
-		'Button1
-		'
-		Me.Button1.Enabled = False
-		Me.Button1.Location = New System.Drawing.Point(426, 263)
-		Me.Button1.Name = "Button1"
-		Me.Button1.Size = New System.Drawing.Size(52, 20)
-		Me.Button1.TabIndex = 11
-		Me.Button1.Text = "&Licenses"
-		Me.Button1.UseVisualStyleBackColor = True
 		'
 		'About
 		'
 		Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
 		Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
 		Me.ClientSize = New System.Drawing.Size(570, 300)
-		Me.Controls.Add(Me.Button1)
 		Me.Controls.Add(Me.btnClose)
 		Me.Controls.Add(Me.lblDBVersion)
 		Me.Controls.Add(Me.btnNotes)
@@ -174,5 +162,4 @@ Partial Class About
 	Friend WithEvents btnNotes As Button
 	Friend WithEvents lblDBVersion As Label
 	Friend WithEvents btnClose As Button
-	Friend WithEvents Button1 As Button
 End Class
