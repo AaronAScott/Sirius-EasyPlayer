@@ -85,12 +85,13 @@ Public Class frmMain
 		DBVersion = "1.00"
 
 		' Add program dependencies. Declaring the DLLs as "file" will cause them
-		' to be merely copied over if they don't exist.
+		' to be merely copied over if they don't exist.  A true "DLL" file is usually
+		' one of my own, from its own folder.
 
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "taglib-sharp.dll"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "Newtonsoft.Json.dll"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "SiriusAudio.dll"))
-		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "README.md"))
+		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "HtmlAgilityPack.dll"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "LICENSE.md"))
 
 		' Check for updates.

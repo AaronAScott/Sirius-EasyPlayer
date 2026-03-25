@@ -265,13 +265,13 @@ Module ProgramUpdater
 						Try
 							' Get the latest version number, to compare against the program's version.
 
-							zx = Client.GetStringAsync(ProgramUpdateURL & "CurrentVersion.txt").GetAwaiter().GetResult()
+							zx = Client.GetStringAsync(UpdateSiteURL & d.FolderName & "\CurrentVersion.txt").GetAwaiter().GetResult()
 							If zx.IndexOf(vbCrLf) > 0 Then zx = zx.Substring(0, zx.IndexOf(vbCrLf))
 
 							' See if the dependent file exists.  If it's missing, we'll copy it over as though
 							' it were out of date.
 
-							If Not My.Computer.FileSystem.FileExists(DestinationFolder & d.FolderName & "." & d.ObjectType) Then
+							If Not My.Computer.FileSystem.FileExists(DestinationFolder & d.FileToCopy & "." & d.ObjectType) Then
 								v = 0 ' Setting the version to 0 will cause it to get copied over.
 
 								' Get the version of the currently-existing file.

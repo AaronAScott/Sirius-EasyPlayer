@@ -14,7 +14,7 @@ Module MessageBox
 	' MESSAGEBOX.VB
 	' Written: January 2017
 	' Version 2: November 2017
-	' Version 3: July 2026 
+	' Version 3: July 2025 
 	' Version 4: January 2026
 	' Programmer: Aaron Scott
 	' Copyright 2017-2026 Sirius Software — Use, modify, and share freely.
