@@ -1258,13 +1258,13 @@ Public Class frmMain
 		f.LoadFile(zx)
 		Me.Text = "Viewing " & Path.GetFileName(zx)
 
-		f.EnableEditing = CBool(GetControlItem("EditMDFiles", "False"))
+		If DbOpen Then f.EnableEditing = CBool(GetControlItem("EditMDFiles", "False"))
 		f.ShowDialog()
 
 	End Sub
 	'***********************************************************************
 
-	' The View Readme menu option is selected.
+	' The View licenses menu option is selected.
 
 	'***********************************************************************
 	Private Sub mnuViewLicense_Click(sender As Object, e As EventArgs) Handles mnuViewLicense.Click
