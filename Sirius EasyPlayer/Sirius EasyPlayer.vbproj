@@ -111,11 +111,6 @@
     <Compile Include="DoubleBufferedListBox.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="EP_Theme1.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>EP_Theme.resx</DependentUpon>
-    </Compile>
     <Compile Include="EP_ChangeFilePrecedence.Designer.vb">
       <DependentUpon>EP_ChangeFilePrecedence.vb</DependentUpon>
     </Compile>
@@ -171,10 +166,6 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="EP_Module1.vb" />
-    <Compile Include="EP_Theme.designer.vb" />
-    <Compile Include="EP_Theme.vb">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="EP_MusicPlayer.Designer.vb">
       <DependentUpon>EP_MusicPlayer.vb</DependentUpon>
     </Compile>
@@ -236,10 +227,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EP_Main.resx">
       <DependentUpon>EP_Main.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="EP_Theme.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>EP_Theme1.Designer.vb</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="EP_MusicPlayer.resx">
       <DependentUpon>EP_MusicPlayer.vb</DependentUpon>

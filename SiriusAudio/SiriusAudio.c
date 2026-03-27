@@ -62,6 +62,7 @@ extern "C" {
 	static int repeat = 1; // 0 = false; 1 = true
 	static int playstate = SEP_Undefined;
 	static float volume = 0.9f;
+	static ma_uint64 g_lastFrame = 0;
 
 
 	// Global buffer pointer and indices to
@@ -100,7 +101,9 @@ extern "C" {
 	DLL_EXPORT int DequeueEvent(int* code, void** payload);
 	DLL_EXPORT void LoadPlaylist(const wchar_t* text);
 	DLL_EXPORT BSTR GetPlaylist(void);
-	DLL_EXPORT void LoadFallbackList(const wchar_t* text);
+	DLL_EXPORT void ShutdownAudio(void);
+	DLL_EXPORT void ShutdownAudioEngine(void);
+	DLL_EXPORT int ResetAudio(void);
 
 
 	// ************************************************************
@@ -636,6 +639,86 @@ extern "C" {
 
 	}
 	// ************************************************************
+	// Shutdown audio engine routine.
+	// ************************************************************
+	DLL_EXPORT void ShutdownAudioEngine(void)
+	{
+
+		// 1. Save the current position of the song.
+		ma_uint64 frame = 0;
+		ma_sound_get_cursor_in_pcm_frames(&g_sound, &frame);
+		g_lastFrame = frame;
+
+		// 2. Stop and uninit the sound FIRST
+		ma_sound_stop(&g_sound);
+		ma_sound_uninit(&g_sound);
+		ma_sound_set_end_callback(&g_sound, NULL, NULL);
+		g_soundInitialized = 0;
+
+		// 3. Now uninit the engine
+		ma_engine_uninit(&g_engine);
+		g_engineInitialized = 0;
+
+		// 4. Reset playstate
+		playstate = SEP_Paused;
+	}
+	// ************************************************************
+	// Reset audio routine.
+	// ************************************************************
+	DLL_EXPORT int ResetAudio(void)
+	{
+		// Send the restarting playstate.
+
+		playstate = SEP_Restarting;
+		QueueEvent(SEP_PlayStateChanged, (void*)(intptr_t)playstate);
+
+		// Reinitialize the engine. 
+		if (g_engineInitialized)
+			return 1;
+
+		ma_engine_config config = ma_engine_config_init();
+
+		ma_result result = ma_engine_init(&config, &g_engine);
+		if (result != MA_SUCCESS) {
+			g_engineInitialized = 0;
+			return 0;
+		}
+		g_engineInitialized = 1;
+
+		// SongInfo.filename is a BSTR containing the UTF-16 filename
+		BSTR b = info.filename;
+
+		if (b && SysStringLen(b) > 0)
+		{
+			UINT len = SysStringLen(b);   // number of UTF-16 characters
+
+			// Allocate a new wchar_t buffer for LoadAndPlaySong to free
+			currentfilename = (wchar_t*)malloc((len + 1) * sizeof(wchar_t));
+			if (currentfilename)
+			{
+				// Copy the UTF-16 characters directly from the BSTR
+				memcpy(currentfilename, b, len * sizeof(wchar_t));
+
+				// Null-terminate
+				currentfilename[len] = L'\0';
+
+				// Pass to the loader (which will free(currentfilename))
+				LoadAndPlaySong(currentfilename);
+
+				// Reset the position of the last song before shutdown.
+				if (g_lastFrame > 0)
+				{
+					ma_sound_seek_to_pcm_frame(&g_sound, g_lastFrame);
+				}
+
+				// Immediately pause the music, as that's how we left things.
+				PlayPause(); // This will toggle the playstate.
+
+			}
+		}	return g_engineInitialized;
+	}
+
+	// ************************************************************
 	// Function to take a song name, feed it to the engine and
 	// set the callback function for it.
 	// ************************************************************
@@ -711,6 +794,10 @@ extern "C" {
 
 		return MA_SUCCESS;
 	}
+	// ************************************************************
+	// Function to indicate if a song name exists in the fallback
+	// list.
+	// ************************************************************
 	int FallbackContains(const wchar_t* filename)
 	{
 		if (!filename || !fbindex || fbcount == 0)
@@ -997,6 +1084,7 @@ extern "C" {
 	
 
 	}
+
 
 	// ************************************************************
 	// The Main routine.

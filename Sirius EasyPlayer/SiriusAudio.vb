@@ -78,6 +78,12 @@ Public Class SiriusAudio
 	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
 	Private Shared Sub SetVolume(v As Single)
 	End Sub
+	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
+	Private Shared Sub ShutdownAudioEngine()
+	End Sub
+	<DllImport("SiriusAudio.dll", CallingConvention:=CallingConvention.Cdecl)>
+	Private Shared Function ResetAudio() As Integer
+	End Function
 	Private Declare Function DequeueEvent Lib "SiriusAudio.dll" (ByRef code As Integer, ByRef payload As IntPtr) As Integer  ' Enum for the types of events we will be raising upon notice from the .dll
 
 	Public Enum SiriusEvent
@@ -103,6 +109,7 @@ Public Class SiriusAudio
 		SEP_MediaEnded
 		SEP_PlaylistEnded
 		SEP_Ready
+		SEP_Restarted
 	End Enum
 
 	' Declare the events to be raised by this class.
@@ -146,6 +153,7 @@ Public Class SiriusAudio
 		AddHandler wmPlayer.PlayStateChange, AddressOf wmpPlayStateChanged
 	End Sub
 	Public Sub Dispose() Implements IDisposable.Dispose
+		_relayTimer.Enabled = False
 		ShutdownAudio()
 		GC.SuppressFinalize(Me)
 		RemoveHandler wmPlayer.Error, AddressOf wmp_Error
@@ -202,7 +210,9 @@ Public Class SiriusAudio
 		PlayNext()
 	End Sub
 	'****************************************************************
+
 	' The PlaySong method
+
 	'****************************************************************
 	Public Sub PlaySong(idx As Integer)
 
@@ -221,6 +231,22 @@ Public Class SiriusAudio
 		wmPlayer.controls.stop()
 		PlayStop()
 	End Sub
+	'****************************************************************
+
+	' The UninitAudio sub.
+
+	'****************************************************************
+	Public Sub UninitAudio()
+		ShutdownAudioEngine()
+	End Sub
+	'****************************************************************
+
+	' The ResetAudio function.
+
+	'****************************************************************
+	Public Function RestartAudio() As Integer
+		Return ResetAudio()
+	End Function
 	'****************************************************************
 	' Sub to play .wma or any other files miniaudio cannot play here,
 	' in the wrapper using WMPLIB.  If it cannot play them, an

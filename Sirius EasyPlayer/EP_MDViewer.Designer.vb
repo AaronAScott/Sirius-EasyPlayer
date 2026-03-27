@@ -44,6 +44,7 @@ Partial Class frmMDViewer
 		Me.MenuStrip1.Size = New System.Drawing.Size(872, 24)
 		Me.MenuStrip1.TabIndex = 1
 		Me.MenuStrip1.Text = "MenuStrip1"
+		Me.MenuStrip1.Visible = False
 		'
 		'FileToolStripMenuItem
 		'
@@ -93,21 +94,23 @@ Partial Class frmMDViewer
 		'
 		Me.MarkdownViewer1.AutoScroll = True
 		Me.MarkdownViewer1.AutoScrollMinSize = New System.Drawing.Size(800, 0)
+		Me.MarkdownViewer1.BackColor = System.Drawing.SystemColors.Window
 		Me.MarkdownViewer1.Dock = System.Windows.Forms.DockStyle.Fill
-		Me.MarkdownViewer1.Location = New System.Drawing.Point(0, 24)
+		Me.MarkdownViewer1.Font = New System.Drawing.Font("Times New Roman", 11.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+		Me.MarkdownViewer1.Location = New System.Drawing.Point(0, 0)
 		Me.MarkdownViewer1.Name = "MarkdownViewer1"
 		Me.MarkdownViewer1.RawText = Nothing
-		Me.MarkdownViewer1.Size = New System.Drawing.Size(872, 509)
+		Me.MarkdownViewer1.Size = New System.Drawing.Size(872, 533)
 		Me.MarkdownViewer1.TabIndex = 2
 		'
 		'TextBox1
 		'
 		Me.TextBox1.Dock = System.Windows.Forms.DockStyle.Fill
-		Me.TextBox1.Location = New System.Drawing.Point(0, 24)
+		Me.TextBox1.Location = New System.Drawing.Point(0, 0)
 		Me.TextBox1.Multiline = True
 		Me.TextBox1.Name = "TextBox1"
 		Me.TextBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-		Me.TextBox1.Size = New System.Drawing.Size(872, 509)
+		Me.TextBox1.Size = New System.Drawing.Size(872, 533)
 		Me.TextBox1.TabIndex = 0
 		Me.TextBox1.Visible = False
 		'
@@ -122,6 +125,7 @@ Partial Class frmMDViewer
 		Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
 		Me.MainMenuStrip = Me.MenuStrip1
 		Me.Name = "frmMDViewer"
+		Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
 		Me.MenuStrip1.ResumeLayout(False)
 		Me.MenuStrip1.PerformLayout()
 		Me.ResumeLayout(False)

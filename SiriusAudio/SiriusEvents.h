@@ -25,7 +25,8 @@ enum SEP_PlayState {
 	SEP_ScanReverse = 6,
 	SEP_MediaEnded = 7,
 	SEP_PlaylistEnded = 8,
-	SEP_Ready = 9
+	SEP_Ready = 9,
+	SEP_Restarting = 10
 };
 
 #endif

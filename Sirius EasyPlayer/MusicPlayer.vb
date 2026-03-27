@@ -51,7 +51,7 @@ Public Class MediaPlayer
 	Private btnNext As New Rectangle(ButtonX + 72, ButtonY, 32, 32)
 	Private btnStop As New Rectangle(ButtonX + 108, ButtonY, 32, 32)
 	Private VolumeRect As New Rectangle(60, ButtonY, 32, 32)
-	Private mPlayer As New SiriusAudio
+	Private mPlayer As SiriusAudio
 	Private mAlbumArt As Image
 	Private mDuration As Double
 	Private mAlbum As String
@@ -109,6 +109,8 @@ Public Class MediaPlayer
 		picControl.BackColor = Color.Transparent
 		picControl.BorderStyle = BorderStyle.FixedSingle
 
+		mPlayer = New SiriusAudio
+
 		AddHandler Me.MouseDown, AddressOf picControl_MouseDown
 		AddHandler Me.MouseUp, AddressOf picControl_MouseUp
 		AddHandler Me.ButtonPressed, AddressOf MP_ButtonPressed
@@ -152,7 +154,9 @@ Public Class MediaPlayer
 		RemoveHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
 		RemoveHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
 
+
 		mPlayer.StopAll()
+		mPlayer.Dispose()
 		MyBase.Dispose()
 	End Sub
 
@@ -861,12 +865,16 @@ Public Class MediaPlayer
 
 	'**********************************************************
 	Private Sub SystemEvents_PowerModeChanged(sender As Object, e As PowerModeChangedEventArgs)
-		If e.Mode = PowerModes.Suspend And IsPlaying Then
-			mPlayer.StopAll()
-			' Set this explicitly, since the power might go off before the playstatechange event arrives.
-			IsPlaying = False
 
-		End If
+		Select Case e.Mode
+			Case PowerModes.Suspend
+				mPlayer.StopAll()
+				mPlayer.UninitAudio()
+				' Set this explicitly, since the power might go off before the playstatechange event arrives.
+				IsPlaying = False
+			Case PowerModes.Resume
+				mPlayer.RestartAudio()
+		End Select
 	End Sub
 
 	'**********************************************************
@@ -904,7 +912,6 @@ Public Class MediaPlayer
 	Public Sub PlayPause()
 
 		mPlayer.Play()
-
 
 	End Sub
 	'**********************************************************

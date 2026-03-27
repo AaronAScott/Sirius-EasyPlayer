@@ -91,7 +91,7 @@ Public Class frmMain
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "taglib-sharp.dll"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "Newtonsoft.Json.dll"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "SiriusAudio.dll"))
-		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "HtmlAgilityPack.dll"))
+		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "README.md"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "LICENSE.md"))
 
 		' Check for updates.
@@ -1256,7 +1256,7 @@ Public Class frmMain
 		Dim f As New frmMDViewer
 		Dim zx As String = My.Application.Info.DirectoryPath & "\Readme.md"
 		f.LoadFile(zx)
-		Me.Text = "Viewing " & Path.GetFileName(zx)
+		f.Text = "Viewing " & Path.GetFileName(zx)
 
 		If DbOpen Then f.EnableEditing = CBool(GetControlItem("EditMDFiles", "False"))
 		f.ShowDialog()
@@ -1275,7 +1275,7 @@ Public Class frmMain
 		Dim f As New frmMDViewer
 		Dim zx As String = My.Application.Info.DirectoryPath & "\license.md"
 		f.LoadFile(zx)
-		Me.Text = "Viewing " & Path.GetFileName(zx)
+		f.Text = "Viewing " & Path.GetFileName(zx)
 
 		f.EnableEditing = CBool(GetControlItem("EditMDFiles", "False"))
 		f.Show()
