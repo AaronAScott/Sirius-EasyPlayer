@@ -11,6 +11,7 @@ Imports System.Windows.Forms.Design
 Imports System.Xml
 Imports Microsoft.Win32
 Imports TagLib
+Imports TagLib.Riff
 Imports WMPLib
 '*******************************************************
 
@@ -36,6 +37,7 @@ Public Class MediaPlayer
 	Private SongTitle As String
 	Private AlbumName As String
 	Private ArtistName As String
+	Private CMIndex As Integer
 	Private picControl As PictureBox ' This holds all the drawn parts of the control.
 	Private lstPlayList As ListBox = Nothing
 	Private ControlSize As New Size(320, 100)
@@ -57,6 +59,9 @@ Public Class MediaPlayer
 	Private mAlbum As String
 	Private mArtist As String
 	Private AlbumImage As Image = Nothing
+	Private ContextMenu1 As ContextMenuStrip
+	Private mnuCMPlay As ToolStripMenuItem
+	Private mnuCMCancel As ToolStripMenuItem
 
 	Public Enum MediaPlayerAction
 		ActionPrevious
@@ -119,10 +124,6 @@ Public Class MediaPlayer
 		AddHandler mPlayer.PlaylistLoaded, AddressOf saPlaylistLoaded
 		AddHandler mPlayer.PlayStateChanged, AddressOf saPlayStateChange
 		AddHandler mPlayer.MediaError, AddressOf saMediaError
-		If lstPlayList IsNot Nothing Then
-			AddHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
-			AddHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
-		End If
 		AddHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
 		AddHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
 
@@ -149,7 +150,9 @@ Public Class MediaPlayer
 		RemoveHandler mPlayer.MediaUnplayable, AddressOf saMediaError
 		If lstPlayList IsNot Nothing Then
 			RemoveHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
+			RemoveHandler mnuCMPlay.Click, AddressOf mnuCMPlay_Click
 			RemoveHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
+			RemoveHandler ContextMenu1.Opened, AddressOf ContextMenu1_Opening
 		End If
 		RemoveHandler Microsoft.Win32.SystemEvents.PowerModeChanged, AddressOf SystemEvents_PowerModeChanged
 		RemoveHandler Microsoft.Win32.SystemEvents.SessionEnding, AddressOf SystemEvents_SessionEnding
@@ -580,6 +583,25 @@ Public Class MediaPlayer
 	End Sub
 	'**********************************************************
 
+	' The Play From Here menu item is clicked.
+
+	'**********************************************************
+	Private Sub mnuCMPlay_Click(sender As Object, e As EventArgs)
+		lstPlayList.SelectedIndex = CMIndex
+		lstPlaylist_DoubleClick(lstPlayList, New EventArgs)
+	End Sub
+	'********************************************************** 
+
+	' The listbox context menu is opening.  Capture the index
+	' of the item which was right-clicked.
+
+	'**********************************************************
+	Private Sub ContextMenu1_Opening(sender As Object, e As EventArgs)
+		Dim pt = lstPlayList.PointToClient(Cursor.Position)
+		CMIndex = lstPlayList.IndexFromPoint(pt)
+	End Sub
+	'**********************************************************
+
 	' Event handler for the listbox Double-click event
 
 	'**********************************************************
@@ -955,12 +977,20 @@ Public Class MediaPlayer
 			Return lstPlayList
 		End Get
 		Set(value As ListBox)
+			mnuCMPlay = New ToolStripMenuItem("&Play From Here")
+			mnuCMCancel = New ToolStripMenuItem("&Cancel")
+			ContextMenu1 = New ContextMenuStrip
+			ContextMenu1.Items.AddRange(New ToolStripItem() {mnuCMPlay, mnuCMCancel})
 			lstPlayList = value
+			lstPlayList.ContextMenuStrip = ContextMenu1
 			lstPlayList.DrawMode = DrawMode.OwnerDrawFixed
 			lstPlayList.BackColor = DarkenOrLightenColor(Color.Gray, 80)
 			lstPlayList.SelectionMode = SelectionMode.One
 			AddHandler lstPlayList.DrawItem, AddressOf lstPlaylist_DrawItem
+			AddHandler mnuCMPlay.Click, AddressOf mnuCMPlay_Click
 			AddHandler lstPlayList.DoubleClick, AddressOf lstPlaylist_DoubleClick
+			AddHandler ContextMenu1.Opened, AddressOf ContextMenu1_Opening
+
 		End Set
 	End Property
 	'**********************************************************
