@@ -9,10 +9,12 @@ I resolved to write my own player that behaved the way I wanted, and which made 
 
 There are 4 basic layers to Sirius EasyPlayer:
 
-- 1)  SiriusAudio.dll, built on **Miniaudio**, which actually plays your music, except .wma files. 
+- 1)  SiriusAudio.dll, built on **Miniaudio,** which actually plays your music, except .wma files. 
 - 2) The "wrapper", SiriusAudio.vb, which takes event information from the DLL's event queue and generates Windows events.  It also parses Windows Playlists (*.wpl files) or takes a string of fully-qualified song names, separated by CrLf (which applies to even the final song name). 
 - 3)  The Music Player control, MusicPlayer.vb.  This is the only route by which a higher-level program should access the wrapper.  
 - 4) The UI, which is the actual Sirius EasyPlayer program.
+
+SiriusAudio.dll is written in native-code 'C'.  All other components are written in VB.Net.
 
 As an open-source program, you may use any or all of these programs, subject only to third-party license considerations.  If you plan to write your own player (always a fun project), and prefer C# or another language, you will also need to write your own wrapper for the DLL.
 
@@ -51,11 +53,11 @@ It is especially well‑suited for large, carefully curated libraries (including
 
 - **Local file library:**
   - Scans user‑specified folders for supported audio formats.
-  - Stores library metadata in a LocalDB database for fast, deterministic queries.
+  - Stores artist names, album names and song names in a LocalDB database for fast, deterministic queries.
   - Does not modify audio files or embedded tags.
 
 - **Deterministic indexing:**
-  - Assigns stable internal IDs to tracks, albums, and playlists.
+  - Assigns stable internal IDs to playlist items.
   - Ensures that sorting and selection remain consistent across sessions.
 
 - **Format and extension awareness:**
@@ -64,13 +66,14 @@ It is especially well‑suited for large, carefully curated libraries (including
 
 ### Playback and fallback behavior
 
-- **Deterministic playback engine:**
-  - Plays tracks in a well‑defined, reproducible order.
+- **Flexible playback**
+  - Play an artist's entire work (all albums), a single album, or a single song, without leaving the playlist editor.
+  - Use the Music Player feature to play playlists.
   - No hidden shuffle or “smart” reordering unless explicitly requested.
 
 - **Fallback architecture:**
-  - If a preferred version of a track is unavailable (moved, offline drive, etc.), the player can fall back to alternate encodings of the same work when present.
-  - Fallback rules are explicit and predictable, not heuristic.
+  - If a preferred version of a track is unplayable (unsupported format, flawed headers), the player can fall back to the WMPLIB player, which can handle malformed headers more easily.
+  - Fallback rules are explicit and predictable.
 
 - **Gapless, queue‑based playback:**
   - Uses a queue model for playback, derived from playlists or ad‑hoc selections.
@@ -78,58 +81,45 @@ It is especially well‑suited for large, carefully curated libraries (including
 
 ### Playlists
 
-- **Playlist editor:**
+- **Playlist editor:**  This editor is the "home page" of Sirius EasyPlayer.  
   - Create, rename, and delete playlists.
   - Add tracks from the library via search, browse, or context menus.
-  - Reorder tracks with deterministic, index‑based ordering.
+  - Playlists can be shuffled, or ordered by artist/album/song.
 
-- **“Choose best version” for playlists:**
-  - For playlists containing multiple encodings or duplicates of the same logical track, a **“Choose best version”** command is available from the playlist list box.
+- **“View best version”**
+  - For albums containing multiple encodings of the same logical track, a **“View best version”** command is available from the playlist editor, which causes the library view to show only the *best* quality version available of each song. The default ranking of file types is: .flac, (lossless), .mp3, .ogg, .wma and .wav.  This ranking is customizable.
   - Applies your format/extension ranking and other rules to:
     - Prefer lossless over lossy.
-    - Prefer primary storage over removable/secondary locations (if configured).
-  - Cleans up playlists so each logical track is represented by the best available version.
 
 - **Stable references:**
-  - Playlists reference tracks by internal IDs, not by fragile path strings alone.
-  - If files move within known roots, the player can often re‑resolve them without manual repair.
+  - Playlists reference tracks by unqualified name, not by fragile path strings alone.
+  - If files move within known roots, the playlist editor "Repair Playlist" can often re‑resolve them without manual repair.
 
 ### Browsing, search, and filtering
 
 - **Structured views:**
-  - Browse by artist, album, and (optionally) work/composer for classical collections.
+  - Browse by artist, album, and song.
   - Album‑centric view that respects disc numbers and track ordering.
-
-- **Search:**
-  - Text search across titles, artists, albums, and other key fields.
-  - Deterministic result ordering (e.g., by relevance, then by album/track index).
-
-- **Filters:**
-  - Filter by format, rating (if used), or other metadata fields.
-  - Filters are order‑preserving: they narrow the set without re‑scrambling it.
 
 ### Album art and metadata
 
 - **Album art display:**
-  - Compatible with WMP, using a *_large.jpg and *_small.jpg image stored in the music folder.
+  - Compatible with WMP, using an AlbumArt[_...]_large.jpg and AlbumArt[_...]_small.jpg image stored in the album folder.
 
 - **Metadata respect:**
-  - Reads tags for display and organization.
   - Does not write or “fix” tags automatically.
+  - Has a "Metadata" repair function, that will set the "Title" field **only**, for songs that do not have this tag set.
 
 ### User interface and behavior
 
 - **Minimal, focused UI:**
   - Main window with library view, playlist pane, and playback controls.
-  - Context menus for common actions (add to playlist, play next, locate in library, choose best version, etc.).
+  - Context menus for common actions (add to playlist, play artist/album/song, set compatibility mode.).
 
-- **Deterministic sorting:**
-  - Sorting rules are explicit and stable (e.g., album sort by artist, year, disc, track).
-  - No hidden “smart” grouping that changes between runs.
-
-- **Help → About:**
-  - Displays program version, basic environment information, and license information.
+- **Help menu:**
+  - Displays program version and program release notes..
   - Includes a combined license view for Sirius EasyPlayer and third‑party components (generated from individual license fragments).
+  - Display this "ReadMe" file.
 
 ---
 
@@ -140,7 +130,7 @@ It is especially well‑suited for large, carefully curated libraries (including
 - **Database:**
   - **Microsoft SQL Server LocalDB** (required).
 - **Runtime:**
-  - .NET Desktop runtime (version TBD by final build).
+  - .NET Desktop runtime (version 4.8).
 - **Storage:**
   - Sufficient disk space for:
     - The LocalDB database.
@@ -158,47 +148,55 @@ It is especially well‑suited for large, carefully curated libraries (including
    - Install the appropriate .NET Desktop runtime if not already present.
 
 3. **Obtain Sirius EasyPlayer:**
-   - Download the release package (ZIP or installer) from the project’s distribution location.
+   - Download the release package (ZIP) from the project’s distribution location.
 
-4. **Run the program:**
+4. **Copy the .exe and, 3 DLLs, and .md files into your selected folder.**
+
+5. **Run the program:**
    - Launch `SiriusEasyPlayer.exe`.
    - On first run, the program will:
      - Initialize or upgrade the LocalDB database.
      - Prompt you to select one or more library root folders.
+    
 
 ---
 
 ## First‑run setup
 
-1. **Select library folders:**
-   - Choose the directories where your music is stored.
-   - You can add multiple roots (e.g., internal drive plus external archive).
+1. **Select library folder:**
+   - Choose the directory where your music is stored. It must be in the WMP (and common) order by: root, artist, album, with songs and album art stored in the album folder.
 
 2. **Initial scan:**
    - The program scans the selected folders and populates the LocalDB library.
    - Progress is shown in the status area; you can begin exploring once the initial pass is complete.
 
 3. **Configure format preferences:**
-   - Set your preferred format/extension ranking (e.g., `FLAC > ALAC > WAV > MP3`).
+   - Set your preferred format/extension ranking (e.g., `FLAC >WAV > MP3`). or whatever you prefer.
    - These preferences drive the “choose best version” logic and fallback behavior.
-
-4. **Optional: UI preferences:**
-   - Adjust view options (e.g., show/hide columns, default sort order).
-   - Save layout so it remains consistent across sessions.
 
 ---
 
 ## Usage highlights
 
+- **Playing an artist:**
+  - Navigate to the artist view.
+  - Use the context menu to “Play artist.”
+  - Tracks play in album order, respecting disc and track indices.
+
 - **Playing an album:**
   - Navigate to the album view.
-  - Double‑click an album or use the context menu to “Play album.”
-  - Tracks play in album order, respecting disc and track indices.
+  - Use the context menu to “Play album.”
+  - Tracks play in song order..
+
+- **Playing a song:**
+  - Navigate to the song view.
+  - Use the context menu to “Play song.”
+  - Track plays.
 
 - **Creating a playlist:**
   - Open the playlist pane and create a new playlist.
-  - Drag tracks from the library or use “Add to playlist” from context menus.
-  - Use the playlist list box to reorder tracks as needed.
+  - Double-click artists, albums or individual songs from the library or use “Add to playlist” from context menus.
+  - Use the playlist list box context menu to reorder tracks as needed.
 
 - **Cleaning up a playlist with multiple versions:**
   - Open the playlist.

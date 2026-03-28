@@ -1,4 +1,4 @@
-## Contents
+﻿## Contents
 
 - [Sirius EasyPlayer](#sirius-easyplayer)
 - [Miniaudio](#miniaudio)
@@ -108,7 +108,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ---
 
 ## TagLib-Sharp
-
+---
 ### License: Mozilla Public License 1.1
 
                           MOZILLA PUBLIC LICENSE
