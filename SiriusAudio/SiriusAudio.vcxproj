@@ -138,10 +138,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="SiriusEvents.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SiriusAudio.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SiriusAudio.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

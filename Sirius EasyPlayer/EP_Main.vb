@@ -90,7 +90,7 @@ Public Class frmMain
 
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "taglib-sharp.dll"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "Newtonsoft.Json.dll"))
-		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "SiriusAudio.dll"))
+		Dependencies.Add(New Dependency("SiriusAudio", "dll", "SiriusAudio.dll"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "README.md"))
 		Dependencies.Add(New Dependency("SiriusEasyPlayer", "file", "LICENSE.md"))
 
@@ -128,8 +128,8 @@ Public Class frmMain
 				If WaitForMusicFolder(MusicFolder, 30) Then
 					Exit Do
 				Else
-					If MsgBox("Your music folder, located at """ & MusicFolder & """ is unavailble." & vbCrLf & "If it's a removable drive, re-connect it, and click ""Okay"" to try again.  If you click ""Cancel"", you'll be prompted to select the new location of your music.", MsgBoxStyle.Information + MsgBoxStyle.OkCancel, "Music Folder Not Online") = MsgBoxResult.Ok Then
-						Continue Do
+					If MsgBox("Your music folder, located at """ & MusicFolder & """ Is unavailble." & vbCrLf & "If it's a removable drive, re-connect it, and click ""Okay"" to try again.  If you click ""Cancel"", you'll be prompted to select the new location of your music.", MsgBoxStyle.Information + MsgBoxStyle.OkCancel, "Music Folder Not Online") = MsgBoxResult.Ok Then
+		Continue Do
 					Else
 						frmLocateMusicFolder.ShowDialog()
 					End If
