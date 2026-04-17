@@ -46,7 +46,7 @@ Friend Class About
 
 		' Disable the version notes button if there are none found.
 
-		If VersionNotes = "" Then btnNotes.Enabled = False
+		If VersionNotes = "" Then btnNotes.Enabled = False Else btnNotes.Enabled = True
 
 		System.Windows.Forms.Application.DoEvents() ' give things a chance to display
 	End Sub

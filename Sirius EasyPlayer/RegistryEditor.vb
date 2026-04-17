@@ -47,11 +47,11 @@ Public Class frmRegistryEditor
             If vb.Left(Keys(ii), 6) = "Sirius" Then
                 n = TreeView1.Nodes.Add(Keys(ii), Keys(ii))
 
-                ' If the current node is for this program, it will be displayed in black.  If for
-                ' some other Sirius program, it will be displayed in gray.
+                    ' If the current node is for this program, it will be displayed in black.  If for
+                    ' some other Sirius program, it will be displayed in gray.
 
-                If n.Name = "Sirius" & ProgramName.Replace(" ","") Then c = Color.Black Else c = Color.Gray
-                n.ForeColor = c
+                    If n.Name = "Sirius" & ProgramName.Replace(" ", "") Or n.Name = "SiriusSoftwareGlobal" Then c = Color.Black Else c = Color.Gray
+                    n.ForeColor = c
 
                 ' Get all the subkeys for the current node.
 

@@ -1,7 +1,8 @@
-﻿Option Strict Off
+Option Strict Off
 Option Explicit On
 Imports System.Drawing.Imaging
 Imports System.Drawing.Text
+Imports System.Text.RegularExpressions
 Imports VB = Microsoft.VisualBasic
 Module CommonLibrary
 	'**********************************************************
@@ -10,9 +11,10 @@ Module CommonLibrary
 	' Written: April 2007
 	' Updated: November 2013
 	' Updated: November 2023
-	' Updated: April 2026
+	' Updated: April 2025
+	' Updated: July 2025
 	' Programmer: Aaron Scott
-	' Copyright (C) 1993-2026 Sirius Software All Rights Reserved
+	' Copyright (C) 1993-2025 Sirius Software All Rights Reserved
 	'**********************************************************
 
 	'**************************************************
@@ -46,33 +48,8 @@ Module CommonLibrary
 		' Return the long file name
 
 		xx = zx.IndexOf(Chr(0))
-		If xx = -1 Then xx = zx.Length + 1
-		GetOSLongPathName = zx.Substring(xx - 1)
-
-	End Function
-
-	'**********************************************************
-	'
-	' Function to indicate if a string contains any of a number
-	' of characters.
-	'
-	'**********************************************************
-	Public Function StringContains(Str_Renamed As String, SrchStr As String) As Boolean
-
-		' Declare variables
-
-		Dim jj As Integer
-
-		' Look for each search string in the supplied string
-
-		If Str_Renamed.Length >= 1 Then
-			For jj = 0 To SrchStr.Length - 1
-				If Str_Renamed.IndexOf(SrchStr.Substring(jj, 1)) >= 0 Then
-					Return False
-				End If
-			Next jj
-		End If
-		Return True
+		If xx = 0 Then xx = zx.Length + 1
+		GetOSLongPathName = zx.Substring(0, Math.Min(xx - 1, zx.Length))
 
 	End Function
 
@@ -111,7 +88,7 @@ Module CommonLibrary
 							Swapped = True
 						End If
 						jj = kk
-						kk = kk + Midl
+						kk += Midl
 					Loop While kk <= Size
 				Loop While Swapped = True
 			Next ii
@@ -137,7 +114,7 @@ Module CommonLibrary
 
 		' Lowercase the entry string for comparison
 
-		zz = Entry.ToLower
+		zz = Entry.ToLower()
 
 		' Begin a binary search of the combobox
 
@@ -154,12 +131,12 @@ Module CommonLibrary
 				If Bottom = Midl Then Exit Function
 				Bottom = Midl
 				If Top - Midl > 1 Then ii = Int((Top - Midl) / 2) Else ii = 1
-				Midl = Midl + ii
+				Midl += +ii
 			ElseIf zz < xx Then
 				If Top = Midl Then Exit Function
 				Top = Midl
 				If Midl - Bottom > 1 Then ii = Int((Midl - Bottom) / 2) Else ii = 1
-				Midl = Midl - ii
+				Midl -= -ii
 			End If
 		Loop While ii > 0 And Midl >= LBound(Text, 1) And Midl <= UBound(Text, 1)
 
@@ -174,21 +151,21 @@ Module CommonLibrary
 
 		' Declare variables
 
-		Dim zx0 As String
+		Dim zx As String
 		Dim jj As Integer
 
 		' Begin taking the string apart, two bytes at a
 		' time, and converting those hex values back to
 		' what they represent.
 
-		zx0 = ""
+		zx = ""
 		For jj = 0 To Text.Length - 1 Step 2
-			zx0 &= Chr(CInt("&H" & Text.Substring(jj, 2)))
+			zx &= Chr(CInt("&H" & Text.Substring(jj, 2)))
 		Next jj
 
 		' return the value
 
-		FromHex = zx0
+		Return zx
 
 	End Function
 	'**************************************************
@@ -266,10 +243,12 @@ Module CommonLibrary
 		' Begin going through the passed string, convert
 		' each byte to its Hex representation
 
-		zx = VB.Format(value, "x").ToUpper
+		zx = Format(value, "x").ToUpper
 		If zx.Length / 2 <> Int(zx.Length / 2) Then zx = "0" & zx
 
 		Return zx
+
+
 
 	End Function
 	'**************************************************
@@ -357,13 +336,29 @@ Module CommonLibrary
 
 	End Function
 	'**********************************************************
+
+	' Pre-processor to the TextTrimCore function.
+
+	'**********************************************************
+	Public Function TextTrim(Destination As Object, Text As String, Width As Single, F As Font) As String
+
+		If TypeOf Destination IsNot Graphics Then
+			Using g As Graphics = Destination.CreateGraphics
+				Return TextTrimCore(g, Text, Width, F)
+			End Using
+		Else
+			Return TextTrimCore(Destination, Text, Width, F)
+		End If
+
+	End Function
+	'**********************************************************
 	'
 	' Function to trim text to a specified width.  This works
 	' much like the WordWrap function, but breaks anywhere, and
 	' not at word boundries.
 	'
 	'**********************************************************
-	Public Function TextTrim(ByRef g As Graphics, Text As String, Width As Integer, F As Font) As String
+	Private Function TextTrimCore(g As Graphics, Text As String, Width As Single, F As Font) As String
 
 		' Declare variables
 
@@ -381,25 +376,11 @@ Module CommonLibrary
 		Return ""
 
 	End Function
-
-	'**********************************************************
-
-	' Overloads to the TextTrim function
-
-	'**********************************************************
-	Public Function TextTrim(ByRef Destination As Object, Text As String, Width As Single, F As Font) As String
-		Return TextTrim(Destination, Text, CInt(Width), F)
-
-	End Function
-	Public Function TextTrim(ByRef Destination As Object, Text As String, Width As Double, F As Font) As String
-		Return TextTrim(Destination, Text, CInt(Width), F)
-	End Function
-
 	'*****************************************************
-	'
+
 	' Function to return the current date in the format
 	' yyyymmdd
-	'
+
 	'*****************************************************
 	Public Function DBCurrentDate() As Integer
 
@@ -430,7 +411,6 @@ Module CommonLibrary
 			Mid(ww, jj, 1) = Chr(Asc(Mid(ww, jj, 1)) Xor &HFFS)
 		Next jj
 		Encrypt = ww
-
 	End Function
 	'**********************************************************
 	'
@@ -443,50 +423,40 @@ Module CommonLibrary
 	'**********************************************************
 	Public Function Capitalize(ByRef Text As String, Optional CapitalizeAll As Boolean = True) As String
 
-		' Declare variables
+		' Declare variables.
 
-		Dim ii As Integer
-		Dim jj As Integer
-		Dim X As String
-		Dim Y As String
-		Dim z As String
+		Dim i As Integer
+		Dim words() As String = Text.Trim.Split(" "c)
 
-		' Get both an uppercase and a lowercase version of the
-		' text.
+		' Ignote empty arguments.
 
-		Y = Text.ToUpper
-		z = Text.ToLower
-
-		' Begin parsing the string.  Save an uppercase version
-		' of the current character, in case we decide to use it.
-
-		For jj = 0 To z.Length - 1
-			X = z.Substring(jj, 1).ToUpper
-
-			' The first letter is always capitalized
-
-			If jj = 0 Then
-				z = X & z.Substring(jj + 1)
-				If Not CapitalizeAll Then Return z
-
-				' If the previous character is not a letter, and not an
-				' apostrophe, and not a number, capitalize the current
-				' letter.
-
-			Else
-				ii = jj - 1
-				If (Y.Substring(ii, 1) < "A" Or Y.Substring(ii, 1) > "Z") And Val(Y.Substring(ii, 1)) = 0 And Y.Substring(ii, 1) <> "0" And Y.Substring(ii, 1) <> "'" Then z = z.Substring(0, jj) & X & z.Substring(jj + 1)
+		If String.IsNullOrWhiteSpace(Text) Then Return ""
 
 
-				' Capitalize letters after "Mc" or "O'"
+		For i = 0 To words.Length - 1
+			Dim word As String = words(i)
 
-				If jj > 1 Then
-					If z.Substring(jj - 2, 2) = "Mc" Then z = z.Substring(0, jj) & X & z.Substring(jj + 1)
-					If z.Substring(jj - 2, 2) = "O'" Then z = z.Substring(0, jj) & X & z.Substring(jj + 1)
-				End If
+			' If CapitalizeAll is False and not the first word, uncapitalize
+			If Not CapitalizeAll AndAlso i > 0 Then
+				word = word.ToLower()
+				words(i) = word
+				Continue For
 			End If
-		Next jj
-		Capitalize = z
+
+			word = word.ToLower()
+
+			' Handle "O'" case
+			If word.StartsWith("o'") And word.Length > 2 Then
+				word = "O'" & Char.ToUpper(word(2)) & word.Substring(3)
+			Else
+				word = Char.ToUpper(word(0)) & word.Substring(1)
+			End If
+
+			words(i) = word
+		Next
+
+		Return String.Join(" ", words)
+
 	End Function
 
 	'*********************************************************
@@ -502,17 +472,17 @@ Module CommonLibrary
 		Dim yr As Integer
 		Dim mo As Integer
 		Dim dy As Integer
-		Dim zx0 As String = ""
+		Dim zx As String = ""
 
 		If d > 19000101 Then
-			zx0 = Str(d).TrimStart
-			If FullYear Then yr = Val(zx0.Substring(0, 4)) Else yr = Val(zx0.Substring(2, 2))
-			mo = Val(zx0.Substring(4, 2))
-			dy = Val(zx0.Substring(6, 2))
-			zx0 = Format(mo, "00") & "-" & Format(dy, "00") & "-"
-			If FullYear Then zx0 &= Format(yr, "0000") Else zx0 &= Format(yr, "00")
+			zx = Str(d).TrimStart
+			If FullYear Then yr = Val(zx.Substring(0, 4)) Else yr = Val(zx.Substring(2, 2))
+			mo = Val(zx.Substring(4, 2))
+			dy = Val(zx.Substring(6, 2))
+			zx = Format(mo, "00") & "-" & Format(dy, "00") & "-"
+			If FullYear Then zx = zx & Format(yr, "0000") Else zx = zx & Format(yr, "00")
 		End If
-		ChDate = zx0
+		Return zx
 	End Function
 	'************************************************************
 	'
@@ -523,8 +493,8 @@ Module CommonLibrary
 	' Output: the path with a guaranteed final backslash
 	' Call this as a sub or a function, as suits the code
 	'************************************************************
-	Public Function AddDirSeparator(Path As String) As String
-		If Path.Substring(Path.Length - 1, 1) <> "\" Then Path = Path & "\"
+	Public Function AddDirSeparator(ByRef Path As String) As String
+		If If(Path.Length >= 1, Path.Substring(Path.Length - 1), Path) <> "\" Then Path &= "\"
 		AddDirSeparator = Path
 	End Function
 
@@ -574,8 +544,7 @@ Module CommonLibrary
 		' a zero date is valid. allow it to return zero
 
 		If d = 0 Then
-			DateToSeq = 0
-			Exit Function
+			Return 0
 		End If
 
 		' otherwise calculate sequential date. any other errors return -1.
@@ -584,22 +553,19 @@ Module CommonLibrary
 		mm = d \ 100 - yy * 100
 		dd = d - yy * 10000 - mm * 100
 		If yy < 1901 Or yy > 2099 Or dd < 1 Or mm < 1 Or mm > 12 Or dd > 31 Then
-			DateToSeq = -1
-			Exit Function
+			Return -1
 		ElseIf mm <> 2 And dd > days_in_month(mm - 1) Or (yy \ 4 * 4 <> yy And mm = 2 And dd > 28) Then
-			DateToSeq = -1
-			Exit Function
+			Return -1
 		Else
 
 			' the date is valid, convert it to its sequential value where the value 1
 			'       represents the date 01/01/1901
 
 			f = (nodays(mm - 1) + 365 * (yy - 1901) + dd + ((yy - 1901) \ 4))
-			If yy \ 4 * 4 = yy And mm > 2 Then f = f + 1
-			DateToSeq = f
+			If yy \ 4 * 4 = yy And mm > 2 Then f += 1
+			Return f
 		End If
 	End Function
-
 	'**********************************************************
 	'
 	' Function to return a date of the form yyyymmdd from just
@@ -619,53 +585,54 @@ Module CommonLibrary
 		Dim yy As Integer
 		Dim Bad As Boolean
 		Dim X As String
-		Dim zx0 As String
+		Dim zx As String
 		Dim zx1 As String
 
 		' If "date" is null or "00/00/00" then return zero.
 		' Otherwise, we will validate the date.
 
 		Bad = False
-		If TextDate = "" Or TextDate.Substring(0, 8) = "00/00/00" Or TextDate.Substring(0, 8) = "00-00-00" Then
+		If TextDate = "" Or TextDate = "00/00/00" Or TextDate = "00-00-00" Then
 			lDate = 0
 
 			' Convert mm-dd-yy to mm/dd/yy
 
 		Else
-			zx0 = TextDate.Replace("-", "/")
+			zx = TextDate.Replace("-", "/")
 
 			' Convert m/d/yy to mm/dd/yy for standard length date.
 
-			xx = zx0.IndexOf("/", 0)
-			If xx = 1 Then zx0 = SRep(LPad(Left(zx0, 1), 2), 1, " ", "0") & zx0.Substring(1, zx0.Length - 1)
-			xx = zx0.IndexOf("/", 3)
-			If xx = 5 Then zx0 = zx0.Substring(0, 3) & SRep(LPad(Mid(zx0, 4, 1), 2), 1, " ", "0") & zx0.Substring(4, zx0.Length - 1)
+			xx = zx.IndexOf("/", 0)
+			If xx = 1 Then zx = LPad(zx.Substring(0, 1), 2).Replace(" ", "0") & zx.Substring(1, zx.Length - xx)
+			xx = zx.IndexOf("/", 3)
+			If xx = 4 Then zx = zx.Substring(0, 3) & LPad(zx.Substring(3, 1), 2).Replace(" ", "0") & zx.Substring(xx)
+
 
 			' Now get rid of slashes, leaving mmddyy or mmddyyyy
 
-			zx0 = zx0.Replace("/", "")
+			zx = zx.Replace("/", "")
 
 			' If length is 8, assume we have mmddyyyy or yyyymmdd
 
-			If zx0.Length = 8 Then
+			If zx.Length = 8 Then
 
 				' If the first two digits are >= 19 (19xx), must be a full
 				' year, of the form yyyymmdd
 
-				If Val(zx0.Substring(0, 2)) >= 19 Then
-					z = Val(zx0)
+				If Val(zx.Substring(0, 2)) >= 19 Then
+					z = Val(zx)
 
 					' Otherwise convert to yyyymmdd
 
 				Else
-					z = Val(zx0.Substring(4, 4) & zx0.Substring(0, 4))
+					z = Val(zx.Substring(4, 4) & zx.Substring(0, 4))
 				End If
 
 				' If length is six, can only be mmddyy or yymmdd.
 				' If yymmdd, is only unambiguous if year is past
 				' 1931.  Then the number can ONLY be a year.
 
-			ElseIf zx0.length = 6 Then
+			ElseIf zx.Length = 6 Then
 
 				' Get the "split year", used by Windows to convert a 2-digit
 				' year to a 4-digit year.
@@ -679,9 +646,9 @@ Module CommonLibrary
 
 				' Get the parts of the supposed date
 
-				mm = Val(zx0.Substring(0, 2))
-				dd = Val(zx0.Substring(2, 2))
-				yy = Val(zx0.Substring(4, 2))
+				mm = Val(zx.Substring(0, 2))
+				dd = Val(zx.Substring(2, 2))
+				yy = Val(zx.Substring(4, 2))
 
 				' See if the value of "mm" is 32 or greater.  If so,
 				' can only be a date of form yymmdd, if other parts
@@ -737,10 +704,32 @@ Module CommonLibrary
 
 			' If the date is valid, return it, otherwise return -1
 
-			If Bad = True Then lDate = -1 Else lDate = z
+			If Bad = True Then Return -1 Else Return z
 		End If
 
 	End Function
+	'**********************************************************
+
+	' Function to return a fixed-width string with a formatted
+	' number
+	' Input: z   = the number to be formatted.
+	'        div = the multiplier, as a factor of 10
+	'        wid = the width of the string returned.
+
+	'**********************************************************
+	Public Function DblToStr(ByVal z As Double, ByVal div As Integer, Optional ByVal wid As Integer = 10) As String
+
+		' Declare variables
+
+		Dim zx As String
+
+		' Format and return the supplied number
+
+		zx = New String("#", wid - 2 - Len(CStr(div))) & "." & New String("0", Len(CStr(div)) - 1)
+		DblToStr = LPad(Format(z / div, zx), wid)
+
+	End Function
+
 	'**********************************************************
 
 	' Function to perform a safe "get" from a recordset.
@@ -784,7 +773,13 @@ Module CommonLibrary
 	'
 	'**********************************************************
 	Public Function LPad(ByRef Text As String, ByRef wd As Integer) As String
-		If wd >= Len(Text) Then LPad = Right(Space(wd) & Text, wd) Else LPad = Text
+		Dim zx As String
+		If wd >= Text.Length Then
+			zx = Space(wd) & Text
+			Return zx.Substring(zx.Length - wd)
+		Else
+			Return Text
+		End If
 	End Function
 
 	'*********************************************************
@@ -793,9 +788,22 @@ Module CommonLibrary
 	'
 	'*********************************************************
 	Public Function RPad(ByRef Text As String, ByRef wd As Integer) As String
-		If wd > Len(Text) Then RPad = Left(Text & Space(wd), wd) Else RPad = Text
+		If wd > Text.Length Then RPad = Text & Space(wd).Substring(0, wd) Else RPad = Text
 	End Function
 
+	'***************************************************************************
+	'
+	' Function to return a string centered in a string of blanks of a specified
+	' width.
+	'
+	'***************************************************************************
+	Public Function SCenterS(ByRef Text As String, ByRef wd As Integer) As String
+		If Text.Length >= wd Then
+			SCenterS = Text.Substring(0, Math.Min(wd, Text.Length))
+		Else
+			SCenterS = RPad(Space(Fix((wd - Text.Length) / 2)) & Text, wd)
+		End If
+	End Function
 	'*********************************************************
 	'
 	' Function to parse a string of items separated by commas,
@@ -848,23 +856,20 @@ Module CommonLibrary
 
 		' Declare variables
 
-		Dim zx0 As String
+		Dim zx As String
 		Dim yr As Integer
 		Dim mo As Integer
 		Dim dy As Integer
 
 		' Assemble the date and return it.
 
-		zx0 = Str(d)
-		yr = Val(zx0.Substring(3, 2))
-		mo = Val(zx0.Substring(5, 2))
-		dy = Val(zx0.Substring(7, 2))
-		zx0 = Format(mo, "00") & "/" & Format(dy, "00") & "/" & Format(yr, "00")
-		SDate = zx0
+		zx = CStr(d)
+		yr = Val(zx.Substring(2, 2))
+		mo = Val(zx.Substring(4, 2))
+		dy = Val(zx.Substring(6, 2))
+		zx = Format(mo, "00") & "/" & Format(dy, "00") & "/" & Format(yr, "00")
+		SDate = zx
 	End Function
-
-
-
 	'***************************************************************************
 	'
 	' Function to convert a sequential number to a date of the form yyyymmdd.
@@ -922,19 +927,21 @@ Module CommonLibrary
 		' Declare variables
 
 		Dim xx As Integer
-		Dim zx0 As String
+		Dim zx As String
 
 		' Begin searching through the string and replacing
 		' occurences of the search string with the
 		' replace string.
 
-		zx0 = Target
-		xx = InStr(StartPos, zx0, SrchStr, CompareMethod)
-		While xx > 0
-			zx0 = Left(zx0, xx - 1) & ReplStr & Right(zx0, Len(zx0) - (xx + Len(SrchStr) - 1))
-			xx = InStr(xx + Len(ReplStr), zx0, SrchStr)
-		End While
-		SRep = zx0
+		zx = Target
+		If Target.Length > StartPos Then
+			xx = zx.ToLower.IndexOf(SrchStr.ToLower, StartPos)
+			While xx > 0
+				zx = zx.Substring(0, xx) & ReplStr & zx.Substring(xx + SrchStr.Length)
+				xx = zx.IndexOf(SrchStr, xx + ReplStr.Length)
+			End While
+		End If
+		Return zx
 
 	End Function
 
@@ -951,7 +958,21 @@ Module CommonLibrary
 		End If
 	End Function
 
+	'***************************************************************************
 
+	' Pre-processor for the WordWrap function.
+
+	'***************************************************************************
+	Public Function WordWrap(ByRef Destination As Object, F As Font, ByRef Text As String, wd As Single) As String
+
+		If TypeOf (Destination) IsNot Graphics Then
+			Using g As Graphics = Destination.CreateGraphics
+				Return WordWrapCore(g, F, Text, wd)
+			End Using
+		Else
+			Return WordWrapCore(Destination, F, Text, wd)
+		End If
+	End Function
 	'**********************************************************
 
 	' Function to return the longest string which will print
@@ -959,13 +980,13 @@ Module CommonLibrary
 	' supplied string.
 
 	'**********************************************************
-	Public Function WordWrap(g As Graphics, F As Font, ByRef Text As String, wd As Integer) As String
+	Private Function WordWrapCore(g As Graphics, F As Font, ByRef Text As String, wd As Single) As String
 
 		' Declare variables
 
 		Dim jj As Integer
-		Dim wWord As Integer
-		Dim wText As Integer
+		Dim wWord As Single
+		Dim wText As Single
 		Dim xx As String
 		Dim zx As String
 
@@ -1039,40 +1060,28 @@ Module CommonLibrary
 
 	End Function
 	'***************************************************************************
-
-	' Overloads for the WordWrap function.
-
-	'***************************************************************************
-	Public Function WordWrap(ByRef g As Graphics, F As Font, ByRef Text As String, wd As Single) As String
-		Return WordWrap(g, F, Text, CInt(wd))
-	End Function
-	Public Function WordWrap(ByRef g As Graphics, F As Font, ByRef Text As String, wd As Double) As String
-		Return WordWrap(g, F, Text, CInt(wd))
-	End Function
-
-	'***************************************************************************
 	'
 	' Function to return the workstation ID, used for networking applications.
 	' Input : None
-	' Output: workstation ID 01-99.  If none is defined, "01" is the default
+	' Output: workstation ID 001-999.  If none is defined, "001" is the default
 	'
 	'***************************************************************************
 	Public Function WSID() As String
 
 		' Declare variables
 
-		Dim zx0 As String
+		Dim zx As String
 
-		zx0 = System.Environment.GetEnvironmentVariable("WSID", EnvironmentVariableTarget.User)
-		If zx0 <> "" Then
-			If Val(zx0) > 0 Then
-				zx0 = Right("000" & zx0, 3)
+		zx = System.Environment.GetEnvironmentVariable("WSID", EnvironmentVariableTarget.User)
+		If zx <> "" Then
+			If Val(zx) > 0 Then
+				zx = LPad(zx, 3).Replace(" ", "0")
 			Else
-				zx0 = Left(Trim(zx0), 3)
+				zx = "001"
 			End If
-			WSID = zx0
+			Return zx
 		Else
-			WSID = "001"
+			Return "001"
 		End If
 
 	End Function
@@ -1162,178 +1171,6 @@ Module CommonLibrary
 
 	End Function
 	'***********************************************************
-	'
-	' Function to format numbers or dates
-	'
-	'***********************************************************
-	Public Function Format(ByVal Value As Object, Optional ByVal Template As String = "") As String
-
-		' Declare variables
-
-		Dim ii As Integer
-		Dim jj As Integer
-		Dim m As Integer
-		Dim d As Integer
-		Dim y As Integer
-		Dim s1 As String = ""
-		Dim s2 As String = ""
-		Dim s3 As String = ""
-		Dim div As String = ""
-		Dim BeforeTemplate As String = ""
-		Dim AfterTemplate As String = ""
-		Dim RawNum As String = ""
-		Dim FormattedNum As String = ""
-		Dim FormattedDate As String = ""
-		Dim zx0 As String = ""
-		Dim zx1 As String = ""
-		Dim zx2 As String = ""
-		Dim zx3 As String = ""
-		Dim dt As Date
-
-		' If no format is supplied, just return a string representation of the number
-
-		Format = "" ' Default return value
-		If Template = "" Then
-			Return CStr(Value)
-
-			' If a format is specified, determine the type of object
-
-		ElseIf TypeOf (Value) Is Date Then
-
-			' Get the supplied value as a date (saves using CType on every call to its members)
-
-			dt = Value
-
-			' get the portions of the date
-
-			y = dt.Year
-			m = dt.Month
-			d = dt.Day
-
-			' Get the sections of the format
-
-			zx0 = Template
-			If InStr(1, Template, "/") > 0 Then
-				div = "/"
-				s1 = ParseString(zx0, "/")
-				s2 = ParseString(zx0, "/")
-				s3 = zx0
-			ElseIf InStr(1, Template, "-") > 0 Then
-				div = "-"
-				s1 = ParseString(zx0, "-")
-				s2 = ParseString(zx0, "-")
-				s3 = zx0
-			Else
-				s1 = zx0
-				s2 = ""
-				s3 = ""
-			End If
-
-
-			' Now begin formatting the date
-
-			For jj = 1 To 3
-				zx1 = Choose(jj, s1, s2, s3).tolower
-				Select Case zx1
-					Case "m"
-						FormattedDate = FormattedDate & m
-					Case "mm"
-						FormattedDate = FormattedDate & Right("0" & m, 2)
-					Case "d"
-						FormattedDate = FormattedDate & d
-					Case "dd"
-						FormattedDate = FormattedDate & Right("0" & d, 2)
-					Case "yy"
-						FormattedDate = FormattedDate & Right(y, 2)
-					Case "yyyy"
-						FormattedDate = FormattedDate & y
-				End Select
-				If jj = 1 And (s2 <> "" Or s3 <> "") Then FormattedDate = FormattedDate & div
-				If jj = 2 And s3 <> "" Then FormattedDate = FormattedDate & div
-			Next
-			Return FormattedDate
-		ElseIf TypeOf (Value) Is Double Or TypeOf (Value) Is Single Or TypeOf (Value) Is Integer Then
-
-			' Get the raw number, ignorning negative signs
-
-			RawNum = CStr(Math.Abs(Value))
-
-			' Get both the format and the raw number halves: before and after any decimal place
-
-			zx0 = ValidateFormat(Template)
-			BeforeTemplate = ParseString(zx0, ".")
-			AfterTemplate = zx0
-
-			zx0 = RawNum
-			zx1 = ParseString(zx0, ".")
-			zx2 = zx0
-
-			' Determine how many places, if any, in the before format are occupied by
-			' commas.
-
-			ii = 0
-			For jj = 0 To BeforeTemplate.Length - 1
-				If BeforeTemplate.Substring(jj, 1) = "," Then ii = ii + 1
-			Next jj
-
-			' Make sure the before and after portions of both the format and the number are of equal length
-
-			zx3 = BeforeTemplate.Replace(",", "")
-			If zx1.Length < zx3.Length Then
-				zx1 = LPad(zx1, BeforeTemplate.Length)
-			ElseIf zx3.length < zx1.length Then
-				BeforeTemplate = LPad(BeforeTemplate, zx1.Length + ii)
-			End If
-			zx3 = AfterTemplate.Replace(",", "")
-			If zx2.Length < zx3.Length Then
-				zx2 = RPad(zx2, AfterTemplate.Length)
-			ElseIf zx3.length < zx2.length Then
-				AfterTemplate = RPad(AfterTemplate, zx2.Length)
-			End If
-
-			' Begin matching up the number and the format character by character and using the 
-			' format to assemble the number.
-
-			ii = 0
-			For jj = 0 To BeforeTemplate.Length - 1
-				s1 = BeforeTemplate.Substring(jj, 1)
-				s2 = zx1.Substring(ii, 1)
-				Select Case s1
-					Case "#", " "
-						If s2 <> " " Then FormattedNum = FormattedNum & s2
-						ii = ii + 1
-					Case "0"
-						If s2 = " " Then
-							FormattedNum = FormattedNum & "0"
-						Else
-							FormattedNum = FormattedNum & s2
-						End If
-						ii = ii + 1
-					Case ","
-						If Val(FormattedNum) > 0 Then FormattedNum = FormattedNum & ","
-				End Select
-			Next jj
-			If Template.IndexOf(".") >= 0 Then FormattedNum = FormattedNum & "." ' Add decimal according to format.
-			For jj = 0 To AfterTemplate.Length - 1
-				s1 = AfterTemplate.Substring(jj, 1)
-				s2 = zx2.Substring(jj, 1)
-				Select Case s1
-					Case "#"
-						If s2 <> " " Then FormattedNum = FormattedNum & s2
-					Case "0"
-						If s2 = " " Then
-							FormattedNum = FormattedNum & "0"
-						Else
-							FormattedNum &= s2
-						End If
-				End Select
-			Next jj
-			If Value < 0 Then FormattedNum = "-" & FormattedNum
-			Return FormattedNum.TrimStart
-		End If
-
-	End Function
-	'***********************************************************
 
 	' Function to remove any invalid character from the format template.
 
@@ -1344,17 +1181,17 @@ Module CommonLibrary
 
 		Dim jj As Integer
 		Dim ii As Integer
-		Dim zx0 As String
+		Dim zx As String
 
 		' Look for date specifiers, to decide how to validate the format
 
-		zx0 = ""
+		zx = ""
 		ii = 0
-		If Template.IndexOf("-") >= 0 Or Template.IndexOf("/") >= 0 Or Template.ToLower.IndexOf("m") >= 0 Or Template.ToLower.IndexOf("d") >= 0 Or Template.ToLower.IndexOf("y") >= 0 Then
-			For jj = 1 To Len(Template)
+		If Template.IndexOf("-") >= 0 Or Template.IndexOf("/") >= 0 Or Template.IndexOf("m", 1) >= 0 Or Template.IndexOf("d", 1) >= 0 Or Template.IndexOf("y", 1) >= 0 Then
+			For jj = 0 To Template.Length - 1
 				If Template.Substring(jj, 1) = "-" Or Template.Substring(jj, 1) = "/" Or Template.Substring(jj, 1).ToLower = "m" Or Template.Substring(jj, 1).ToLower = "d" Or Template.Substring(jj, 1).ToLower = "y" Then
 					ii += 1
-					zx0 &= Template.Substring(jj, 1)
+					zx &= Template.Substring(jj, 1)
 				End If
 			Next jj
 		Else
@@ -1362,13 +1199,15 @@ Module CommonLibrary
 				For jj = 0 To Template.Length - 1
 					If Template.Substring(jj, 1) = "0" Or Template.Substring(jj, 1) = "#" Or Template.Substring(jj, 1) = "," Or Template.Substring(jj, 1) = "." Then
 						ii += 1
-						zx0 &= Template.Substring(jj, 1)
+						zx &= Template.Substring(jj, 1)
 					End If
 				Next jj
 			End If
 		End If
-		ValidateFormat = zx0 ' Return validated template
+		Return zx ' Return validated template
 	End Function
+
+
 
 	'**********************************************************
 
@@ -1395,4 +1234,5 @@ Module CommonLibrary
 			g.ResetTransform()
 		End Sub
 	End Class
+
 End Module

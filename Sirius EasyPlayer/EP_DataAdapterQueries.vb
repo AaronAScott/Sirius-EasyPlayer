@@ -30,7 +30,7 @@ Module EP_DataAdapterQueries
 
 		'Get the server name.  The default is the old 2012 version of SQL Server Express.
 
-		ServerName = "(LocalDB)\" & GetSetting("SiriusSoftwareGlobal", "SQLServer", "InstanceName", "v11.0")
+		ServerName = "(LocalDB)\MSSQLLocalDB"
 
 		cs.Add("Data Source", ServerName)
 		cs.Add("AttachDbFilename", Databasename)

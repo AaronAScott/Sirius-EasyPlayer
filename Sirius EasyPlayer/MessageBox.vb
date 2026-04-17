@@ -137,6 +137,8 @@ Module MessageBox
 
 		' Dispose of resources.
 
+		f.Dispose()
+		f = Nothing
 		LabelFont.Dispose()
 
 		' Always turn off the SaveVerify flag: if must be set to true

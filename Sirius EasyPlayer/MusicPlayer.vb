@@ -1095,6 +1095,14 @@ Public Class MediaPlayer
 			Return mPlayer.Songlist
 		End Get
 		Set(value As String)
+
+			' If music is currently playing, stop it.
+
+			If IsPlaying Then
+				PlayStop()
+				IsPlaying = False
+			End If
+
 			mPlayer.Songlist = value
 		End Set
 	End Property
@@ -1119,6 +1127,13 @@ Public Class MediaPlayer
 			' Save the new playlist name.
 
 			mPlaylist = value
+
+			' If music is currently playing, stop it.
+
+			If IsPlaying Then
+				PlayStop()
+				IsPlaying = False
+			End If
 
 			' Set the playlist property to the name of the playlist file.  It will play automatically
 			' as the player defaults to autostart.

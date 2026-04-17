@@ -301,7 +301,7 @@ Module ProgramUpdater
 
 						Try
 							If Not My.Computer.FileSystem.FileExists(DestinationFolder & d.FileToCopy) Then
-								DownloadFile(ProgramUpdateURL & d.FileToCopy, DestinationFolder & d.FolderName & "\" & d.FileToCopy)
+								DownloadFile(ProgramUpdateURL & d.FileToCopy, DestinationFolder & d.FileToCopy)
 							Else
 
 								' If the file DOES exist, compare the date and time of the current copy and the
@@ -502,6 +502,11 @@ Module ProgramUpdater
 		RemoveHandler PictureBox1.Paint, AddressOf Picturebox1_Paint
 		RemoveHandler ListBox1.SelectedIndexChanged, AddressOf Listbox1_SelectedIndexChanged
 		RemoveHandler ListBox1.DrawItem, AddressOf ListBox1_DrawItem
+
+		' Dispose of the form.
+
+		f.Dispose()
+		f = Nothing
 
 		' Return the dialog result.
 
