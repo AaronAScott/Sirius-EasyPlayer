@@ -663,7 +663,8 @@ extern "C" {
 		playstate = SEP_Paused;
 	}
 	// ************************************************************
-	// Reset audio routine.
+	// Reset audio routine. This is called to restart playing a
+	// song from where it was at shutdown.
 	// ************************************************************
 	DLL_EXPORT int ResetAudio(void)
 	{
@@ -704,12 +705,6 @@ extern "C" {
 
 				// Pass to the loader (which will free(currentfilename))
 				LoadAndPlaySong(currentfilename);
-
-				// Reset the position of the last song before shutdown.
-				if (g_lastFrame > 0)
-				{
-					ma_sound_seek_to_pcm_frame(&g_sound, g_lastFrame);
-				}
 
 				// Immediately pause the music, as that's how we left things.
 				PlayPause(); // This will toggle the playstate.
@@ -788,6 +783,15 @@ extern "C" {
 		// the signal when a song has ended.
 
 		ma_sound_set_end_callback(&g_sound, MediaEndCallback, NULL);
+
+		// If we were playing a song at shutdown, reset to that song's
+		// position before starting to play.
+
+		if (g_lastFrame > 0)
+			{
+				ma_sound_seek_to_pcm_frame(&g_sound, g_lastFrame);
+				g_lastFrame = 0;
+			}
 
 		// Start the sound playing.
 		ma_sound_start(&g_sound);
